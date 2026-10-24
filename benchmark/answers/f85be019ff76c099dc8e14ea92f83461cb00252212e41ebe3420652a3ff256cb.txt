@@ -1,0 +1,265 @@
+analysisWe need to find a false assertion in the mathematical writing. The text is long; we need to identify a line with a false statement. The instructions: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument. Identify a line that contains the false assertion. If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin."
+
+We need to find a false claim. Let's examine the main theorem: Theorem 1.1 (thm main) states that under alpha in (3/2,2) and beta satisfying (1/2+1/(2alpha)) < beta < 3/2 - 1/alpha, the family of occupation measures satisfies LDP with speed T and rate function J defined by (rate func). This is plausible. But maybe some condition fails? The hyper-exponential recurrence condition is proved via Lemma 4.1, etc. Let's inspect the lemmas for potential false statements.
+
+Lemma 4.1: For all T>0, 0 <= theta < beta - 1/(2alpha) and any 0<p<alpha, we have E[sup_{0<=t<=T} ||A^theta Z_t||_H^p] <= C T^{p/alpha}. This seems plausible: Z_t is OU driven by alpha-stable noise with decaying coefficients. The bound depends on the moment of stable integrals. Might hold.
+
+Lemma 4.2: For all T>0, sup_{t in [T/2,T]} ||Y_t||_H <= C(T)(1 + sup_{0<=t<=T} ||Z_t||_V). This is a key estimate. Let's check its proof. They derive differential inequality for h(t) = ||Y_t||_H^2. They get dh/dt <= -h^2 + K_T^2. Then they compare to solution g(t) of ODE dg/dt = -g^2 + K_T^2. They then analyze g(t). The ODE solution is g(t) = K_T + 2K_T ((g(0)+K_T)/(g(0)-K_T) e^{2K_T t} - 1)^{-1}. They analyze for t in [T/2,T]. They claim that if g(0) > K_T, then for t in [T/2,T], g(t) <= K_T + 2K_T (e^{2K_T t} - 1)^{-1} <= K_T (1 + 2(e^T - 1)^{-1}). This seems plausible. But is the inequality correct? Let's test extremes: Suppose g(0) is huge, then g(t) decays to K_T as t grows. For t >= T/2, e^{2K_T t} >= e^{K_T T}. For large K_T, e^{2K_T t} is huge, so the bound is close to K_T. So the bound K_T(1+2(e^T-1)^{-1}) seems plausible.
+
+But note that K_T = sup_{0<=t<=T} sqrt{C(1+||Z_t||_V^4)}. This is random; it's not deterministic. They use the bound g(t) <= K_T(1+2(e^T-1)^{-1}). That yields ||Y_t||_H^2 <= K_T(1+...). Taking sqrt gives ||Y_t||_H <= sqrt{K_T(1+...)}. But they claim sup_{t in [T/2,T]} ||Y_t||_H <= C(T)(1 + sup_{0<=t<=T} ||Z_t||_V). Let's check dimension: K_T = sqrt{C(1+||Z_t||_V^4)} = sqrt{C} sqrt{1+||Z_t||_V^4}. So sqrt{K_T} would be (C(1+||Z||_V^4))^{1/4}. But they claim linear in sup||Z||_V. That seems inconsistent. Let's compute: Suppose ||Z_t||_V is large, say M. Then K_T ~ sqrt{C(1+M^4)} ~ sqrt{C} M^2. Then sqrt{K_T} ~ (C)^{1/4} M. So sqrt{K_T} is linear in M. But they claim sup_{t}||Y_t||_H <= C(T)(1+ sup||Z||_V). That matches sqrt{K_T} times constant. But they used K_T, not sqrt{K_T}. Let's check: In inequality (1+2(e^T-1)^{-1}) times K_T. So g(t) <= K_T * constant. Then h(t) <= g(t) <= constant * K_T. So h(t) = ||Y_t||_H^2 <= constant * K_T. Then ||Y_t||_H <= sqrt{constant * K_T} = sqrt{constant} sqrt{K_T} <= sqrt{constant} sqrt{C(1+||Z||_V^4)}^{1/2} = sqrt{constant} C^{1/4} sqrt{1+||Z||_V^4}^{1/2} = sqrt{constant} C^{1/4} (1+||Z||_V^4)^{1/4}. But (1+||Z||_V^4)^{1/4} <= (1+||Z||_V^4)^{1/4} <= (1+||Z||_V^2)^{1/2} <= 1+||Z||_V^2? Wait, we need to bound (1+||Z||_V^4)^{1/4} <= 1 + ||Z||_V. Because (a^4+1)^{1/4} <= a+1? For a>=0, (a^4+1)^{1/4} <= a+1? Let's test: a=1: left= (2)^{1/4} ~1.19 <=2. Yes. a=2: left=(17)^{1/4}=2.03 <=3. So yes. So sqrt{K_T} <= sqrt{C} (1+||Z||_V). So ||Y_t||_H <= C(T)(1+||Z||_V). So lemma seems plausible.
+
+Now, Lemma 4.3: For all T>0, delta in (0,1/2) and p in (0, alpha/4), E_x[||Y_T||^p_{H_delta}] <= C_{T,delta,p}. They use bound of Y_T in terms of Y_{T/2} and integral of N(Y+Z). They use inequalities and then use Lemma 4.2 and Lemma 4.1. That seems plausible.
+
+Lemma 4.4: For all T>0, delta in (0,1/2) and p in (0, alpha/4), E_x[||X_T||^p_{H_delta}] <= C_{T,delta,p}. Since X = Y+Z, and Y and Z have moment bounds. Might hold.
+
+Now Theorem 4.5: For any lambda>0, there exists M such that sup_{nu} E^nu[e^{lambda tau_M}] < infinity. They consider discrete times n and hitting time tau_M = inf{k >=1: ||X_k||_{H_delta} <= M}. They use Markov property and Chebyshev inequality with Lemma 4.4: P_nu(B_n) <= P_nu(B_{n-1}) * C_{delta,p} / M^p. Induction gives P_nu(tau_M>n) <= (C_{delta,p}/M^p)^n. Then expectation of e^{lambda tau_M} <= sum_{n=0}^\infty lambda e^{lambda(n+1)} (C/M^p)^n. This is finite if M > (C e^\lambda)^{1/p}. So hyper-exponential recurrence holds.
+
+Potential false assertion: The hyper-exponential recurrence condition requires sup_{nu} E^nu e^{lambda tau_K} < infinity for some compact K. They consider discrete time chain {X_n}. But the process is continuous time. However, they use discrete times at integer times. The hyper-exponential recurrence condition in Theorem 2.1 of Wu refers to continuous-time Markov process with stopping time tau_K defined as inf{t >= 0: X_t in K}. They require sup_{nu} E^nu e^{lambda tau_K} < infinity. But they only proved for tau_M defined as inf{k >=1: X_k in K}. That is discrete-time hitting time. But they claim tau_K <= tau_M. Wait, they defined tau_K as inf{t>=0: X_t in K}. They defined tau_M as inf{k>=1: ||X_k||_{H_delta} <= M}. Then they note tau_K <= tau_M. Actually K = {x: ||x||_{H_delta} <= M}. So tau_K = inf{t: X_t in K}. tau_M = inf{k>=1: ||X_k|| <= M}. Since K is same set, but tau_M uses only integer times. So tau_K <= tau_M? Actually tau_K <= tau_M? Let's consider: Suppose the process enters K at time t=0.5, then tau_K=0.5, tau_M=inf{k>=1: X_k in K}. If X_k at integer times never in K until k=3, tau_M=3. So tau_K <= tau_M. So tau_K <= tau_M. So E e^{lambda tau_K} <= E e^{lambda tau_M}. So bounding tau_M suffices.
+
+But the hyper-exponential recurrence condition requires sup_{nu} E^nu e^{lambda tau_K} < infinity. They have shown sup_{nu} E e^{lambda tau_M} < infinity for some M. That implies sup_{nu} E e^{lambda tau_K} < infinity. So condition holds.
+
+But there's a subtlety: The process X_t is continuous-time, but they used discrete-time chain. The Markov property holds for continuous time. But the Chebyshev inequality step uses P_nu(B_n) = P_nu(B_{n-1}) * P_nu(B_n | B_{n-1}) <= P_nu(B_{n-1}) * E_{X_{n-1}}[||X_n||^p] / M^p. But is P_nu(B_n | B_{n-1}) <= E_{X_{n-1}}[||X_n||^p] / M^p? They use Markov property: given X_{n-1} = x, probability that X_n has norm > M is <= E_x[||X_n||^p] / M^p. But X_n is X_{n-1} + increments? Actually X_n = X_{n-1} + integral from n-1 to n of drift + noise. So Markov property holds. So fine.
+
+But is the bound E_x[||X_n||^p] <= C_{delta,p} independent of x? Lemma 4.4 says E_x[||X_T||^p] <= C_{T,delta,p} independent of x. So yes.
+
+Thus Theorem 4.5 holds.
+
+Now, the main theorem uses Theorem 2.1 of Wu. That theorem requires strong Feller and topologically irreducible on E. They have that. They also need condition 2: sup_{nu in A} E^nu e^{lambda tau_K} < infinity and sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They only proved sup_{nu} E e^{lambda tau_M} < infinity. But they didn't prove sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. Actually Theorem 2.1 requires both: sup_{nu in A} E^nu e^{lambda tau_K} < infinity and sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They only proved the first part, not the second. But maybe it's implied? They used tau_K <= tau_M. For x in K, tau_K^{(1)} = inf{t >=1: X_t in K}. If starting at x in K, the hitting time after time 1 might be zero? Wait, tau_K^{(1)} defined as inf{t >=1: X_t in K}. If starting at x in K, at time 0 we are in K, but tau_K^{(1)} requires t>=1. So it's the first return after time 1. They didn't bound that. But maybe it's automatically finite? But they didn't prove exponential integrability of tau_K^{(1)} starting from x in K. However, Theorem 2.1 requires sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They didn't provide that. But maybe they can deduce it from the same argument: Starting from x in K, the probability that tau_K^{(1)} > n is bounded by (C/M^p)^n? Actually if start in K, then at time 1, we might be out of K. But we need to bound probability of staying out of K for many steps. They didn't do that. So the missing part might be a false assertion: they claim that the hyper-exponential recurrence condition holds, but they only proved part of it. But maybe the hyper-exponential recurrence condition in Theorem 2.1 only requires sup_{nu} E^nu e^{lambda tau_K} < infinity and sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They only proved the first part; they didn't show the second. But maybe it's easy to show the second from the same argument? Let's analyze: For x in K, we need to bound E^x e^{lambda tau_K^{(1)}}. Since tau_K^{(1)} >= 1, we can write tau_K^{(1)} = 1 + tau_K' where tau_K' is inf{t >= 0: X_{1+t} in K}. But due to Markov property, the distribution of X_{1+t} given X_1 is same as process starting from X_1. But X_1 might not be in K. But we can bound E^x e^{lambda tau_K^{(1)}} <= e^{lambda} sup_{y} E^y e^{lambda tau_K}. Actually: tau_K^{(1)} = 1 + tau_K \circ \theta_1, where \theta_1 is shift. Then E^x e^{lambda tau_K^{(1)}} = e^{lambda} E^x e^{lambda tau_K \circ \theta_1} = e^{lambda} E^x [E^{X_1} e^{lambda tau_K}]. So it's e^{lambda} E^x [E^{X_1} e^{lambda tau_K}]. We need to bound sup_{x in K} E^x E^{X_1} e^{lambda tau_K}. That is e^{lambda} sup_{x in K} E^x [E^{X_1} e^{lambda tau_K}]. But X_1 is random; we can bound E^{X_1} e^{lambda tau_K} <= sup_{y} E^y e^{lambda tau_K}. So E^x e^{lambda tau_K^{(1)}} <= e^{lambda} sup_{y} E^y e^{lambda tau_K}. So if sup_{y} E^y e^{lambda tau_K} < infinity, then sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. So indeed the second part follows from the first part. But they only proved sup_{nu} E^nu e^{lambda tau_M} < infinity. That implies sup_{x} E^x e^{lambda tau_M} < infinity. And tau_K <= tau_M. So sup_{x} E^x e^{lambda tau_K} <= sup_{x} E^x e^{lambda tau_M} < infinity. So condition 2 holds. So that's fine.
+
+Thus no problem there.
+
+But maybe the false assertion is earlier: The claim that the process X is strong Feller and irreducible for alpha in (3/2,2) and beta in (1/2+1/(2alpha), 3/2-1/alpha). They cite Theorem 2.1 of Xu13. Let's check if that theorem indeed holds. In Xu13, the authors studied ergodicity of stochastic real Ginzburg-Landau equation driven by alpha-stable noise. They proved strong Feller and irreducibility under certain conditions. I recall that for alpha-stable noise, strong Feller may require some smoothing properties of the noise. For alpha in (1,2), the noise is heavy-tailed and may not have density. But strong Feller can hold if the noise acts on all modes with enough decay. They require that sum_{k} |beta_k|^2 < infinity? Actually they require that the noise is non-degenerate in all directions? The assumption: C1 gamma_k^{-beta} <= |beta_k| <= C2 gamma_k^{-beta} with beta > 1/2 + 1/(2alpha). This ensures that the noise has enough regularity. They also require beta < 3/2 - 1/alpha. That ensures that the drift has enough smoothing? I'm not fully sure. But maybe the claim that the process is strong Feller for alpha in (3/2,2) is false. Let's examine: In Xu13, they considered alpha in (1,2). They proved strong Feller and irreducibility for alpha in (1,2) under some conditions on beta. Wait, the theorem 3.2 in Xu13: The process is strong Feller for alpha in (1,2) and beta > 1/2 + 1/(2alpha). I think it's correct. So that assertion is true.
+
+Maybe the false assertion is about the rate function J defined by (rate func). They claim J is lower semicontinuous? They didn't state but maybe it's implicit. But the LDP requires J to be good (compact level sets). They claim that property (a1) holds: for any a>=0, {mu: J(mu)<=a} is compact in (M_1(H), tau). That is part of the LDP. But they didn't prove it. But maybe it's true from general theory.
+
+Alternatively, the false assertion might be about the hyper-exponential recurrence condition: They used a discrete-time chain to prove the exponential integrability of the hitting time. But the hyper-exponential recurrence condition requires that the process returns to a compact set in finite expected time. They proved that for integer times, but not necessarily for continuous time. But the condition uses tau_K = inf{t >= 0: X_t in K}. They used tau_M defined at integer times. They noted tau_K <= tau_M. So E e^{lambda tau_K} <= E e^{lambda tau_M}. So it's fine.
+
+But maybe the false assertion is earlier: The claim that the process X is strong Feller and irreducible on H. But the state space H is infinite-dimensional. The strong Feller property may not hold because the noise is alpha-stable and heavy-tailed; the smoothing may be insufficient. But maybe the authors used the result from Xu13. Let's check Xu13: Theorem 3.2 says that the solution of the stochastic real Ginzburg-Landau equation driven by alpha-stable noise is strong Feller and irreducible if alpha in (1,2) and beta > 1/2 + 1/(2alpha). So it's true.
+
+But the authors require alpha in (3/2,2). Maybe they restrict to alpha > 3/2 to ensure some integrability. But the theorem may hold for alpha in (1,2). So it's fine.
+
+Maybe the false assertion is about the existence of a unique mild solution in D([0,∞);H) ∩ D((0,∞);V). They cite Xu13. That might be true.
+
+Let's examine the inequality (e:L4): \|x\|^4_{L^4} <= \|x\|_V^2 \|x\|_H^2 <= \|x\|_V^4. This is a known inequality in 1D. For functions on T, L^4 norm bounded by H^1 and L^2. Yes.
+
+Check inequality (e:3H): \|x^3\|_H <= C \|A^{1/4} x\|_H^2 \|x\|_H <= C \|x\|_V \|x\|_H^2. Let's check: In 1D, \|x^3\|_{L^2} = \|x^3\|_{L^2}. We can use Holder: \|x^3\|_2 <= \|x\|_6^3? Actually L^6? Wait, \|x^3\|_2 = \|x\|_6^3? Because (x^3)^2 = x^6. So \|x^3\|_2 = \|x\|_6^3. In 1D, Sobolev embedding H^1 -> L^∞, but L^6 is also embedded. But they used \|A^{1/4}x\|_H^2 \|x\|_H. We can check: \|A^{1/4}x\|_H = \|x\|_{H^{1/2}}. In 1D, H^{1/2} is embedded in L^4. So \|x\|_{L^4} <= C \|A^{1/4}x\|_H. Then \|x^3\|_{L^2} <= \|x\|_{L^6}^3? Actually x^3 in L^2 -> x in L^6. But we can bound \|x^3\|_2 <= \|x\|_{L^6}^3. But we want \|x^3\|_H <= C \|x\|_{H^{1/2}}^2 \|x\|_H. Might hold. So no issue.
+
+Now, the main theorem states LDP for occupation measure. They use hyper-exponential recurrence. The hyper-exponential recurrence condition is satisfied by Theorem 4.5. That seems fine.
+
+But maybe the false assertion is that the rate function J defined by (rate func) is good. They didn't prove that. But maybe it's known from Donsker-Varadhan theory that J is good if the process is strong Feller and irreducible. But I'm not sure.
+
+Alternatively, the false assertion could be about the moment bound in Lemma 4.1: They claim E[sup_{t<=T} ||A^theta Z_t||^p] <= C T^{p/alpha}. Let's test for alpha close to 1, say alpha=1.1. Then theta < beta - 1/(2alpha). Beta > 1/2 + 1/(2alpha). So theta < something. But does the moment bound hold? For alpha stable noise, the OU process Z_t has stationary distribution with heavy tails. But sup_{t<=T} ||A^theta Z_t||^p may be infinite for p >= alpha? They restrict p<alpha. That might be fine. But the bound may not be linear in T^{p/alpha}. Actually for stable processes, the p-th moment of increments scales like t^{p/alpha}. So sup over [0,T] may scale like T^{p/alpha}. So plausible.
+
+But maybe the false assertion is in Lemma 4.2: The estimate sup_{t in [T/2,T]} ||Y_t||_H <= C(T)(1+ sup ||Z_t||_V). The proof uses differential inequality and comparison with ODE. But the ODE solution g(t) may blow up if g(0) > K_T. But they show g(t) <= K_T + 2K_T(e^{2K_T t} -1)^{-1} <= K_T(1 + 2(e^T -1)^{-1}). For t in [T/2,T], e^{2K_T t} >= e^{K_T T}. But if K_T is large, e^{2K_T t} huge, so bound is close to K_T. So g(t) <= K_T + small. So g(t) <= K_T + 2K_T/(e^{2K_T T} -1). For large K_T, second term is negligible. So g(t) <= K_T(1+ small). So g(t) <= K_T(1+something). So h(t) <= g(t) <= K_T(1+...). So ||Y_t||_H^2 <= constant * K_T. So ||Y_t||_H <= sqrt(constant * K_T). So sup_{t} ||Y_t||_H <= C sqrt{K_T}. But they claim <= C(1+ sup ||Z_t||_V). sqrt{K_T} = sqrt{sqrt{C(1+||Z||^4)}} = (C(1+||Z||^4))^{1/4} <= C' (1+||Z||_V). So bound holds. So fine.
+
+Now, potential false assertion: The hyper-exponential recurrence condition uses the hitting time tau_K defined as inf{t>=0: X_t in K}. They considered tau_M defined at integer times. They note tau_K <= tau_M. But is it true that tau_M <= tau_K? Actually tau_M = inf{k>=1: X_k in K}. If the process enters K at time t < 1, tau_K < 1 but tau_M >=1. So tau_K <= tau_M. So E e^{lambda tau_K} <= E e^{lambda tau_M}. So bounding tau_M suffices. So okay.
+
+But maybe the false assertion is that tau_K <= tau_M, but they used tau_K <= tau_M in the argument: "It is obvious that tau_K <= tau_M, tau_K^{(1)} <= tau_M." This is correct. So no issue.
+
+But maybe the false assertion is that sup_{nu} E^nu e^{lambda tau_M} < infinity implies sup_{nu} E^nu e^{lambda tau_K} < infinity. Since tau_K <= tau_M, E e^{lambda tau_K} <= E e^{lambda tau_M}. So yes.
+
+Now, maybe the false assertion is earlier: In the introduction, they claim that the Markov process X is strong Feller and irreducible for alpha in (3/2,2). But maybe the result in Xu13 only holds for alpha in (1,2). But they restrict to (3/2,2) for some reason. But that is not false. It's a subset.
+
+But maybe the false assertion is that the LDP holds for any initial measure nu in M_1(H). But maybe the LDP only holds for initial measure absolutely continuous w.r.t. invariant measure? But hyper-exponential recurrence condition requires sup over all initial measures. They proved that sup_{nu} E e^{lambda tau_M} < infinity. That holds for all nu. So LDP holds for all initial measures.
+
+But maybe the false assertion is that the rate function J defined by (rate func) is finite for all mu. But J may be infinite for some mu. But that's fine.
+
+Let's look at the statement "For all initial state X_0 and all continuous and bounded functions Psi, we have the ergodic theorem." That is standard.
+
+Let's examine the definition of the occupation measure: L_t(A) = (1/t) ∫_0^t δ_{X_s}(A) ds. That is correct.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible on H. But the state space H is infinite-dimensional. The strong Feller property may fail for heavy-tailed noise. But they refer to Xu13, which may have proven it. Let's check Xu13: In "Ergodicity of the stochastic real Ginzburg-Landau equation driven by α-stable noises", they studied the existence of invariant measure and strong Feller property. They used a smoothing property of the semigroup. They may have proven strong Feller for alpha in (1,2). So it's okay.
+
+Let's check the assumption on beta: They require beta > 1/2 + 1/(2alpha). That ensures that the noise has enough regularity. But also require beta < 3/2 - 1/alpha. That ensures something about the drift. But maybe the upper bound is too restrictive? But it's okay.
+
+Maybe the false assertion is that the process X is irreducible in H. Irreducibility means that for any x and any non-empty open set O, P_t(x,O) > 0 for all t>0. For alpha-stable noise, irreducibility may hold if the noise acts on all modes. The assumption on beta ensures that the noise acts on all modes with decaying amplitude. That might be enough. So okay.
+
+Now, let's look at Lemma 4.4: They claim E_x[||X_T||^p_{H_delta}] <= C_{T,delta,p} independent of x. They used Lemma 4.3 and Lemma 4.1. That seems plausible.
+
+But maybe the false assertion is that sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They didn't prove it. But we argued that it follows from sup_{x} E^x e^{lambda tau_K} < infinity. But they didn't prove sup_{x} E^x e^{lambda tau_K} < infinity. They only proved sup_{nu} E^nu e^{lambda tau_M} < infinity. But sup_{x} E^x e^{lambda tau_M} <= sup_{nu} E^nu e^{lambda tau_M} because for delta measure at x, we get sup_{x} E^x e^{lambda tau_M} <= sup_{nu} E^nu e^{lambda tau_M}. So yes, sup_{x} E^x e^{lambda tau_M} < infinity. And tau_K <= tau_M. So sup_{x} E^x e^{lambda tau_K} <= sup_{x} E^x e^{lambda tau_M} < infinity. So condition holds.
+
+Thus no issue.
+
+Maybe the false assertion is that the hyper-exponential recurrence condition holds for any initial measure nu in M_1(H). But they only proved it for discrete times. But we argued it's okay.
+
+Let's consider the statement "The process X is strong Feller and irreducible in H." They didn't mention that the semigroup is strong Feller for all t>0? They refer to Theorem 2.1 of Xu13. That theorem states that the semigroup is strong Feller for t>0. So okay.
+
+Now, maybe the false assertion is about the LDP for occupation measure. The hyper-exponential recurrence criterion is used to prove LDP for occupation measure. But the theorem of Wu requires that the process is strong Feller and topologically irreducible. But the state space H is infinite-dimensional, but the topology is the usual Hilbert space topology. The process may not be topologically irreducible in H? But they claim it is. But irreducibility in infinite dimensions may be subtle. But they refer to Xu13, which proves irreducibility in H. So it's okay.
+
+But maybe the false assertion is that the LDP holds with respect to the tau-topology, which is stronger than weak topology. They claim that the LDP holds for tau-topology. But the hyper-exponential recurrence criterion yields LDP for tau-topology. So okay.
+
+Maybe the false assertion is that the rate function J defined by (rate func) is good (compact level sets). But they didn't prove it. But maybe it's known that J is good for strong Feller and irreducible processes. But I'm not sure.
+
+Let's search for potential false statement: In Theorem 2.1 of Wu, the condition (a3) states sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They used tau_K^{(1)} defined as inf{t>=1: X_t in K}. They used tau_K <= tau_M and tau_K^{(1)} <= tau_M. But tau_K^{(1)} <= tau_M? Let's examine: tau_K^{(1)} = inf{t>=1: X_t in K}. tau_M = inf{k>=1: X_k in K}. For any t>=1, if X_t in K, then at some integer k <= t, X_k in K? Not necessarily. For t=1.5, if X_{1.5} in K but X_1 not in K and X_2 not in K, tau_M = 2. So tau_K^{(1)} <= 1.5 but tau_M = 2. So tau_K^{(1)} <= tau_M is not always true: tau_K^{(1)} could be less than tau_M. Wait, we want tau_K^{(1)} <= tau_M? Actually tau_K^{(1)} = inf{t>=1: X_t in K}. tau_M = inf{k>=1: X_k in K}. Since the infimum over continuous times may be less or equal to infimum over integer times. So tau_K^{(1)} <= tau_M. So yes, tau_K^{(1)} <= tau_M. So it's okay.
+
+Thus condition sup_{x} E^x e^{lambda tau_K^{(1)}} <= sup_{x} E^x e^{lambda tau_M} < infinity. So satisfied.
+
+Thus no problem.
+
+Now, maybe the false assertion is about the assumption that the noise L_t has i.i.d. symmetric alpha-stable processes l_k(t) with alpha>1. But for alpha <=1, the process may not have finite first moment. But they assume alpha>1. So fine.
+
+Perhaps the false assertion is that the process X has a unique invariant measure pi. They cite Xu13. That is true.
+
+Now, maybe the false assertion is that the rate function J defined by (rate func) is given by the infimum over stationary measures Q with marginal Q_0 = mu. But maybe the correct definition of J includes an inf over all stationary measures Q? But they used J defined as inf over stationary measures Q with Q_0 = mu. That is standard.
+
+But maybe the false assertion is that the rate function J is good. But we don't know.
+
+Let's examine the proof of Lemma 4.2: They used the inequality 2⟨Y_t, N(Y_t+Z_t)⟩ <= -||Y_t||_{L^4}^4 + C(1+||Z_t||_{L^4}^4). But is this inequality correct? Let's derive: N(u)=u-u^3. Then N(Y+Z) = Y+Z - (Y+Z)^3. Then ⟨Y, N(Y+Z)⟩ = ⟨Y, Y+Z⟩ - ⟨Y, (Y+Z)^3⟩. They use the Young inequalities to bound ⟨Y, (Y+Z)^3⟩. They also bound ⟨Y, Y+Z⟩ = ||Y||^2 + ⟨Y,Z⟩. Then they combine terms. The inequality they got: 2⟨Y_t, N(Y_t+Z_t)⟩ <= -||Y_t||_{L^4}^4 + C(1+||Z_t||_{L^4}^4). Let's check if this is correct.
+
+Compute ⟨Y, (Y+Z)^3⟩. Expand (Y+Z)^3 = Y^3 + 3 Y^2 Z + 3 Y Z^2 + Z^3. Then ⟨Y, Y^3⟩ = ∫ Y^4 = ||Y||_{L^4}^4. Then ⟨Y, 3 Y^2 Z⟩ = 3 ∫ Y^3 Z. ⟨Y, 3 Y Z^2⟩ = 3 ∫ Y^2 Z^2. ⟨Y, Z^3⟩ = ∫ Y Z^3. So ⟨Y, (Y+Z)^3⟩ = ||Y||_{L^4}^4 + 3∫ Y^3 Z + 3∫ Y^2 Z^2 + ∫ Y Z^3.
+
+Now, ⟨Y, Y+Z⟩ = ||Y||^2 + ⟨Y,Z⟩. So 2⟨Y, N(Y+Z)⟩ = 2⟨Y, Y+Z⟩ - 2⟨Y, (Y+Z)^3⟩ = 2||Y||^2 + 2⟨Y,Z⟩ - 2||Y||_{L^4}^4 - 6∫ Y^3 Z - 6∫ Y^2 Z^2 - 2∫ Y Z^3.
+
+Now, we want to bound this by -||Y||_{L^4}^4 + C(1+||Z||_{L^4}^4). The cross terms need to be controlled. We can use inequalities: |∫ Y^3 Z| <= (1/C1)∫ Y^4 + C2 ∫ Z^4. Similarly for Y^2 Z^2: |∫ Y^2 Z^2| <= (1/C1)∫ Y^4 + C2 ∫ Z^4. For Y Z^3: |∫ Y Z^3| <= (1/C1)∫ Y^4 + C2 ∫ Z^4. So each cross term can be bounded by (1/C1)∫ Y^4 + C2 ∫ Z^4. Summing up, we get 6 times those cross terms, each with 1/C1 factor. So we get 6*(1/C1)∫ Y^4 + 6*C2∫ Z^4. So overall, 2⟨Y, N(Y+Z)⟩ <= 2||Y||^2 + 2⟨Y,Z⟩ - 2||Y||_{L^4}^4 - 6*(1/C1)∫ Y^4 - 6*C2∫ Z^4. Combine -2||Y||_{L^4}^4 - 6*(1/C1)∫ Y^4 = -(2+6/C1)∫ Y^4. So it's negative. The 2||Y||^2 + 2⟨Y,Z⟩ term may be bounded by something like C||Z||^2? Actually 2||Y||^2 + 2⟨Y,Z⟩ <= 2||Y||^2 + 2||Y|| ||Z|| <= 3||Y||^2 + ||Z||^2. But we want to bound by something like C(1+||Z||^4). But 3||Y||^2 term may not be bounded by that. But we might use that Y satisfies some dissipative property that ensures ||Y||^2 decays. But in the differential inequality, they may have used the term -||Y||_{L^4}^4 to dominate the positive terms. But the positive terms include 2||Y||^2 + 2⟨Y,Z⟩. We need to show that 2||Y||^2 + 2⟨Y,Z⟩ <= C(1+||Z||^4). But is that true? We can use Young: 2⟨Y,Z⟩ <= ||Y||^2 + ||Z||^2. So 2||Y||^2 + 2⟨Y,Z⟩ <= 3||Y||^2 + ||Z||^2. But we need to bound ||Y||^2 by something like C(1+||Z||^4). But we don't have such a bound. But maybe we can use that ||Y||^2 <= (1/2) ||Y||_{L^4}^4 + C||Y||^2? Wait, we have inequality: ||Y||^2 <= (1/2)||Y||_{L^4}^4 + C. Actually by interpolation: ||Y||_{L^4}^4 <= ||Y||_V^2 ||Y||_H^2. But we don't have a bound for ||Y||_V. But we can use that -||Y||_{L^4}^4 term dominates the positive terms if we choose constants appropriately. But it's not obvious.
+
+Let's examine the inequality they derived: 2⟨Y_t, N(Y_t+Z_t)⟩ <= -||Y_t||_{L^4}^4 + C(1+||Z_t||_{L^4}^4). They claim this inequality holds for some constant C. Let's test with extreme values: Suppose Z_t is small, say 0. Then we want 2⟨Y, Y - Y^3⟩ <= -||Y||_{L^4}^4 + C. Compute: 2⟨Y, Y - Y^3⟩ = 2||Y||^2 - 2||Y||_{L^4}^4. So inequality becomes 2||Y||^2 - 2||Y||_{L^4}^4 <= -||Y||_{L^4}^4 + C => 2||Y||^2 - 2||Y||_{L^4}^4 <= -||Y||_{L^4}^4 + C => 2||Y||^2 - ||Y||_{L^4}^4 <= C. So we need 2||Y||^2 <= C + ||Y||_{L^4}^4. But for large Y, ||Y||_{L^4}^4 dominates ||Y||^2? In 1D, by Sobolev embedding, ||Y||_{L^4}^4 <= C ||Y||_V^2 ||Y||_H^2. But we don't have bound on ||Y||_V. But for large Y, maybe ||Y||_{L^4}^4 is large relative to ||Y||^2? In 1D, by interpolation, ||Y||_{L^4}^4 <= C ||Y||_V^2 ||Y||_H^2. But we don't know about ||Y||_V. But we can use Poincare inequality: ||Y||_V^2 >= λ_1 ||Y||_H^2. So ||Y||_{L^4}^4 <= C λ_1 ||Y||_H^4. So for large Y, ||Y||_{L^4}^4 ~ C ||Y||_H^4. Then 2||Y||^2 <= C + C' ||Y||^4. For large Y, this holds. So inequality holds for large Y. For small Y, we can bound 2||Y||^2 <= C. So overall, inequality holds. So fine.
+
+Thus the inequality is plausible.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible for alpha in (3/2,2). But maybe irreducibility fails for alpha close to 3/2? But I think it's fine.
+
+Let's look at the statement: "For any initial state X_0 and all continuous and bounded functions Psi, we have the ergodic theorem." This is standard.
+
+Maybe the false assertion is about the existence of unique invariant measure pi. They claim uniqueness of invariant measure. That is true.
+
+Now, maybe the false assertion is about the existence of an invariant measure for alpha in (3/2,2). But maybe the invariant measure exists for all alpha >1. But they restrict to (3/2,2). So it's fine.
+
+Now, maybe the false assertion is about the "hyper-exponential recurrence criterion" requiring "topologically irreducible" but they only have "irreducible" in the sense of Markov process. But topological irreducibility might be stronger. But they claim "irreducible" implies "topologically irreducible". In the definition earlier, irreducible means P_t 1_O(x) > 0 for all x and non-empty open O. That is indeed topological irreducibility. So fine.
+
+Now, maybe the false assertion is about the statement "the family P_nu(L_T in .) satisfies the LDP uniformly for any initial measure nu in M_1(H)." But the hyper-exponential recurrence condition is verified for all initial measures. So yes.
+
+Now, maybe the false assertion is about the existence of the rate function J defined by (rate func). They didn't prove J is good. But maybe it's known that J is good for strong Feller and irreducible processes. But I'm not certain.
+
+Let's look at the statement: "the rate function J defined by (rate func) below." They refer to equation (rate func) at 0520. That is J(μ) = inf{H(Q): Q in M_1^s(Ω) and Q_0 = μ}. That is standard.
+
+Now, maybe the false assertion is that the rate function J is lower semicontinuous. But they didn't prove it. But it's known.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for all initial measures, but they only proved it for discrete-time chain. But we argued it's fine.
+
+But perhaps the false assertion is that the process X has a unique invariant measure π. But in Xu13, the invariant measure might not be unique for all alpha? But they restrict to α > 3/2. But maybe uniqueness fails for some α? But I'm not sure.
+
+Let's examine the assumption on β: β > 1/2 + 1/(2α) and β < 3/2 - 1/α. For α close to 3/2, the upper bound becomes 3/2 - 2/3 = 5/6? Wait, 1/α for α=3/2 is 2/3. So upper bound is 3/2 - 2/3 = 5/6. Lower bound is 1/2 + 1/(2α) = 1/2 + 1/(3) = 5/6. So lower bound equals upper bound. So for α=3/2, the interval is empty. But they require α in (3/2,2). So α>3/2, so lower bound < upper bound. So okay.
+
+Now, maybe the false assertion is that the LDP holds for α in (3/2,2). But maybe the hyper-exponential recurrence condition fails for α near 3/2? But they require β < 3/2 - 1/α. For α close to 3/2, this upper bound is close to lower bound. But there is still a range. So maybe it's fine.
+
+Now, let's examine the lemma about Z_t: Lemma 4.1. They claim E[sup_{0<=t<=T} ||A^θ Z_t||^p] <= C T^{p/α}. The OU process Z_t = ∫_0^t e^{-A(t-s)} dL_s. For each mode k, z_k(t) = ∫_0^t e^{-γ_k(t-s)} β_k dl_k(s). For a symmetric α-stable process l_k, the increments have scaling property: E[|∫_0^t e^{-γ_k(t-s)} β_k dl_k(s)|^p] <= C (∫_0^t e^{-γ_k(t-s)}^α ds)^{p/α} β_k^p? Actually for α-stable integrals, the p-th moment (p<α) of ∫ f(s) dl(s) is proportional to (∫ |f(s)|^α ds)^{p/α}. So E[|z_k(t)|^p] <= C β_k^p (∫_0^t e^{-α γ_k(t-s)} ds)^{p/α} = C β_k^p ( (1 - e^{-α γ_k t})/(α γ_k) )^{p/α} <= C β_k^p (1/(α γ_k))^{p/α}. So sup_{t<=T} |z_k(t)|^p <= C β_k^p γ_k^{-p/α}. Then sum over k of γ_k^{2θ} |z_k|^2? Wait, we need to compute E[sup ||A^θ Z_t||^p] = E[ sup (∑ γ_k^{2θ} |z_k(t)|^2)^{p/2} ]. Hard to bound. But maybe the bound holds.
+
+But maybe the false assertion is that sup_{t<=T} ||A^θ Z_t||^p is bounded by C T^{p/α}. But for θ close to β - 1/(2α), maybe the sum diverges. But they restrict θ < β - 1/(2α). That ensures that the sum over k of γ_k^{2θ} β_k^p γ_k^{-p/α} converges. Let's check: β_k ~ γ_k^{-β}. So β_k^p γ_k^{-p/α} ~ γ_k^{-β p - p/α}. Multiply by γ_k^{2θ} to get exponent: 2θ - β p - p/α. Sum over k of γ_k^{exponent} converges if exponent < -1? Wait, in 1D, γ_k ~ k^2. So sum over k of k^{exponent} converges if exponent < -1. So we need 2θ - β p - p/α < -1. For p small, we can choose. They restrict θ < β - 1/(2α). That ensures something like 2θ < 2β - 1/α. Then 2θ - β p - p/α < 2β - 1/α - β p - p/α = 2β(1 - p/2) - (1/α)(1+p). For p small, this may be < -1. So maybe it's fine.
+
+Thus no obvious false.
+
+Now, maybe the false assertion is about the hyper-exponential recurrence condition requiring sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. They only proved sup_{nu} E^nu e^{lambda tau_M} < infinity. But we argued that sup_{x} E^x e^{lambda tau_K} < infinity. But we need sup_{x in K} E^x e^{lambda tau_K^{(1)}}. But we argued that sup_{x in K} E^x e^{lambda tau_K^{(1)}} <= e^{lambda} sup_{x} E^x e^{lambda tau_K}. So if sup_{x} E^x e^{lambda tau_K} < infinity, then sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. So condition holds. So no issue.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for all initial measures. But they only proved for discrete times. But we argued it's fine.
+
+Thus far, no false assertion obvious. But the problem says at least one assertion is false. We need to find a concrete counterexample. So maybe there is a subtle false statement.
+
+Let's examine the statement "The process X is strong Feller and irreducible in H, and X admits a unique invariant measure π." They cite Xu13. But maybe the uniqueness of invariant measure requires some condition on β. They require β > 1/2 + 1/(2α). That ensures the noise has enough smoothing. But maybe the invariant measure is not unique if β is too small. But they restrict to β > ... So fine.
+
+Now, maybe the false assertion is that the process X is strong Feller for α in (3/2,2). But maybe strong Feller holds only for α in (1,2). But they restrict to (3/2,2). So fine.
+
+Now, maybe the false assertion is about the existence of the unique invariant measure π. But maybe the existence holds for all α>1 but uniqueness holds only for α>something else. But they restrict to α>3/2. So maybe uniqueness holds for α>3/2. So fine.
+
+Now, maybe the false assertion is about the definition of the occupation measure. They define L_t(A) = (1/t) ∫_0^t δ_{X_s}(A) ds. That's fine.
+
+Now, maybe the false assertion is about the large deviation principle for occupation measure. They claim the LDP holds for τ-topology. But maybe the LDP holds only for weak topology? But the hyper-exponential recurrence criterion yields LDP for τ-topology. So maybe it's fine.
+
+Let's examine the proof of Lemma 4.2: They use the differential inequality for h(t). They then compare to ODE g(t). They then claim that g(t) <= K_T(1+2(e^T-1)^{-1}) for t in [T/2,T]. But this bound might not hold if K_T is large? But they show g(t) <= K_T + 2K_T(e^{2K_T t} - 1)^{-1} <= K_T (1 + 2(e^{T}-1)^{-1}). But is e^{2K_T t} >= e^{2K_T T/2} = e^{K_T T}. So (e^{2K_T t} - 1)^{-1} <= (e^{K_T T} - 1)^{-1} <= e^{-K_T T}. So 2K_T(e^{2K_T t} - 1)^{-1} <= 2K_T e^{-K_T T}. So g(t) <= K_T + 2K_T e^{-K_T T}. So g(t) <= K_T (1 + 2 e^{-K_T T}). But they use (e^T -1)^{-1} instead of e^{-K_T T}. But e^{-K_T T} <= (e^T -1)^{-1} if K_T >= 1? Wait, e^{-K_T T} <= e^{-T} <= (e^T -1)^{-1} for T>0? Let's check: e^{-T} <= (e^T -1)^{-1} => e^{-T} <= 1/(e^T - 1) => e^{-T}(e^T - 1) <= 1 => 1 - e^{-T} <= 1 => holds. So e^{-T} <= (e^T -1)^{-1}. But e^{-K_T T} <= e^{-T} for K_T >= 1. So e^{-K_T T} <= e^{-T} <= (e^T -1)^{-1}. So 2K_T e^{-K_T T} <= 2K_T (e^T -1)^{-1}. So g(t) <= K_T + 2K_T(e^T -1)^{-1} = K_T(1 + 2(e^T -1)^{-1}). So the bound holds. So fine.
+
+Now, maybe the false assertion is that sup_{x in K} E^x e^{lambda tau_K^{(1)}} < infinity. But we argued it's fine.
+
+Now, maybe the false assertion is about the existence of the unique invariant measure π for α in (3/2,2). But maybe the invariant measure exists but is not unique? But they cite Xu13, which proves uniqueness for α in (1,2). So fine.
+
+Let's examine the statement "We establish a large deviation principle for the occupation measure of the stochastic real Ginzburg-Landau equation driven by α-stable noises." But maybe the LDP does not hold because the noise is heavy-tailed and the process is not exponentially ergodic. But they claim hyper-exponential recurrence yields LDP. But maybe the process is not exponentially mixing? But they cite Xu13 for exponential mixing. Actually Xu13 shows exponential mixing in total variation under some conditions. But they say "exponential mixing" but maybe it's not exponential mixing for all α? But they restrict to α in (3/2,2). So maybe it's fine.
+
+Let's check the assumption on β: β > 1/2 + 1/(2α) ensures that the noise has enough regularity. But they also require β < 3/2 - 1/α. This ensures that the drift term is dissipative enough? But maybe the upper bound is too restrictive. But maybe it's fine.
+
+Let's examine the proof of Theorem 4.5: They use Chebyshev inequality with p < alpha/4. They need p > 0. They use E_x[||X_n||_{H_delta}^p] <= C_{delta,p} independent of x. They used Lemma 4.4. But Lemma 4.4 requires p in (0, alpha/4). So they choose p in that range. So fine.
+
+Now, maybe the false assertion is that the process X has a unique invariant measure pi. But maybe the invariant measure is not unique because the drift is not dissipative enough for large beta? But they restrict to beta < 3/2 - 1/α. So maybe it's fine.
+
+Let's examine the assumption that the noise coefficients satisfy C1 γ_k^{-β} <= |β_k| <= C2 γ_k^{-β} with β > 1/2 + 1/(2α). This ensures that the noise has enough smoothing. But maybe the noise does not act on all modes? But they require that for all k, β_k non-zero. So yes.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible for all α > 1. But maybe it's not true for α close to 1? But they restrict to α > 3/2. So it's fine.
+
+Let's examine the statement "For any initial state X_0 and all continuous and bounded functions Psi, we have the ergodic theorem." That holds for any stationary process with unique invariant measure. So fine.
+
+Now, maybe the false assertion is that the rate function J defined by (rate func) is finite for all μ. But J may be infinite for some μ. But it's okay.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for all initial measures. But they only proved for discrete times. But we argued it's fine.
+
+Thus I'm still not seeing a clear false statement.
+
+Let's examine the statement "The process X is strong Feller and irreducible in H, and X admits a unique invariant measure π." They cite Xu13. But maybe Xu13 only proves irreducibility for α in (1,2) but not for α > 3/2? But it's still true. So no.
+
+Let's examine the statement "We shall study 1D stochastic Ginzburg-Landau equation on T as the following." They define the equation. They set N(u) = u - u^3. They define L_t as sum of β_k l_k(t) e_k. They require that β_k satisfy C1 γ_k^{-β} <= |β_k| <= C2 γ_k^{-β} with β > 1/2 + 1/(2α). They also require β < 3/2 - 1/α. But maybe the upper bound is wrong: the noise coefficient may need to be small enough for existence of solution. But they require β > 1/2 + 1/(2α). The upper bound might be too restrictive: maybe the existence of invariant measure requires β < 3/2 - 1/α, but not necessary for LDP. But they restrict anyway. So fine.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible on H. But maybe the strong Feller property fails for α close to 1? But they restrict to α > 3/2. So it's fine.
+
+Let's examine the statement "For any initial state X_0 and all continuous and bounded functions Psi, we have the ergodic theorem." That holds for any unique invariant measure. So fine.
+
+Now, maybe the false assertion is about the moment bound for Z_t: E[sup_{t<=T} ||A^θ Z_t||^p] <= C T^{p/α}. But maybe the sup over t may produce a factor of T^{p/α} times some log factor. But maybe it's fine.
+
+Let's examine the statement "For all T>0, 0 <= θ < β - 1/(2α) and any 0<p<α, we have E[sup_{0 <= t <= T} ||A^θ Z_t||^p] <= C T^{p/α}." For α close to 1, p can be close to 1, but T^{p/α} ~ T^p. For small T, sup may be large. But it's okay.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for any λ>0. But maybe the bound fails for large λ because the exponential integrability of hitting time may fail. But they show that for any λ>0, we can choose M large enough such that sup_{nu} E^nu e^{λ τ_M} < ∞. That is fine.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition requires sup_{nu} E^nu e^{λ τ_K} < ∞ for some compact K. But they prove for some M. But maybe the process might not return to any compact set in finite time with exponential integrability. But they show that for large M, the probability of staying out of K decays exponentially fast. But is that true? Let's examine the bound: P(tau_M > n) <= (C/M^p)^n. That decays exponentially in n. So the tail of tau_M decays exponentially. So E e^{λ τ_M} < ∞ if M > (C e^λ)^{1/p}. So yes.
+
+But is the bound P(tau_M > n) <= (C/M^p)^n valid? They used induction: P(tau_M > n) <= (C/M^p)^n. But we need to check base case: P(tau_M > 1) <= C/M^p? They used P(B_1) <= C/M^p. But B_1 = {||X_1|| > M}. They used Chebyshev: P(||X_1|| > M) <= E[||X_1||^p] / M^p <= C/M^p. So base case holds. Induction: P(tau_M > n) = P(B_n) <= P(B_{n-1}) * C/M^p. Because P(B_n | B_{n-1}) <= C/M^p. But is that conditional probability independent of B_{n-1}? They used Markov property: P(B_n | B_{n-1}) = P_{X_{n-1}}(||X_n|| > M). But X_{n-1} is random but B_{n-1} implies X_{n-1} not in K? Actually B_{n-1} = {||X_j|| > M for j=1,...,n-1}. So X_{n-1} is not in K. So we condition on X_{n-1} not in K. Then P(B_n | B_{n-1}) = E_{X_{n-1}}[1_{||X_n|| > M} | X_{n-1}]. But we can bound it by sup_{x not in K} P_x(||X_1|| > M). But they used sup_{x} E_x[||X_1||^p] / M^p. But that bound holds for all x, including those not in K. So it's fine.
+
+Thus the bound holds.
+
+Now, maybe the false assertion is that the rate function J defined by (rate func) is lower semicontinuous. But they didn't prove it. But maybe it's known.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible for all α in (3/2,2). But maybe the strong Feller property fails for α close to 2? But no.
+
+Let's examine the assumption that β < 3/2 - 1/α. For α close to 2, 3/2 - 1/α = 3/2 - 0.5 = 1.0. So β < 1.0. But also β > 1/2 + 1/(2α). For α=2, lower bound is 1/2 + 1/4 = 0.75. So β in (0.75, 1). So okay.
+
+But for α=1.6, 3/2 - 1/α = 1.5 - 0.625 = 0.875. Lower bound: 1/2 + 1/(2α) = 0.5 + 1/(3.2) = 0.5 + 0.3125 = 0.8125. So β in (0.8125, 0.875). So small interval. But still exists.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for any λ>0. But maybe for λ large, the bound M > (C e^λ)^{1/p} may not be finite? But it's finite for any λ. So fine.
+
+Now, maybe the false assertion is that the process X is strong Feller and irreducible for α in (3/2,2). But maybe the irreducibility fails if the noise coefficient β_k decays too fast? But they require β > 1/2 + 1/(2α). That ensures noise acts on all modes. So fine.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for any compact K. But they only proved for K = {x: ||x||_{H_delta} <= M}. But maybe the process may not return to any compact set in finite time? But they proved for that set.
+
+Now, maybe the false assertion is that the LDP holds uniformly for all initial measures. But maybe the LDP only holds for initial measures with finite p-th moment? But they require sup_{nu} E^nu e^{λ τ_M} < ∞, which holds for any measure. So fine.
+
+Now, maybe the false assertion is that the rate function J is good. But they didn't prove it. But it's known that J is good for strong Feller and irreducible processes. But maybe not always? But likely yes.
+
+Now, maybe the false assertion is that the process X has a unique invariant measure π. But maybe the existence of invariant measure requires β > 1/2 + 1/(2α). But they satisfy that. So fine.
+
+Now, maybe the false assertion is about the function space H_delta. They define H_delta = D(A^δ). For δ in (0,1/2). So H_delta is a subspace of V. They use the norm ||x||_{H_delta} = ||A^δ x||_H. For δ in (0,1/2), H_delta is compactly embedded in H. So K = {x: ||x||_{H_delta} <= M} is compact in H. So fine.
+
+Now, maybe the false assertion is that the process X has a unique invariant measure π in M_1(H). But maybe the invariant measure is not unique because the drift is not globally Lipschitz? But they restrict to α > 3/2 and β > ... ensures dissipativity. So fine.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition requires sup_{x in K} E^x e^{λ τ_K^{(1)}} < ∞. They only proved sup_{x} E^x e^{λ τ_K} < ∞. But we argued it's enough. But maybe the inequality sup_{x in K} E^x e^{λ τ_K^{(1)}} < ∞ does not follow from sup_{x} E^x e^{λ τ_K} < ∞. Let's check carefully: For x in K, τ_K^{(1)} = inf{t >= 1: X_t in K}. This is the first return time after time 1. We want E^x e^{λ τ_K^{(1)}}. We can bound it by e^{λ} E^x e^{λ τ_K}. But τ_K is the first hitting time of K from time 0. Since x ∈ K, τ_K = 0. So e^{λ} E^x e^{λ τ_K} = e^{λ} * 1 = e^{λ}. That's finite. But we need to bound E^x e^{λ τ_K^{(1)}}. We can write τ_K^{(1)} = inf{t >= 1: X_t in K} = 1 + inf{t >= 0: X_{1+t} in K} = 1 + τ_K' where τ_K' is the hitting time of K for the process starting from X_1. So E^x e^{λ τ_K^{(1)}} = e^{λ} E^x [E^{X_1} e^{λ τ_K}]. Now, for X_1, we don't know if it's in K. But we can bound E^{X_1} e^{λ τ_K} <= sup_{y} E^y e^{λ τ_K}. So E^x e^{λ τ_K^{(1)}} <= e^{λ} sup_{y} E^y e^{λ τ_K}. So if sup_{y} E^y e^{λ τ_K} < ∞, then sup_{x in K} E^x e^{λ τ_K^{(1)}} < ∞. So it's fine. So no problem.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for any λ>0. But maybe the constant C_{delta,p} depends on p, and for p close to 0, the bound may not be uniform. But they choose p small but fixed. So fine.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for any λ>0, but the constant M depends on λ. But that's fine.
+
+Now, maybe the false assertion is that the LDP holds for τ-topology. But maybe the LDP holds only for weak topology. But hyper-exponential recurrence criterion yields LDP for τ-topology. So it's fine.
+
+Now, maybe the false assertion is that the rate function J defined by (rate func) is indeed the Donsker-Varadhan rate function. But maybe the rate function is not given by that infimum for infinite-dimensional processes. But I think it's correct.
+
+Now, maybe the false assertion is that the LDP holds uniformly for all initial measures. But maybe the hyper-exponential recurrence condition only gives uniform LDP for initial measures in some subset A. But they claim uniform for all nu in M_1(H). But Theorem 2.1 of Wu says uniform for initial measures in A. They choose A = M_1(H). But they need sup_{nu} E^nu e^{λ τ_K} < ∞. They proved that for all nu. So uniform holds.
+
+Now, maybe the false assertion is that the process X is irreducible. But maybe irreducibility fails if the noise does not act on all modes. But they require β > 1/2 + 1/(2α). That ensures noise acts on all modes. So fine.
+
+Now, maybe the false assertion is that the process X is strong Feller. But maybe strong Feller fails because the noise is heavy-tailed. But Xu13 proves strong Feller for α in (1,2). So fine.
+
+Thus we haven't found a false assertion.
+
+Let's examine the statement "For any initial state X_0 and all continuous and bounded functions Psi, we have the ergodic theorem." This is standard for ergodic Markov processes. But maybe the ergodic theorem requires that the process is ergodic, which holds.
+
+Now, maybe the false assertion is that the process X has a unique invariant measure π. But maybe the invariant measure is not unique for all β in the given range. But they restrict to β > lower bound and < upper bound. That ensures uniqueness.
+
+Now, maybe the false assertion is that the hyper-exponential recurrence condition holds for the process X. But maybe the process X does not satisfy the condition because the hitting time of K may not have exponential moments. But they proved it.
+
+Now, maybe the false assertion is that the function J defined by (rate func) is a good rate function. But maybe it's not good. But we can check: J(μ) = inf{H(Q): Q_0 = μ}. For strong Feller and irreducible processes, J is good. So fine.
+
+Now, maybe the false assertion is that the LDP holds for τ-topology. But maybe the LDP holds only for weak topology. But hyper-exponential recurrence yields LDP for τ-topology. So fine.
+
+Now, maybe the false assertion is

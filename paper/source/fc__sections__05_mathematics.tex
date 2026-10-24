@@ -1,0 +1,53 @@
+\section{From Finding a Failure to Understanding the Mathematics}
+\label{sec:mathematics}
+\label{sec:mathematical-results}
+Each case study below moves from a single counterexample to a theorem that explains an entire family of failures. The initial graph and integer-coloring counterexamples were found by language models asked to prove or refute the statements, without access to BugBank. We developed the family theorems and proofs with the help of AI tools. These follow-ups do not test whether retrieving stored dossiers helps mathematical discovery. Appendices~\ref{app:sqrt-proof} and~\ref{app:structural-case-studies} give the complete proofs.
+
+\subsection{A square-root algorithm: from one failure to a complete correction}
+This supplementary analysis concerns a printed integer square-root algorithm whose original dossier is outside the human-approved core because a human reviewer questioned its reading of the source (Appendix~\ref{app:auditing-exhibits}). The results below concern the printed recurrence itself.
+
+\paragraph{Claim and counterexample.}
+The final algorithm in \citetalias{alhassy2018sqrtanswer} is intended to compute the integer square root $\lfloor\sqrt{x}\rfloor$ of a nonnegative integer $x$: the greatest integer whose square does not exceed $x$. It starts with answer zero at zero. Given answer $b$ at $x-1$, it returns $b$ if $x\le(b+1)^2$ and $b+1$ otherwise. At $x=1$ the weak guard $1\le(0+1)^2$ holds, so the algorithm wrongly returns zero; at $x=4$ it still returns one, reaching two only at $x=5$.
+
+\paragraph{Structural insight.}
+Because the guard tests $x\le(b+1)^2$ rather than strict inequality, for every positive input $x$ the printed algorithm returns $\lfloor\sqrt{x-1}\rfloor$, lagging the true integer square root by one input. Replacing $\le$ with $<$, the correction proposed in the source, removes this delay. Induction proves both statements. Because $\lfloor\sqrt{x}\rfloor$ increases exactly at positive perfect squares, this one-input lag explains the failure pattern noted in earlier annotations (Appendices~\ref{app:auditing-exhibits} and~\ref{app:sqrt-proof}).
+
+\begin{proposition}[Exact failure set and repair]
+\label{prop:sqrt}
+The corrected algorithm returns the integer square root of every nonnegative integer. For a positive input $x$, the original algorithm returns the integer square root of $x-1$. Its errors therefore occur exactly at the positive perfect squares: $1,4,9,16,\ldots$.
+\end{proposition}
+Appendix~\ref{app:explanation-census} records all thirteen dossiers of the earlier 285-dossier collection whose annotations named both a counterexample family and a repair, each paired with Lean-checked family and repair statements.
+
+\subsection{Graph colorings: a repeating local pattern explains an entire family}
+\paragraph{Claim and counterexample.}
+A proper coloring assigns different colors to adjacent vertices; the chromatic number is the fewest colors needed. A graph is \emph{recolorable} if, for every palette size larger than its chromatic number, any two proper colorings can be connected by single-vertex color changes that keep the coloring proper. A proper coloring is \emph{frozen} if every vertex already sees every other available color on a neighbor~\citep{cereceda2008connectedness}. For a nonempty graph, a frozen $k$-coloring with $k$ greater than the chromatic number proves non-recolorability.
+
+A clique blowup replaces each vertex of a base graph by a clique, called a \emph{bag}, and joins every pair of vertices in adjacent bags. Doubling each vertex of an $n$-cycle gives $C_n[K_2]$. A graph is \emph{prime} if it has no proper subset of at least two vertices whose members have identical neighbors outside that subset. \citet[Conjecture~1, \S6]{belavadi2026recoloring} conjectured that if a prime graph and all of its induced subgraphs are recolorable, then every clique blowup of the graph is recolorable (the reviewed input was arXiv~v2, \citealp{belavadi2024recoloringv2}). Every odd cycle of length $n\ge5$ satisfies those hypotheses, yet $C_9[K_2]$ has 18 vertices, chromatic number five, and a frozen six-coloring.
+
+\input{fc__figures__palette_windows}
+
+\paragraph{Structural insight.}
+In a frozen six-coloring of $C_n[K_2]$, every vertex sees all five other colors among the three consecutive bags in its closed neighborhood. Consequently, every window of three consecutive bags uses all six colors once, which forces the color pairs on the bags to repeat with period three around the cycle (Figure~\ref{fig:palettes}). Closing that period-three pattern around an $n$-cycle yields the classification. Existence when $3\mid n$ follows from \citet{shaebani2009fall}; our contribution is proving necessity and the exact count for labeled vertices and colors.
+
+\begin{proposition}[When the repeating pattern closes]
+\label{prop:cycle-readable}
+Let $n\ge5$ be odd. The doubled $n$-cycle has a frozen six-coloring exactly when $n$ is a multiple of three. For each such $n$, there are exactly $90\cdot2^n$ such colorings when the vertices and six colors are labeled.
+\end{proposition}
+There are $\binom{6}{2}\binom{4}{2}=90$ ways to assign disjoint color pairs to the first three bags, and two ways to order the pair inside each of the $n$ labeled bags, giving $90\cdot2^n$.
+
+Larger bags yield counterexamples for every odd cycle of length at least nine. For instance, $C_{11}[K_3]$ has chromatic number seven and a frozen eight-coloring. For every odd $n\ge9$ with $q=\lceil n/3\rceil$, the blowup $C_n[K_q]$ has chromatic number $2q+1<n$ and a frozen $n$-coloring, refuting recolorability preservation for the base cycle $C_n$ for every odd $n\ge9$.
+
+\subsection{Integer colorings: a better construction with a provable limit}
+\paragraph{Claim and counterexample.}
+Color the integers $\{1,\dots,n\}$ ($n\ge2$) with three colors. An ordered Schur triple $(x,y,x+y)$ with $x,y>0$ and $x+y\le n$ is \emph{rainbow} if its three entries receive distinct colors. \citet{parczyk2026unschur} conjectured that the maximum limiting fraction of rainbow Schur triples as $n\to\infty$ is $2/5$ ($40\%$).
+
+Consider the two-threshold rule that colors every even integer red and colors an odd integer $k$ blue if $k/n\le a$ or $k/n>b$, and green if $a<k/n\le b$. Set $a=4/11$ and $b=10/11$. For each positive integer $m$, the coloring at $n=22m$ produces $99m^2+3m$ rainbow triples out of $n(n-1)/2$ ordered Schur triples, a fraction converging to $9/22\approx 40.9\% > 2/5$. Independent work obtained the same construction and lower bound \citep{hegde2026somewhat}.
+
+\paragraph{Structural insight.}
+To understand why $a=4/11$ and $b=10/11$ arise, allow the thresholds to vary over $0\le a\le b\le1$ while keeping all even integers red. Every rainbow triple uses one even entry and two odd entries of different colors. Counting the valid mixed-parity and odd--odd pairs via interval lengths and the sum bound $x+y\le n$ yields a piecewise quadratic limiting rainbow fraction $D(a,b)$, whose maximum is the best this family can do.
+
+\begin{theorem}[The best thresholds for this construction]
+\label{thm:schur}
+The unique maximum of $D(a,b)$ is $9/22$, approximately $40.9\%$, at $a=4/11$ and $b=10/11$. The simpler rules with $a=0$ or $b=1$, which omit one blue end block, reach at most $2/5$, or $40\%$.
+\end{theorem}
+This optimum applies to the two-threshold family; a higher limiting fraction requires a rule outside it. Appendix~\ref{app:structural-case-studies} gives the exact $n=22m$ counts and the proof of Theorem~\ref{thm:schur}; Appendix~\ref{app:research-extensions} summarizes the further certified counterexample families.

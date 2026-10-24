@@ -1,0 +1,127 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "c6e68bd7c0c2e956d32f32de6d8d9b43e6dba86afd15175b9565528b5b5bc572",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "For the source-literal optimized FIFO algorithm, every actual queue Q_t is duplicate-free and has exactly the current descent bottoms; processing (p_t,Q_t) yields p_{t+1}=reverse(Q_t) followed by the stable deletion of Q_t from p_t, and the complexity is Θ(n+M_FIFO), where M_FIFO=Σ_t|Q_t|.",
+      "claim_sha256": "459468c5e760ab0b611bc6308070a35ef99839d0e842578989c14fd858fa6c5e",
+      "verdict": "VERIFIED",
+      "evidence": "Initialization queues every descent bottom exactly once. Moving distinct q_1,…,q_r successively to the front gives q_r,…,q_1 followed by the unmoved subsequence. Descents inside that reversed prefix are detected exactly by the front test. For an unmoved successor, a consecutive block of old descent bottoms is decreasing; as its members are deleted, the successor can cross from ascent to descent only once, exactly when x<Next(x)<Prev(x), so the deletion test detects it once and creates no duplicate. Initialization costs Θ(n), every queue item costs Θ(1), and every nonempty round processes at least one item, yielding Θ(n+M_FIFO).",
+      "witness": "All 409,113 permutations through n=9 satisfied queue/descent equality, duplicate-freedom, the stated round transformation, and sorted termination. All 1,240,498 choices of a permutation and arbitrary ordering of its descent-bottom set through n=8 also satisfied the next-queue invariant.",
+      "search_method": "General local-adjacency case analysis, exhaustive permutation enumeration, arbitrary queue-order enumeration, and independent direct-vector/linked-list execution comparison.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "There is an exact phase decomposition: if i is the largest unfixed value and starts its phase at position s_i, that phase makes exactly (i−s_i)+Σ_tℓ_t moves, where ℓ_t counts its round-t queued elements initially left of i.",
+      "claim_sha256": "3721ed3ae2dab154a37a980eb14ea18620104f80c7516a5753405dd51b530224",
+      "verdict": "VERIFIED",
+      "evidence": "Values larger than i form a fixed suffix, so i lies at s_i<i, is not queued, and has a smaller right neighbor until fixation. In a round, moving an element initially left of i shifts i left on deletion and right on prepending, for net zero; moving one initially right shifts i right exactly once. If q_t is the number on the right, the round has ℓ_t+q_t moves and advances i by q_t. Summing q_t=i−s_i proves the identity, including the final round.",
+      "witness": "The identity was checked phase-by-phase on every permutation of sizes 1 through 9, with ℓ_t computed from each round-start shelf.",
+      "search_method": "Exact position-shift accounting followed by exhaustive phase decomposition over 409,113 permutations.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "For every k≥1, the permutation A_k=(k+1,1,k+2,2,…,2k,k,3k+1,2k+1,2k+2,…,3k) has initial FIFO queue Q_0=(1,2,…,k,2k+1).",
+      "claim_sha256": "bfd06fa836215022380b06d7aaa983a6c56757ea45d15eb7ab4d51cc697ce3a0",
+      "verdict": "VERIFIED",
+      "evidence": "Each low j is immediately preceded by k+j and is therefore a descent bottom. Boundaries from j to k+j+1 are ascents, k to 3k+1 is an ascent, 2k+1 is the sole descent bottom after 3k+1, and the remaining tail is increasing. Thus the scan queues exactly the claimed sequence.",
+      "witness": "For k=3, A_3=(4,1,5,2,6,3,10,7,8,9) and the exact initial queue is (1,2,3,7). Checks passed for every k≤250.",
+      "search_method": "Symbolic examination of every adjacent-pair type, supplemented by exact construction checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Writing a=3k+1 and c_t=2k+1+t, the actual detection-ordered queue in round t of A_k begins (1,2,…,k−t,c_t) for every 0≤t<k.",
+      "claim_sha256": "5b18621f5e8bf5567e1419ce7730d5b415ac7d005cf011010ff50ca29a028f01",
+      "verdict": "VERIFIED",
+      "evidence": "The initial case follows from claim 2. Inductively, Prev(j)=j+1 for displayed lows at the next round start. Processing 1 produces no event; for j≥2, the preceding processed j−1 is the front and is appended by the front test, while the deletion test would require an integer strictly between j and j+1 and is impossible. In round 0 the larger separators similarly make deletion tests false. The still-adjacent a,c_t,c_{t+1} triple then appends c_{t+1} through the deletion test before the front event or any undisplayed queue item. This proves the ordered prefix for all required t.",
+      "witness": "For k=3, the first queues are Q_0=(1,2,3,7), Q_1=(1,2,8,3), and Q_2=(1,9,2,4), exhibiting the claimed prefixes. Exact checks passed for k≤250.",
+      "search_method": "Induction following the source's precise deletion-test/front-test/move event order, plus finite exact traces.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Let R(n) be the maximum, over source-literal executions on n values and over ordered adjacent inversion pairs (y,x), of the number of moves of x made while Prev(x)=y. Then R(n)≥⌊(n−1)/3⌋−1 for n≥4, and hence R(n)=Ω(n). Therefore a charging proof that charges every move to its actual predecessor–descent-bottom pair cannot impose a uniform O(1) capacity per pair.",
+      "claim_sha256": "57b1be347628cde770c3b9633dd2918c4f402c3470f71293a61347bf42772e17",
+      "verdict": "VERIFIED",
+      "evidence": "For A_k, rounds t=1,…,k−1 begin their queues with 1 and have Prev(1)=2. Because 1 is processed first, each round contributes another move charged to the same inversion (2,1). Appending the at-most-two larger ranks needed to reach arbitrary n leaves these transitions unchanged. Taking k=⌊(n−1)/3⌋ gives the bound and rules out constant capacity for this prescribed actual-pair charging rule.",
+      "witness": "The repeated first-queue event Q_t[0]=1 with Prev_t(1)=2 was checked for every k≤250 and every 1≤t<k.",
+      "search_method": "Deduction from the proved queue-prefix invariant, fixed-suffix extension, and exact trace validation.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "If W(n) is the worst-case source-literal move count, then W(n)≥(k²+3k)/2 for k=⌊(n−1)/3⌋; in particular W(n)=Ω(n²), improving the source lower bound for the optimized algorithm.",
+      "claim_sha256": "594e3f365b8ff5ce3646fdc5d3e49ef139f77208553c3e0ee1851050461e77ff",
+      "verdict": "VERIFIED",
+      "evidence": "Claim 3 gives at least k−t+1 queued moves in each round t=0,…,k−1. Their exact sum is (k+1)+k+⋯+2=(k²+3k)/2. For general n, appending ranks 3k+2,…,n as an increasing larger suffix neither queues them nor changes the first k transitions. Since k=n/3+O(1), this is an Ω(n²) move and step lower bound.",
+      "witness": "For k=100 (n=301), the certified first-k-round bound is 5,150 moves; the exact complete execution made 165,358 moves. The bound also survived zero-, one-, and two-element fixed-suffix extensions in the checker.",
+      "search_method": "Exact summation of the universal queue-prefix lower bound, with construction and suffix-extension checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "The audited ordinary-transition staircase argument remains invalid for literal FIFO; the new Ω(n²) lower bound is independent of it.",
+      "claim_sha256": "a88b5bce410dceca0929a6a00c918a15654b5e4a78ad66d7e642adaca64e8b01",
+      "verdict": "VERIFIED",
+      "evidence": "The ordinary transition processes current descent bottoms in shelf order, whereas subsequent literal queues use event-detection order. These orders produce different states on the stated six-element instance, invalidating transfer of the ordinary recurrence to literal FIFO. The A_k proof instead follows literal FIFO events directly and does not invoke that recurrence.",
+      "witness": "Starting from (6,1,2,3,4,5), three ordinary transitions yield (3,1,2,6,4,5), while three literal FIFO rounds yield (1,3,2,6,4,5).",
+      "search_method": "Direct exact evaluation of both transition definitions for the supplied distinguishing instance, followed by a dependency check of the A_k proof.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "For n≤9, the exact maximum source-literal move counts remain 0,1,3,6,11,18,27,38,53.",
+      "claim_sha256": "30b1aed72d948e98335ed7681ab7057adf66814295cc66eaf8b9cd51ad7875be",
+      "verdict": "VERIFIED",
+      "evidence": "Exhaustive lexicographic enumeration of all Σ_{n=1}^9 n!=409,113 permutations reproduced exactly the listed maxima. A direct-vector implementation simultaneously checked the queue invariants, while an independently structured array-backed linked-list transcription agreed on every permutation's move and round counts.",
+      "witness": "One reproduced maximizer at n=9 is (9,1,6,3,2,7,4,8,5), with 53 moves; the complete maxima output is 0,1,3,6,11,18,27,38,53.",
+      "search_method": "Complete finite search over every permutation for n=1,…,9 with two independently structured literal transcriptions.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 8,
+      "claim": "A twice-per-unordered-pair charging bound remains false.",
+      "claim_sha256": "751465eb6be332ed43259c5b459b6eae21cdf00a76a53510deef13b998752f68",
+      "verdict": "VERIFIED",
+      "evidence": "A bound allowing at most two charges per unordered pair would imply M≤2·binom(n,2). Exact literal execution of the supplied n=4096 permutation makes 49,545,006 moves, strictly exceeding 16,773,120. This is a concrete counterexample to that charging bound.",
+      "witness": "p=(2,4,…,4096,1,3,…,4095): M=49,545,006, whereas 2·binom(4096,2)=16,773,120.",
+      "search_method": "O(n+M) exact array-backed linked-list execution, cross-validated against the direct transcription on every permutation through n=9.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    },
+    {
+      "idx": 9,
+      "claim": "The requested asymptotically tight worst-case complexity remains unresolved, but the proved interval for the source-literal optimized FIFO algorithm is now Ω(n²)–O(n³).",
+      "claim_sha256": "ede5c436a4ee89663fada80cdba1835337c1bb64daefe53f6e1f9094b40057dd",
+      "verdict": "VERIFIED",
+      "evidence": "Claim 5 rigorously supplies Ω(n²), and claim 0 transfers the move bound to steps. The source supplies O(n³); independently, during active phase i there are at most i−1 rounds and O(i) moves per round, whose sum over i is O(n³). No argument in the draft controls the left-of-active phase term sufficiently for O(n²), nor proves a superquadratic lower bound. Thus the interval is valid but non-tight.",
+      "witness": "The established endpoints are the A_k lower bound (1/18+o(1))n² and the phase/source O(n³) upper bound; no matching endpoint appears in the draft.",
+      "search_method": "Dependency audit of the lower and upper bounds and adversarial search for an unstated matching argument or invalid inference.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/plain/attempt_5/fifo_audit_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The target requests an asymptotically tight worst-case complexity. The draft rigorously improves the source-literal optimized FIFO lower bound from Ω(n log n) to Ω(n²), but retains the O(n³) upper bound and explicitly does not claim tightness. This is material, correct partial progress rather than a complete resolution.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json; used no web or other evidence, arm, prompt, receipt, database, or prior-run material.",
+    "Verified /evidence/parent.json SHA-256 is c6e68bd7c0c2e956d32f32de6d8d9b43e6dba86afd15175b9565528b5b5bc572.",
+    "Recomputed all ten claim SHA-256 bindings and matched every supplied digest.",
+    "Persisted the exact checker at /work/fifo_audit_checker.py (SHA-256 93300cd2e65ce48ce489a94fde09087c59cd5a653f017e425f4ed029333d322f).",
+    "Exhaustively executed all 409,113 permutations through n=9, checking queue invariants, round transformations, termination, phase identities, and exact maxima.",
+    "Cross-checked direct-vector and array-backed linked-list transcriptions on all 409,113 permutations.",
+    "Checked 1,240,498 permutation/arbitrary-descent-queue-order cases through n=8 without an invariant failure.",
+    "Checked A_k initial queues, ordered prefixes, repeated predecessor pair, and suffix extensions for k≤250, alongside the symbolic all-k induction.",
+    "Reproduced the 4096-element witness's 49,545,006 moves and its violation of the twice-per-unordered-pair threshold.",
+    "Reproduced the P_6 divergence between ordinary shelf-order transitions and literal FIFO transitions."
+  ]
+}

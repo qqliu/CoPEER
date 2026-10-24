@@ -1,0 +1,38 @@
+\section{Co-PEER and BugBank: Reusable Mathematical Objections}
+\label{sec:resource}
+\label{sec:resource-audit}
+Co-PEER is our workflow for constructing and checking the proofs of error defined in Section~\ref{sec:evidence}, and BugBank is the collection that stores each resulting objection dossier and its revision history for inspection and reuse.
+
+\subsection{From a selected assertion to an objection dossier}
+\label{sec:pipeline}
+Given a problem statement and a numbered proof, Co-PEER constructs an objection dossier in six stages (prompts, search bounds, and procedures are given in Appendix~\ref{sec:method}; see also \citealp{mcconnell2011certifying,moura2021lean,mathlib2020}):
+\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=3pt]
+\item \textbf{1. Selecting a candidate assertion.} Two calls to a fixed language model read the problem and the numbered proof and each select an assertion that may admit a short counterexample, quoting the source verbatim and stating its assumptions and conclusion. A deterministic validator checks the exact quotation and output format, and a second model reviews each candidate.
+\item \textbf{2. Searching for a counterexample.} A search agent writes and runs exact-arithmetic programs to test the assertion. It records one of four outcomes: a concrete witness, no witness found after exhaustive search of a specified finite set, an inconclusive result, or a claim outside the permitted search setting.
+\item \textbf{3. Checking the witness independently.} A separately written checker program reconstructs the condition from the quoted claim and tests the witness independently of the search script.
+\item \textbf{4. Formalizing the certificate in Lean.} Human contributors and coding agents construct the formal certificate of Equation~\eqref{eq:formal-witness}; Lean checks the proof, and an axiom audit records the assumptions and dependencies used.
+\item \textbf{5. Reviewing the mathematics and source correspondence.} Three fresh model reviews audit the dossier. One searches for a counterexample from the problem and quoted claim alone; one tests the recorded witness with its own program; and one compares the Lean certificate with the quoted claim and witness to assess Equation~\eqref{eq:transport}. A further model examines flagged records and recommends keeping, repairing, excluding, or referring them for human review.
+\item \textbf{6. Recording the dossier.} The workflow packages the stage inputs, outputs, certificates, and any recorded review decisions into a persistent objection dossier.
+\end{itemize}
+
+\noindent\begin{minipage}{\linewidth}
+Each \emph{objection dossier} preserves four groups of evidence for inspection:
+
+{\small\noindent
+\begin{tabularx}{\linewidth}{@{}p{.27\linewidth}X@{}}
+\toprule
+Dossier component & What a reader can inspect\\\midrule
+Source and claim & The saved source version, quoted passage, selected assertion, and the assumptions under which that assertion is claimed to hold.\\
+Counterexample and proof & The concrete witness, formal definitions, and exact named Lean theorem proving Equation~\eqref{eq:formal-witness}.\\
+Checking record & File identifiers, dependencies, build logs, and the axioms and assumptions used by the formal proof.\\
+Review and consequence & Assessments of source correspondence~\eqref{eq:transport} and of what the objection shows about the surrounding argument (local or global), with the reviewer (human or model), reviewed version, verdict, and any unresolved concerns recorded for each assessment.\\
+\bottomrule
+\end{tabularx}\par}
+\end{minipage}
+The dossier records what the objection shows about the surrounding argument separately from the checks of the counterexample and its correspondence to the selected source claim.
+
+\paragraph{BugBank.}
+BugBank collects these dossiers. A dossier in BugBank shows what the workflow produced and which reviews, if any, it received; human review is not a condition of membership in the broader collection. Different subsets were reviewed by humans for different studies. Section~\ref{sec:evaluation} describes those reviews and defines the 147-dossier \emph{human-approved core} used for the benchmark.
+
+\paragraph{Why preserve the history?}
+A proof checked by Lean does not by itself establish that an objection applies to the source. In the Shellsort example of Section~\ref{sec:evidence}, the initial witness $(3,4,2,5,1)$ had a proof checked by Lean, but source review found that it violates the source's endpoint assumption ($3>1$). The replacement $(3,5,2,6,1,7,4)$ satisfies that assumption ($3<4$), refutes the same step, and also has a Lean certificate. By keeping both versions and the reason for the replacement, the dossier lets a reader check which objection applies under the source's assumptions before reusing it. Section~\ref{app:source-admissibility} compares the two witnesses; Appendix~\ref{sec:method} and Section~\ref{app:verified-census} document construction and replay.

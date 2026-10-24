@@ -1,0 +1,275 @@
+# Record E01: Square root: the incremental integer square-root routine
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E01 (SE_cs_97637__a97647)
+public source: https://cs.stackexchange.com/a/97647
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Relating a proof to a Haskell program
+P0002 | 
+P0003 | I am trying to relate the following [integer square root theorem][1] 
+P0004 | 
+P0005 | $\forall x: \mathbb{N}, \exists y : \mathbb{N}((y^2 \leq x) \land  (x < (y+1)^2))$
+P0006 | 
+P0007 | and its proof to its role as a specification of the Integer Square Root `isqrt` ($\lfloor \sqrt{x} \rfloor$) function in a Haskell program.
+P0008 | 
+P0009 | Below is a [inductive proof][2] of the theorem and the related Haskell program. 
+P0010 | The proof was done using natural deduction in the [Fitch system][3], hence there are notational differences between code and proof e.g. no $\leq$ in Fitch. 
+P0011 | 
+P0012 | For my question the details of the proof are not important. I wish to focus on the base case, and the two cases involving  $\exists$-Elimination and $\lor$-Elimination. 
+P0013 | 
+P0014 | I used Quickcheck as a reasonable check that the theorem holds in the code. 
+P0015 | 
+P0016 | I can see that cases **1** and **2** in the proof correspond to the guard conditions in the Haskell definition of `isqrt` function. I did not specify, prove, and implement  the function `isqrt` in any structured way. I just used any examples I could find. I believe that there must some more formal transformation from proof to code that I am missing. So despite having written both the proof and code the precise correspondence between both eludes my comprehension. 
+P0017 | 
+P0018 | Is there a technical name for this form of proof to program relation?
+P0019 | I would be grateful for an explanation or pointer to the literature.
+P0020 |  
+P0021 | [![Inductive Proof][4]][4]
+P0022 | 
+P0023 |     module Peano where
+P0024 |     import Test.QuickCheck
+P0025 |     
+P0026 |     data Nat = Z | S Nat deriving Show
+P0027 |     -- addition
+P0028 |     (+@) :: Nat -> Nat -> Nat
+P0029 |     Z +@ y = y
+P0030 |     (S x) +@ y = S (x +@ y)
+P0031 |     -- multiplication
+P0032 |     (*@) :: Nat -> Nat -> Nat
+P0033 |     x *@ Z = Z 
+P0034 |     x *@ S y = (x *@ y) +@ x 
+P0035 |     -- square
+P0036 |     sqr x = x *@ x 
+P0037 |     -- equality
+P0038 |     (=@) :: Nat -> Nat -> Bool
+P0039 |     Z =@ Z  = True
+P0040 |     (S m) =@  (S n) = m =@ n 
+P0041 |     _=@ _  = False 
+P0042 |     
+P0043 |     -- lesst than
+P0044 |     (<@) :: Nat -> Nat -> Bool
+P0045 |     Z <@ Z = False 
+P0046 |     Z <@ x | not(x =@ Z) = True 
+P0047 |     x <@ Z | not(x =@ Z) = False 
+P0048 |     (S x) <@ (S y) = x <@ y 
+P0049 |     
+P0050 |     
+P0051 |     -- less than or equal
+P0052 |     (<=@) :: Nat -> Nat -> Bool
+P0053 |     x <=@ y = if (x =@ y) || (x <@ y) then True else False
+P0054 |     
+P0055 |     
+P0056 |     -- Integer square root function
+P0057 |     isqrt Z = Z
+P0058 |     isqrt (S x) | (sqr (S (isqrt x))) <=@  (S x) = (S (isqrt x))
+P0059 |                 | (S x) <@ (sqr (S (isqrt x))) = isqrt x
+P0060 |     
+P0061 |     -- test with Quickcheck
+P0062 |     instance Arbitrary Nat where
+P0063 |      arbitrary = oneof [return Z, (S  <$>  arbitrary) ]
+P0064 |     
+P0065 |     isqrtPostCondition :: Nat  -> Bool
+P0066 |     isqrtPostCondition x  = (sqr (isqrt x) <=@ x) && (x <@ sqr(S (isqrt x)))
+P0067 |     check = quickCheck isqrtPostCondition
+P0068 |     -- +++ OK, passed 100 tests.
+P0069 | 
+P0070 | 
+P0071 |   [1]: http://www.nuprl.org/MathLibrary/integer_sqrt/
+P0072 |   [2]: https://math.stackexchange.com/questions/2891932/inductive-proof-using-fitch-software
+P0073 |   [3]: https://www.press.uchicago.edu/ucp/books/book/distributed/L/bo12734345.html
+P0074 |   [4]: https://i.sstatic.net/Qr4Jp.png
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Your goal is to “prove”  --I'm using bullets “•” for syntactic separators--
+0002 | $$ ∀x \;•\;\; ∃y \;•\;\; y² ≤ x < (y+1)²$$
+0003 | 
+0004 | ---
+0005 | ### Proof Methods
+0006 | 
+0007 | In the natural deduction style, one proves “∀ x : ℕ • P x” by proving
+0008 | two statements: 
+0009 | 
+0010 |     Base case      :: P 0
+0011 |     Inductive step :: P a ⇒ P (S a) , for a : ℕ and S successor function
+0012 | 
+0013 | Where, in this case,
+0014 | $$P x \;\;≡\;\; ∃y \;•\; y² ≤ x < (y+1)²$$
+0015 | 
+0016 | In the constructive fashion, one proves “∃ y • Q x” by 
+0017 | *actually finding* such a $y$ using whatever data is available.
+0018 | ### Base case
+0019 | 
+0020 | For the [base] case the input `x` is `0`, and we need to *find*
+0021 | some $y$ with $y² ≤ x < (y+1)²$. Clearly $y = 0$ works as shown
+0022 | in the proof your posted.
+0023 | 
+0024 | ### Inductive step
+0025 | 
+0026 | For the [inductive] case where the input `x` is of the shape `S a`,
+0027 | we need to *find* a $y$ with $y² ≤ S a < (y+1)²$, (*).
+0028 | 
+0029 |  1. However, we have the assumption $P a$ which gives us a $b$ with
+0030 |    $b² ≤ a < (b+1)²$ --which looks really close to the goal (*).
+0031 | 
+0032 |  2. To reach our goal (*), let's do the simplest thing possible:
+0033 |     replace $a$ with $S a$ in (1) thereby obtaining
+0034 |     $b² ≤ S a < (b + 1)²$. Because of (1), and the transitivity of ≤,
+0035 |     the left part is true and the whole thing reduces to:
+0036 |     $$S a < (b + 1)²$$
+0037 | 
+0038 |  3. So if this is true, then we are done and the answer is $b$.
+0039 | 
+0040 |  4. If it is not true, then we must have it complement:
+0041 |    $$(b + 1)² ≤ S a$$
+0042 | 
+0043 |     + But from (1) we also have $a < (b + 1)² = b² + 2b + 1$
+0044 |       thus we obtain $S a = a + 1 < (b² + 2b + 1) + 1 ≤ b² + 4b + 2 = ((b + 1) + 1)²$
+0045 |      
+0046 |     + Hence, we have found that $(b + 1)² ≤ S a < ((b + 1) + 1)²$
+0047 |       and so we may take the output $y$ to be $b + 1$ for our goal (*).
+0048 | 
+0049 | ---
+0050 | 
+0051 | # Curry-Howard: Proving ≅ Programming
+0052 | 
+0053 | The above was a proof [sketch] which corresponds to the a program.
+0054 | 
+0055 | A proof of $$∀ x : ℕ • ∃ y : ℕ • R(x, y)$$
+0056 | corresponds to the program
+0057 | 
+0058 |     -- Output y = prog x satisfies relationship R(x, y), for all input x.
+0059 |     prog :: Int → Int
+0060 |     prog 0  = “the y found in the base case of the proof”
+0061 |     prog n  = “the y found in the inductive step, 
+0062 |                  along with any conditionals and recursive calls”
+0063 | 
+0064 | Applying this to our above proof yields,
+0065 | 
+0066 |     prog :: Int → Int
+0067 |     prog 0 = 0
+0068 |     prog n = let a = n - 1 ; b = prog a
+0069 |              in
+0070 |                if   a + 1 <= (b + 1) * (b + 1)
+0071 |                then b
+0072 |                else b + 1
+0073 | 
+0074 | Hope that helps :-)
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+prog :: Int → Int
+    prog 0 = 0
+    prog n = let a = n - 1 ; b = prog a
+             in
+               if   a + 1 <= (b + 1) * (b + 1)
+               then b
+               else b + 1
+located at line label(s): 0066, 0067, 0068, 0069, 0070, 0071, 0072
+
+## Located defective declaration
+
+Declaration: `SqrtFailureBoundary.ProgramCorrect (the program prog against the specification R)`
+
+```lean
+abbrev R (x y : Nat) : Prop := y * y ≤ x ∧ x < (y + 1) * (y + 1)
+def prog : Nat → Nat
+  | 0 => 0
+  | n + 1 =>
+      let b := prog n
+      if n + 1 ≤ (b + 1) * (b + 1) then b else b + 1
+def ProgramCorrect : Prop := ∀ x : Nat, R x (prog x)
+```
+
+The extracted program (stored source lines 0066-0072) is claimed to compute the integer square root, i.e. to satisfy R on every input; that universal claim is the located defect. Change only the recursive step (the guard comparison and/or the two branch values) so that the program meets the unchanged specification R on every natural input, and prove it; there is no separate target theorem for this record.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+
+## defs_only.lean
+
+```lean
+/- Record SE_cs_97637__a97647 (E01).  Core Lean only; no Mathlib.
+
+Specification `R x y`: `y` is the integer square root of `x`, i.e. `y*y ≤ x < (y+1)*(y+1)`.
+The program `prog` is the source's incremental square-root routine: `prog 0 = 0`, and for
+input `n + 1`, with `b = prog n`, it returns `b` if `n + 1 ≤ (b+1)*(b+1)` and `b + 1` otherwise.
+The located claim is that `prog` meets `R` on every input (`ProgramCorrect`). -/
+
+set_option maxRecDepth 10000
+
+namespace SqrtFailureBoundary
+
+abbrev R (x y : Nat) : Prop := y * y ≤ x ∧ x < (y + 1) * (y + 1)
+
+def prog : Nat → Nat
+  | 0 => 0
+  | n + 1 =>
+      let b := prog n
+      if n + 1 ≤ (b + 1) * (b + 1) then b else b + 1
+
+/-- The located claim: the program meets the specification on every natural input. -/
+def ProgramCorrect : Prop := ∀ x : Nat, R x (prog x)
+
+end SqrtFailureBoundary
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E01: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace SqrtFailureBoundary
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected recursive step: the value of the program at input `n + 1`, computed from `n` and the
+previous value `b = progC n`. The hole must have the form `if <comparison in n and b> then <value> else <value>`
+with exactly one `if` and values that are expressions in `n` and `b` (no `prog`, no `match`, no `let`). -/
+def step (n b : Nat) : Nat := «HOLE»
+
+/-- The corrected program: `progC 0 = 0` and `progC (n + 1) = step n (progC n)` (recursion shape fixed). -/
+def progC : Nat → Nat
+  | 0 => 0
+  | n + 1 => step n (progC n)
+
+/-- The corrected correctness statement (shape fixed): the specification `R`, unchanged, on every input. -/
+def CorrectedCorrectness : Prop := ∀ x : Nat, R x (progC x)
+-- ===== END FIXED PART =====
+
+end SqrtFailureBoundary
+```
+
+Allowed edit: Replace the hole in `step` by one expression of the form `if <comparison in n and b> then <value> else <value>` (values are expressions in n and b; exactly one `if`; no call to prog or progC, no match/let); nothing else in the fixed part may change. The specification R, the recursion shape (progC 0 = 0, progC (n+1) from progC n by one comparison and two branch values) and the domain (all natural inputs, no precondition) are fixed. Do not redefine R, prog or ProgramCorrect; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): R, prog, ProgramCorrect
+
+## OBLIGATIONS (exact names and statements, inside `namespace SqrtFailureBoundary`)
+
+```lean
+theorem repair_statement : ∀ x : Nat, SqrtFailureBoundary.R x (SqrtFailureBoundary.progC x)
+```
+(universal: Universal: the corrected program meets `R` on every natural input.)
+
+```lean
+theorem repair_nonvacuous : ∃ x : Nat, SqrtFailureBoundary.progC x ≠ SqrtFailureBoundary.prog x
+```
+(nonvacuity: Non-vacuity: the program was actually changed (some input on which `progC` and `prog` differ).)
+
+```lean
+theorem final_theorem : ∀ x : Nat, SqrtFailureBoundary.R x (SqrtFailureBoundary.progC x)
+```
+(final: The endpoint of this record is the corrected universal statement itself (a corrected program with a universal correctness proof against the unchanged specification); restate it here, e.g. `:= repair_statement`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

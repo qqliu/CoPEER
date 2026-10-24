@@ -1,0 +1,55 @@
+{
+  "record_id": "E02",
+  "title": "Array assignment: the postcondition of A[A[0]-1] := A[0]",
+  "endpoint_kind": "changed_statement",
+  "located_defect": {
+    "declaration": "SE_cs_1200_a1206_Census.HoareTriple",
+    "lean_text": "def HoareTriple : Prop := ∀ s : Store, pre s = true → holds post (stepR1 s) = true\n-- pre s = (s.length ≥ 2 ∧ A[0] = 2 ∧ A[1] = 3), post s = (s.length ≥ 2 ∧ A[0] = 1 ∧ A[1] = 1)",
+    "description": "The source (stored source line 0029) discusses the assignment A[A[0]-1] := A[0] under the precondition A[0] = 2 ∧ A[1] = 3 and names A[0] = 1 ∧ A[1] = 1 as the correct postcondition. The Hoare triple {pre} A[A[0]-1] := A[0] {post} with that postcondition, under the operational reading stepR1 (index and right-hand side evaluated in the pre-state, out-of-range write is an error), is the located defect. Supply the corrected postcondition, prove the corrected triple from every store satisfying pre, and prove that it is the strongest postcondition (final_theorem)."
+  },
+  "hole_marker": "«HOLE»",
+  "submission_namespace": "SE_cs_1200_a1206_Census",
+  "template_declaration": "postC",
+  "repair_template": "import defs_only\n/-!\nRecord E02: correction template.\nFill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove\nthe OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the\nfixed part and the obligations, inside the namespace. Import nothing else.\n-/\nnamespace SE_cs_1200_a1206_Census\n\n-- ===== FIXED PART: only the hole «HOLE» may be edited =====\n/-- The corrected postcondition of the triple `{pre} A[A[0]-1] := A[0] {postC}`. The hole must be a `Bool`\npredicate on the store; the canonical form is `decide (s.length ≥ 2) && decide (getI s 0 = c) && decide (getI s 1 = d)`\nwith integer literals `c`, `d` (the source's are 1 and 1). It may not refer to the command (`stepR1`, `writeAt`, ...). -/\ndef postC (s : Store) : Bool := «HOLE»\n\n/-- The corrected triple: total correctness under the operational reading `stepR1` (form fixed). -/\ndef CorrectedTriple : Prop := ∀ s : Store, pre s = true → holds postC (stepR1 s) = true\n-- ===== END FIXED PART =====\n\nend SE_cs_1200_a1206_Census\n",
+  "allowed_edit": "Replace the hole in `postC` by a Bool predicate on the store (canonical form: decide (s.length ≥ 2) && decide (getI s 0 = c) && decide (getI s 1 = d) with integer literals c, d), not referring to the command or to pre/post; nothing else in the fixed part may change. The precondition pre, the command and its semantics (stepR1, writeAt, setI, getI) and total correctness are fixed; pre may not be strengthened. Do not redefine Store, getI, setI, writeAt, pre, post, stepR1, stepR2, stepR3, holds, resultIs or HoareTriple; no instances, notations, macros, axioms or exports.",
+  "obligations": [
+    {
+      "name": "repair_statement",
+      "role": "universal",
+      "statement": "∀ s : SE_cs_1200_a1206_Census.Store, SE_cs_1200_a1206_Census.pre s = true → SE_cs_1200_a1206_Census.holds SE_cs_1200_a1206_Census.postC (SE_cs_1200_a1206_Census.stepR1 s) = true",
+      "description": "Universal: from every store satisfying the precondition the command succeeds and the corrected postcondition holds afterwards."
+    },
+    {
+      "name": "repair_nonvacuous",
+      "role": "nonvacuity",
+      "statement": "(∃ s : SE_cs_1200_a1206_Census.Store, SE_cs_1200_a1206_Census.pre s = true ∧ SE_cs_1200_a1206_Census.holds SE_cs_1200_a1206_Census.postC (SE_cs_1200_a1206_Census.stepR1 s) = true) ∧ (∃ t : SE_cs_1200_a1206_Census.Store, SE_cs_1200_a1206_Census.postC t = false)",
+      "description": "Non-vacuity: the corrected postcondition is reached from some store satisfying the precondition, and it is not the constant `true` predicate."
+    },
+    {
+      "name": "final_theorem",
+      "role": "final",
+      "statement": "∀ t : SE_cs_1200_a1206_Census.Store, SE_cs_1200_a1206_Census.postC t = true ↔ ∃ s : SE_cs_1200_a1206_Census.Store, SE_cs_1200_a1206_Census.pre s = true ∧ SE_cs_1200_a1206_Census.stepR1 s = some t",
+      "description": "The corrected specification statement (the endpoint for this record): the corrected postcondition is the strongest postcondition of the command under the precondition, i.e. it holds of a store exactly when that store is reachable by the command from a store satisfying `pre`. If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`."
+    }
+  ],
+  "reserved_names": [
+    "Store",
+    "getI",
+    "setI",
+    "writeAt",
+    "pre",
+    "post",
+    "stepR1",
+    "stepR2",
+    "stepR3",
+    "holds",
+    "resultIs",
+    "HoareTriple"
+  ],
+  "allowed_imports": [
+    "defs_only"
+  ],
+  "forbidden_tokens_extra": [],
+  "source_context_file": "source_context.txt",
+  "challenged_passage": "0029 consider the assignment $A[A[0]-1] := A[0]$ under the precondition $A[0] = 2 \\wedge A[1] = 3$: you cannot make a simple substitution to obtain the correct postcondition $A[0] = 1 \\wedge A[1] = 1$"
+}

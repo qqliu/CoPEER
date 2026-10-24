@@ -1,0 +1,67 @@
+{
+  "checkers": [
+    {
+      "checker_id": "k000001",
+      "language": "python",
+      "source_utf8": "from itertools import combinations_with_replacement\nfrom math import comb\n\n\ndef nonempty_subset_sums(sequence, modulus):\n    return {\n        sum(sequence[i] for i in range(len(sequence)) if mask & (1 << i)) % modulus\n        for mask in range(1, 1 << len(sequence))\n    }\n\n\ndef main():\n    forbidden = frozenset({0, 4, 12})\n    checked = 0\n\n    # Sorting does not change the set of indexed subset sums.\n    # This enumeration includes repetitions and zero entries.\n    for sequence in combinations_with_replacement(range(16), 5):\n        sums = nonempty_subset_sums(sequence, 16)\n        assert sums & forbidden, (sequence, sorted(sums))\n        checked += 1\n    assert checked == comb(20, 5) == 15504\n\n    N = 80\n    d = 5\n    assert N % d == 0\n    assert N % 16 == 0\n    A = {a for a in range(N) if a % 16 not in forbidden}\n    B = set(range(N)) - A\n    assert len(A) == 65\n    assert len(B) == 15\n    assert d * len(A) > (d - 1) * N\n\n    # Verify the fiber sizes and the reduction homomorphism used to lift\n    # the exhaustive obstruction from Z_16 to every multiset in Z_80.\n    for residue in range(16):\n        assert sum(1 for a in range(N) if a % 16 == residue) == 5\n    for x in range(N):\n        for y in range(N):\n            assert ((x + y) % N) % 16 == (x % 16 + y % 16) % 16\n\n    print({\n        'checked_size_five_multisets_modulo_16': checked,\n        'N': N,\n        'd': d,\n        'A_size': len(A),\n        'proposed_bound': (d - 1) * N // d,\n    })\n\n\nif __name__ == '__main__':\n    main()\n"
+    }
+  ],
+  "claimed_resolution": "FULL",
+  "claims": [
+    {
+      "checker_ids": [
+        "k000001"
+      ],
+      "claim_id": "c000012",
+      "dependency_ids": [],
+      "mathematical_profile": {
+        "assumptions": [
+          "All sums are taken modulo 16",
+          "Repeated entries and zero entries are allowed",
+          "The full five-entry index set is an allowed nonempty subset"
+        ],
+        "object_types": [
+          "finite cyclic additive group Z_16",
+          "size-five indexed multiset",
+          "nonempty indexed subset sums",
+          "reduction modulo 4",
+          "parity classes"
+        ],
+        "proof_direction": "Assume all nonempty subset sums avoid {0,4,12}; use the resulting restriction on sums divisible by 4 and exhaust the possible numbers and residue classes of even and odd entries.",
+        "quantifier_order": "For every tuple (a_1,...,a_5) in (Z_16)^5, there exists a nonempty subset I of {1,...,5} such that sum_{i in I} a_i belongs to {0,4,12}."
+      },
+      "proof": "All sums in this proof are in Z_16. Suppose, for a contradiction, that a five-entry indexed multiset S has no nonempty subset sum in F={0,4,12}. Every nonempty subset whose sum is divisible by 4 must then have sum 8, since the residues divisible by 4 are precisely 0,4,8,12. Call this property (P). In particular, there cannot be two disjoint nonempty indexed subsets each having sum divisible by 4: property (P) would give sum 8 for each, and their union would have sum 0.\n\nFirst suppose an entry of S is divisible by 4. Its singleton sum must be 8. List the other four entries as t_1,t_2,t_3,t_4, and consider the five partial sums 0,t_1,t_1+t_2,...,t_1+t_2+t_3+t_4 modulo 4. Two coincide, so some nonempty indexed block of these four entries has sum divisible by 4. Property (P) makes its sum 8 in Z_16. Together with the selected entry 8, this gives a nonempty subset sum 0, a contradiction. Thus no entry is divisible by 4.\n\nEvery even entry is therefore congruent to 2 modulo 4, and every odd entry is congruent to 1 or 3 modulo 4. There are at most two even entries. Indeed, if e_1,e_2,e_3 were three even entries at distinct indices, property (P) would give e_1+e_2=e_1+e_3=e_2+e_3=8. The first equality gives e_2=e_3, and the last equality then gives 2e_2=8. This is impossible because e_2 is congruent to 2 modulo 4, so 2e_2 is congruent to 4 modulo 8, whereas 8 is congruent to 0 modulo 8.\n\nCase 1: There are exactly two even entries e,f and three odd entries. The even pair has sum divisible by 4. If the odd entries include both residue classes 1 and 3 modulo 4, an odd pair using these two classes also has sum divisible by 4 and is disjoint from the even pair. This is impossible by the observation following (P). Thus the three odd entries all have the same residue modulo 4. Choose two of them, x,y. Both triples (e,x,y) and (f,x,y) have sum divisible by 4, so (P) gives e+x+y=f+x+y=8 and hence e=f. But then the even pair has sum 2e congruent to 4 modulo 8, contradicting (P).\n\nCase 2: There is exactly one even entry e and four odd entries. If two odd entries are 1 modulo 4 and two are 3 modulo 4, pair each entry of the first class with an entry of the second class. This gives two disjoint subsets with sums divisible by 4, a contradiction. If the odd entries split three in one class and one in the other, form one subset from e and two of the three entries in the majority class, and a second subset from the remaining majority entry and the minority entry. These subsets are disjoint, nonempty, and both have sums divisible by 4, again a contradiction. The only remaining possibility is that all four odd entries x_1,x_2,x_3,x_4 have the same residue modulo 4. For every pair of distinct indices i,j, the sum e+x_i+x_j is divisible by 4 and therefore equals 8 by (P). Comparing these pair equations shows that all four odd entries are equal to some odd residue a. Their sum is then 4a, which equals either 4 or 12 in Z_16. This lies in F, a contradiction.\n\nCase 3: All five entries are odd. If each of the residue classes 1 and 3 modulo 4 occurs at least twice, two disjoint pairs using one entry from each class have sums divisible by 4, a contradiction. If the classes occur four times and once, let b be the minority entry and a_1,a_2,a_3,a_4 the majority entries. Each a_i+b is divisible by 4, so (P) gives a_i+b=8 for every i. Hence all a_i equal an odd residue a, and their four-entry sum 4a is either 4 or 12, a contradiction. Finally, if all five entries have the same residue modulo 4, each four-entry subset has sum divisible by 4 and therefore equals 8. Writing T for the sum of all five entries, these equations are T-a_i=8 for every index i. Thus all five entries are equal to some odd residue a, and a four-entry subset again has sum 4a in {4,12}, a contradiction.\n\nThese cases exhaust all possibilities. Therefore every five-entry indexed multiset has a nonempty subset sum in F. All arguments allow repeated values and zero entries, and a subset equal to the entire five-entry index set is included.",
+      "statement": "Every size-five indexed multiset in Z_16 has a nonempty indexed subset whose sum belongs to F={0,4,12}. Consequently Z_16\\F is 5-cube-free."
+    },
+    {
+      "checker_ids": [
+        "k000001"
+      ],
+      "claim_id": "c000013",
+      "dependency_ids": [
+        "c000012"
+      ],
+      "mathematical_profile": {
+        "assumptions": [
+          "A consists exactly of the residues not congruent to 0, 4, or 12 modulo 16",
+          "Projective cubes use every nonempty indexed subset",
+          "Repeated entries and zero entries are allowed"
+        ],
+        "object_types": [
+          "finite cyclic additive groups Z_80 and Z_16",
+          "surjective reduction homomorphism",
+          "inverse images of residue classes",
+          "explicit subset A of Z_80",
+          "arbitrary size-five indexed multiset"
+        ],
+        "proof_direction": "Count the fibers to establish the strict density violation, then project every proposed five-dimensional cube to Z_16 and apply the universal subset-sum obstruction.",
+        "quantifier_order": "There exist admissible d=5, N=80, and the specified A with |A|>((d-1)/d)N, and for every size-five indexed multiset in Z_80 there exists a nonempty indexed subset whose sum lies outside A."
+      },
+      "proof": "Take d=5 and N=80, so both are positive and d divides N. Since 16 divides 80, reduction modulo 16 is a well-defined surjective homomorphism pi:Z_80 to Z_16. Each fiber has 80/16=5 elements. Define F={0,4,12} in Z_16, B=pi^{-1}(F), and A=Z_80\\B. There are three forbidden fibers, so |B|=15 and |A|=80-15=65. The proposed upper bound is ((5-1)/5)80=64, and hence A exceeds it.\n\nTo verify cube-freeness, take any size-five multiset in Z_80 and index its entries as a_1,...,a_5. Their images pi(a_1),...,pi(a_5) form a size-five indexed multiset in Z_16. Claim c000012 supplies a nonempty index set I such that sum_{i in I} pi(a_i) belongs to F. Because pi is a homomorphism, pi(sum_{i in I} a_i)=sum_{i in I} pi(a_i) belongs to F. Thus this subset sum lies in B and not in A. Therefore the projective cube of the original multiset is not contained in A. This applies to every size-five multiset, including repetitions and zeros, proving that A is 5-cube-free and completing the disproof.",
+      "statement": "The target is false. An explicit counterexample is d=5, N=80, and A={a in Z_80 : a modulo 16 does not belong to {0,4,12}}. This set has size 65>64=((d-1)/d)N and is 5-cube-free."
+    }
+  ],
+  "final_writeup": "The conjecture is false. Take d=5, N=80, and A={a in Z_80 : a is not congruent to 0,4, or 12 modulo 16}. Exactly 15 residues are excluded, so |A|=65>64=(4/5)80. Claim c000012 proves that every five-entry multiset modulo 16 has a nonempty subset sum in {0,4,12}. Reduction modulo 16 therefore forces every five-entry multiset in Z_80 to have a nonempty subset sum outside A. Thus A is 5-cube-free under the exact definitions, including repeated generators, zeros, and the full indexed subset. This gives a complete explicit counterexample with 5 dividing 80. The accompanying Python source independently checks all 15,504 size-five multisets modulo 16 and the quotient and cardinality calculations; no execution is claimed.",
+  "schema": "whole_proof_v1",
+  "target_sha256": "beae637cce12f865fa8aa1ceb00aa04e1c67f15844fead68154105d1fd89db9a"
+}

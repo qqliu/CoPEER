@@ -1,0 +1,302 @@
+Here's a thinking process:
+
+1.  **Analyze User Input:**
+   - User provides a mathematical text with sections P1 (title/problem) and numbered text lines 0001-0225.
+   - Task: Identify at least one false assertion as written, with a concrete counterexample under the assumptions in force.
+   - Output: JSON with "candidates" (up to 3 line labels), "claim" (the false assertion), "counterexample" (one sentence).
+   - Constraints: The false assertion may be a theorem, lemma, or intermediate claim. If same assertion appears more than once, any occurrence is fine. Don't point at a line that only uses the assertion later, nor a step merely because its justification is thin.
+   - Output format: Exactly one JSON object, nothing else.
+
+2.  **Scan the Text for False Assertions:**
+   Let's go through carefully. The text discusses mesh refinement, Delaunay triangulation, advancing-front algorithms, Steiner point placement, size optimality constants, etc.
+
+   Key parts:
+   - P1: Title about "Snow Globe: An Advancing-Front 3D Delaunay Mesh Refinement Algorithm"
+   - Lines 0001-0013: Discussion of sizing field, local condition, preprocessing.
+   - Lines 0015-0027: Discussion of poor-quality triangle Δabp, Steiner vertex placement, encroachment.
+   - Lines 0029-0040: Preprocessing to add auxiliary Steiner points so diametral/equatorial circles/spheres don't contain input vertices.
+   - Lines 0043-0077: 2D case, Lemma 1, proof.
+   - Lines 0079-0127: 3D case, Lemma 2, proof.
+   - Lines 0129-0225: Remaining cases (a), (b), (c).
+
+   I need to find a false assertion. Let's scrutinize the lemmas and their proofs, and the claims made.
+
+   **Lemma 1 (line 059-064):** "In 2D refinement, m' may be placed such that the constant associated with the size optimality does not reduce, i.e., |am'| ≥ |pm| and p does not encroach upon the line segment am'."
+
+   **Proof of Lemma 1 (lines 066-077):** 
+   "If p encroaches upon the segment am', |am'| ≥ 2|pm| and m must lie inside the line segment am'. Thus, m' may be placed such that |pm| ≤ |am'| ≥ 2|pm|, and we obtain a triangulation where p does not encroach on the boundary segment am'. If we process vertices in the increasing order of their local sizing field, no other input vertex will be closer than the distance |pm| to m'. Thus, in 2D refinement, the constant associated with the size optimality does not reduce."
+
+   Let's check the logic. The claim is: m' can be placed such that |am'| ≥ |pm| and p does not encroach on am'.
+   The proof says: If p encroaches on am', then |am'| ≥ 2|pm| and m lies inside am'. Thus, m' may be placed such that |pm| ≤ |am'| ≥ 2|pm|. Wait, that seems circular or poorly stated. Actually, the proof seems to argue that if p encroaches, then |am'| must be at least 2|pm|, so we can place m' far enough so that p doesn't encroach, and |am'| ≥ |pm| holds. But is the statement "|am'| ≥ |pm| and p does not encroach upon the line segment am'" always achievable? The proof mentions processing vertices in increasing order of local sizing field, no other input vertex closer than |pm| to m'. This seems hand-wavy.
+
+   **Lemma 2 (lines 0104-0107):** "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p."
+
+   **Proof of Lemma 2 (lines 0109-0127):** 
+   "Consider the unique plane perpendicular to the plane of Δabc and on the line joining points a and m. Consider the cross-section of a equatorial (hemi)sphere on the plane. This cross-section is similar to Fig.~\ref{fig:aux2d} (c) and (d) if diametral semicircles are added to it. By construction, |am'| > |am|. If p is inside an equatorial sphere, the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc. The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2. Note that no arc on the plane may enclose vertices a or m' because the triangular facets form the Delaunay triangulation. Thus, if |am'| < 2|pm|, no equatorial sphere of triangular facets encroaches upon vertex p."
+
+   Let's parse this. The claim: If |am'| < 2|pm|, then no equatorial sphere encroaches on p.
+   The proof talks about cross-sections, arcs, semicircles, radius less than |pm|/2. There's a specific geometric claim: "The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2." This needs to be checked against the geometry.
+
+   Let's think about the 3D case: p is encroaching on triangular facet Δabc. m is projection of p onto plane of Δabc, m ∈ Δabc. m' is perturbed on line am. The equatorial sphere of a triangular facet incident on... wait, the equatorial sphere relative to an edge? Actually, in 3D Delaunay, for a facet (triangle), the "equatorial sphere" might refer to the circumsphere of the triangle? Or spheres related to edge insertion? The text says: "diametral/equatorial circles/spheres on the boundary edges and facets". Earlier: "such that the diametral/equatorial circles/spheres on the boundary edges and facets do not contain the input vertex." And: "If m is arbitrarily close to one of the vertices of the triangle, say, a, we perturb m to a new location m' on the line joining a and m. We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets."
+
+   So, for a triangle facet, the "equatorial sphere" might be the sphere with diameter from m' to something? Or the circumsphere of the triangle? Actually, in 3D advancing front mesh refinement, when you insert a vertex on an edge or facet, you often consider spheres with diameter from the new vertex to existing vertices, or circumspheres. The text mentions "diametral circles/spheres" and "equatorial spheres". Let's read carefully: "If m is arbitrarily close to one of the vertices of the triangle, say, a, we perturb m to a new location m' on the line joining a and m. We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets."
+
+   And Lemma 2: "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p." Wait, the lemma says "diametral sphere", but the text before says "equatorial spheres". There might be a mix-up, but the lemma statement is given.
+
+   Let's check the proof of Lemma 2 again: "If p is inside an equatorial sphere, the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc. The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2."
+
+   This sounds suspicious. Let's try to reconstruct the geometry. We have triangle Δabc in a plane. p is a point somewhere, with projection m onto the plane, m ∈ Δabc. The "equatorial sphere" of a triangular facet... maybe it's the sphere that has the triangle's circumcircle as equator? Or perhaps it's the sphere with diameter from p to something? Actually, in the context of advancing front and Delaunay refinement, when you add a vertex m' on the line am, you might consider the sphere with center m' and radius |m'a|, or the circumsphere of the new tetrahedron. The text says: "If m' is too close to some other vertices, some other point on the line segment mm' may be chosen such that it maximizes the minimum distance from all other vertices." And: "We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets."
+
+   Let's think about a simple 2D analog first, since Lemma 1 is 2D. In 2D, we have line segment ab, point p, projection m. We perturb m to m' on line am (or maybe on ab?). Lemma 1 says: m' may be placed such that |am'| ≥ |pm| and p does not encroach on am'. The proof says if p encroaches on am', then |am'| ≥ 2|pm| and m lies inside am'. So to avoid encroachment, we need |am'| < 2|pm|? Wait, the claim is "m' may be placed such that |am'| ≥ |pm| and p does not encroach upon the line segment am'." The proof argues that if p encroaches, then |am'| ≥ 2|pm|, so by placing m' appropriately (maybe not too far), we can ensure |am'| is between |pm| and 2|pm|, and p doesn't encroach. But is that always possible? The proof also says "If we process vertices in the increasing order of their local sizing field, no other input vertex will be closer than the distance |pm| to m'." This seems like an additional assumption that might not hold generally, or the proof is flawed.
+
+   Now for 3D, Lemma 2: "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p." Let's test with a potential counterexample. Suppose we have a triangle Δabc in the xy-plane. Let a = (0,0,0), b = (1,0,0), c = (0,1,0). So it's a right triangle. Let p = (0.5, 0.5, h) for some h > 0. Projection m = (0.5, 0.5, 0), which is inside the triangle. |pm| = h. Now, m' is on line am. a = (0,0,0), m = (0.5,0.5,0), so line am is parametric t*(0.5,0.5,0), t ≥ 0. m' = t*(0.5,0.5,0). |am'| = t * |am| = t * sqrt(0.5^2+0.5^2) = t * sqrt(0.5) = t/√2. |pm| = h. The claim in Lemma 2: if |am'| < 2|pm|, i.e., t/√2 < 2h, then no diametral sphere of triangular facets encroaches on p.
+
+   What are the "diametral spheres of triangular facets"? Maybe it's the spheres with diameter from m' to the vertices of the triangle? Or the circumspheres of the triangles formed? The text earlier: "If m is arbitrarily close to one of the vertices of the triangle, say, a, we perturb m to a new location m' on the line joining a and m. We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets." So the equatorial spheres of the triangular facets probably means the spheres that have the triangle's edges or something as diameter? Actually, in 3D Delaunay, when you have a facet and you want to add a vertex, you might consider the sphere through the facet's vertices (circumsphere). But "equatorial sphere" might refer to the sphere with center at m' and radius |m'a|, or the sphere that is the "equatorial" one relative to the facet. Let's look at the proof: "Consider the unique plane perpendicular to the plane of Δabc and on the line joining points a and m. Consider the cross-section of a equatorial (hemi)sphere on the plane. This cross-section is similar to Fig.~\ref{fig:aux2d} (c) and (d) if diametral semicircles are added to it."
+
+   Fig.~\ref{fig:aux2d} shows 2D cases. The text says the cross-section is similar to those 2D figures. In 2D, we have a diametral circle on segment ab, and point p inside it. The proof of Lemma 1 and the discussion there might give insight.
+
+   Let's re-read the 2D part carefully. Lines 0043-0077: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. Let the point of projection be m. Further, ∠apb < π/2. If the point m is added to the PLC, p does not lie inside the diametral circle of edge am or mb, but m may not be the most optimal location... Thus, we perturb the vertex m to a location m' such that p does not lie inside the new diametral circles, and its location maximizes the minimum distance from all other vertices."
+
+   Lemma 1: "In 2D refinement, m' may be placed such that the constant associated with the size optimality does not reduce, i.e., |am'| ≥ |pm| and p does not encroach upon the line segment am'."
+
+   Proof: "If p encroaches upon the segment am', |am'| ≥ 2|pm| and m must lie inside the line segment am'. Thus, m' may be placed such that |pm| ≤ |am'| ≥ 2|pm|, and we obtain a triangulation where p does not encroach on the boundary segment am'. If we process vertices in the increasing order of their local sizing field, no other input vertex will be closer than the distance |pm| to m'. Thus, in 2D refinement, the constant associated with the size optimality does not reduce."
+
+   Let's analyze the 2D claim and proof for potential falsehood. Suppose we have segment ab, p inside the diametral circle on ab. m is projection of p onto ab, and ∠apb < π/2 (given). m is on ab. The diametral circle on ab has center at midpoint of ab, radius |ab|/2. p is inside it. Now we add m to ab (so ab is split into am and mb). The diametral circle on am has center at midpoint of am, radius |am|/2. p might be inside it or not. The text says "p does not lie inside the diametral circle of edge am or mb" – is that always true? Actually, it says "If the point m is added to the PLC, p does not lie inside the diametral circle of edge am or mb" – this might be a claim that needs proof, or it's given as part of the setup? Let's read: "If the point m is added to the PLC, p does not lie inside the diametral circle of edge am or mb, but m may not be the most optimal location of an auxiliary Steiner point because it may be arbitrarily close to a or b." This seems like an assertion. Is it true? If m is the projection of p onto ab, and ∠apb < π/2, does p lie inside the diametral circle on am? The diametral circle on am has diameter am. p is inside the diametral circle on ab. There's a known fact: if ∠apb < π/2, then p lies outside the circle with diameter ab? Actually, Thales' theorem: angle in a semicircle is right angle. If ∠apb = π/2, p is on the circle. If ∠apb < π/2, p is outside the circle with diameter ab. Wait, standard: For a given segment ab, the locus of points p such that ∠apb = constant is arcs of circles. Specifically, if ∠apb = π/2, p is on the circle with diameter ab. If ∠apb > π/2, p is inside that circle. If ∠apb < π/2, p is outside. But here it says "p lies inside the diametral circle on line segment ab" and "Further, ∠apb < π/2". That seems contradictory if "diametral circle on line segment ab" means the circle with diameter ab. Let's check: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. Let the point of projection be m. Further, ∠apb < π/2." If p is inside the circle with diameter ab, then ∠apb > π/2 (since angle subtended by diameter is right, interior points subtend obtuse angle). So there's a contradiction in the text's own assumptions? Or perhaps "diametral circle on line segment ab" means something else, like the circle with diameter ab but p is inside it, which would imply ∠apb > π/2. But then it says "Further, ∠apb < π/2". That's inconsistent. Maybe "diametral circle on line segment ab" refers to the circle that has ab as a chord, not necessarily diameter? Or maybe it's the circle with diameter ab, and the text has a mistake, but we have to take the assumptions as written. The problem says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we need to find an assertion that is false given the assumptions stated in the text.
+
+   Let's list the assumptions/claims and see where inconsistency or falsehood arises.
+
+   Potential candidates for false assertions:
+   - Line 0045: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b." Is this always true? If p is inside the circle with diameter ab, its projection onto line ab always lies on the line ab, but does it lie on the segment ab? Not necessarily; it could be outside the segment but still on the line. However, the text might assume it's on the segment, or maybe it's a known result under some conditions. But we need a concrete counterexample under the assumptions in force.
+
+   - Line 0047: "Further, ∠apb < π/2." As noted, if p is inside the diametral circle on ab (circle with diameter ab), then ∠apb > π/2. So this is a direct contradiction within the text's own assumptions. The text says p lies inside the diametral circle AND ∠apb < π/2. These two cannot both be true for the circle with diameter ab. So one of them must be the false assertion, or the definition of "diametral circle" is different. But the text presents them as consecutive statements. Let's read exactly line 0045-0048: "0045 | If an input vertex p lies inside the diametral circle on line segment ab, 0046 | the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. 0047 | Let the point of projection be m.  0048 | Further, ∠apb < π/2." So the text asserts both: p inside diametral circle on ab, AND ∠apb < π/2. As I said, for the standard circle with diameter ab, inside implies angle > 90°. So this is a contradiction. But is "diametral circle on line segment ab" definitively the circle with diameter ab? In mesh refinement, "diametral circle" often means the circle with the segment as diameter. Yes, typically in advancing-front and Delaunay refinement, the "diametral circle" on an edge is the circle with that edge as diameter, used for encroachment checks. So if p is inside that circle, then the angle subtended by the edge at p is greater than 90°. So stating ∠apb < π/2 while p is inside that circle is false under standard geometry. But the text might be defining "diametral circle" differently, or maybe it's a different circle. However, the problem says: "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we can take the assumptions as: p is inside the diametral circle on ab, and ∠apb < π/2. These two assumptions together are geometrically impossible for the usual interpretation. But maybe the text's "diametral circle" is not with diameter ab? Let's check context: "In our ten-page abstract above, we assumed that the local sizing field at every input vertex is equal to (or smaller than) the length of the shortest edge in the input PLC. There are PLCs for which the condition does not hold. For instance, consider a line segment ab and a point p close to it. If no vertices other than a and b are closer to p, the local sizing field at p is equal to its distance to ab, which may be smaller than pa and pb." Then: "Let us assume that Δabp is a poor-quality triangle." Then later: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. Let the point of projection be m. Further, ∠apb < π/2." So the "diametral circle on line segment ab" is introduced here. It's likely the circle with diameter ab. If so, the pair of assertions (p inside it) and (∠apb < π/2) is contradictory. But is the false assertion one of them, or the combination? The task asks: "Identify a line that contains the false assertion." So a specific line number. Line 0045 says "If an input vertex p lies inside the diametral circle on line segment ab" – that's a conditional, not necessarily false by itself; it's the combination with 0048 that's problematic. But line 0048 says "Further, ∠apb < π/2." That's an assertion. If we take the assumptions in force, the text is claiming both. A counterexample would be a configuration where p is inside the diametral circle on ab, but ∠apb ≥ π/2. That's easy: take a=b? No, segment ab, take p on the circle (angle = π/2) or inside (angle > π/2). So a counterexample to the conjunction exists. But which line is the "false assertion"? Maybe line 0048 is the false one, because it's stated as a fact given p is inside the diametral circle. But the text says "If an input vertex p lies inside the diametral circle... Further, ∠apb < π/2." It's presenting ∠apb < π/2 as a consequence or additional assumption. Actually, reading: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. Let the point of projection be m. Further, ∠apb < π/2." It might be that the text is defining the scenario, and ∠apb < π/2 is another condition they're imposing, not derived from the circle. But then it's just an assumption, not necessarily false. However, the problem says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we need to find an assertion that is claimed to be true, but under the writing's own assumptions, it's false, or it's geometrically false regardless, but must be under the assumptions in force.
+
+   Let's look for other candidates. The lemmas and their proofs might have logical gaps or false statements.
+
+   **Lemma 1 (line 059-064)** claim: "In 2D refinement, m' may be placed such that the constant associated with the size optimality does not reduce, i.e., |am'| ≥ |pm| and p does not encroach upon the line segment am'."
+
+   Is this always true? The proof tries to justify it, but maybe it's false. Let's test with a specific 2D example. Suppose we have segment ab, length 10. Let a=0, b=10 on x-axis. Let p be a point inside the diametral circle on ab, so circle center 5, radius 5. Take p = (5, 1) – this is inside the circle (distance to center 1 < 5). Projection m = (5,0). ∠apb: vectors pa = (-5,-1), pb = (5,-1). Dot product = -25+1 = -24. Lengths = sqrt(26) each. cos(angle) = -24/26 ≈ -0.923, angle ≈ 157° > 90°. But the text says "Further, ∠apb < π/2" in line 0048, but here it's > π/2. If we enforce ∠apb < π/2, p must be outside the circle. So the text's assumptions in that section (0045-0048) are contradictory if "diametral circle" means circle with diameter ab. But maybe in their context, "diametral circle on line segment ab" means something else, like the circle that has ab as a chord and some specific radius? Unlikely.
+
+   Let's read the 2D part again carefully, maybe I misremember Thales. Actually, for a given segment ab, the set of points p such that ∠apb = 90° is the circle with diameter ab. Points inside that circle have ∠apb > 90°. Points outside have ∠apb < 90°. So if the text says "p lies inside the diametral circle on line segment ab" and "∠apb < π/2", that's directly contradictory. So one of these is the false assertion. But which line? Line 0045 asserts p lies inside the diametral circle. Line 0048 asserts ∠apb < π/2. Both are presented as part of the setup. The problem says: "The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument." And: "If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." So we need to pick a line that contains the false assertion. If the text has a contradiction, the false assertion could be either, but we need a concrete counterexample under the assumptions in force. If we take the assumptions as "p is inside the diametral circle on ab AND ∠apb < π/2", that's an inconsistent set, so any conclusion can be drawn, but we need a counterexample to the assertion as written. Maybe the false assertion is line 0048: "Further, ∠apb < π/2." Because given p inside the diametral circle, ∠apb must be > π/2, so the assertion ∠apb < π/2 is false under the assumption that p is inside the diametral circle. But the text might not be deriving it; it's just stating another condition. However, the problem says "under the assumptions the writing itself has in force at that point." The writing has in force the assumption that p is inside the diametral circle (line 0045) and also states ∠apb < π/2 (line 0048). If we consider the writing's assumptions, they include both, but they are contradictory. A concrete counterexample to the assertion on line 0048 would be any p inside the diametral circle with ∠apb ≥ π/2. That's easy. But is line 0048 the "false assertion"? Or is line 0045 false? Actually, line 0045 is a conditional: "If an input vertex p lies inside the diametral circle..." It's not asserting it as true for all p; it's setting up a case. Line 0048 is "Further, ∠apb < π/2." This could be read as a claim that follows from the previous, or an additional assumption. Given the structure, it's likely intended as a consequence or a condition of the scenario. But geometrically, it's incompatible with the previous.
+
+   Let's check if there are other clear false assertions. Look at Lemma 2 proof (lines 0109-0127). "If p is inside an equatorial sphere, the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc. The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2." This seems geometrically suspicious. Let's try to derive or test. Suppose we have triangle Δabc in plane z=0. p = (x,y,h) with h>0. m is projection onto plane, so m=(x,y,0) ∈ Δabc. m' is on line am. The "equatorial sphere" of a triangular facet... what is it? In the context, earlier: "If m is arbitrarily close to one of the vertices of the triangle, say, a, we perturb m to a new location m' on the line joining a and m. We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets." So the equatorial spheres of the triangular facets are probably the spheres that have the triangle's edges as diameters? Or the circumspheres? Actually, in 3D Delaunay refinement, when you insert a vertex on a facet, you often consider the sphere with diameter from the new vertex to the opposite vertex, or the encroaching sphere. The text mentions "diametral sphere" in Lemma 2: "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p." And before: "equatorial spheres". Maybe "diametral sphere" and "equatorial sphere" are used interchangeably here, or there's a distinction. Let's assume the "equatorial sphere" of a triangular facet refers to the sphere with center at the facet's circumcenter and radius equal to circumradius? Or maybe it's the sphere that has the facet's edge as diameter and passes through something.
+
+   Let's read the proof of Lemma 2 again: "Consider the unique plane perpendicular to the plane of Δabc and on the line joining points a and m. Consider the cross-section of a equatorial (hemi)sphere on the plane. This cross-section is similar to Fig.~\ref{fig:aux2d} (c) and (d) if diametral semicircles are added to it. By construction, |am'| > |am|. If p is inside an equatorial sphere, the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc. The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2. Note that no arc on the plane may enclose vertices a or m' because the triangular facets form the Delaunay triangulation. Thus, if |am'| < 2|pm|, no equatorial sphere of triangular facets encroaches upon vertex p."
+
+   This proof seems very hand-wavy and likely incorrect. The claim "the cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2" needs to be examined. Let's try to reconstruct: We have a sphere, and we take a plane that intersects it. The cross-section is a circle. If the plane is perpendicular to something... The text says "Consider the unique plane perpendicular to the plane of Δabc and on the line joining points a and m." So the plane contains the line am and is perpendicular to the plane of Δabc. The intersection of this plane with the equatorial sphere (whatever that is) will be a circle (or arc). The text says this cross-section is similar to Fig.~\ref{fig:aux2d} (c) and (d) if diametral semicircles are added. Fig.~\ref{fig:aux2d} shows 2D configurations with circles and points. In those figures, there are diametral circles on segments. The claim about radius less than |pm|/2: if the cross-section arc has radius < |pm|/2, and we have |am'| < 2|pm|, then maybe p is not inside. But is this geometrically guaranteed? Probably not in general, and the proof doesn't rigorously establish it. Moreover, the statement "the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc" – if the sphere's center is on the plane of Δabc, and p has projection m on that plane, then the distance from the center to p is at least the distance from center to m (by Pythagoras, if p is directly above m). Actually, if center C is on the plane, and m is projection of p onto plane, then |Cp|^2 = |Cm|^2 + |pm|^2. So |Cp| ≥ |pm|, with equality iff C = m. So that part is correct: if p is inside the sphere, then |Cp| ≤ R (radius), so R ≥ |Cp| ≥ |pm|. So "radius of the sphere is greater than or equal to |pm|" is true if center is on the plane.
+
+   Now, "The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2." This is the critical part. Let's assume the equatorial sphere has center on the plane of Δabc. The cross-section plane is perpendicular to Δabc and contains am. The intersection of a sphere (center on plane Δabc) with a plane perpendicular to Δabc will be a circle. The radius of that circle depends on the distance from the sphere's center to the cross-section plane. The text claims this cross-section arc has radius < |pm|/2. Is that always true? Not necessarily. It might be true under specific configurations, but as a general claim, it's suspect.
+
+   Moreover, the conclusion "if |am'| < 2|pm|, no equatorial sphere of triangular facets encroaches upon vertex p" – this is the lemma. To find a counterexample, we need a specific 3D configuration where |am'| < 2|pm| but p is inside an equatorial sphere of a triangular facet.
+
+   Let's try to construct a concrete counterexample to Lemma 2 or its proof, or to another assertion.
+
+   Maybe the most straightforward false assertion is the one in line 0048: "Further, ∠apb < π/2." Given the assumption in line 0045 that p is inside the diametral circle on ab, this is geometrically false. But is line 0048 an "assertion" that is false as written? The text says: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b. Let the point of projection be m. Further, ∠apb < π/2." It's presenting ∠apb < π/2 as a fact about the configuration, perhaps derived or assumed. If we take the assumptions in force, the writing claims that if p is inside the diametral circle, then ∠apb < π/2. But we know that's false; in fact, the opposite holds. So line 0048 contains a false assertion. However, the problem might expect us to identify an assertion that is part of the algorithm's claims, not just a geometric mix-up. But the problem says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." The assumptions in force at line 0048 include that p is inside the diametral circle (from line 0045). So a counterexample: take a=(0,0), b=(10,0), p=(5,1). Then p is inside the circle with diameter ab (center 5, radius 5, distance from center 1 < 5). ∠apb: vectors (-5,-1) and (5,-1), dot = -25+1=-24, lengths sqrt(26)≈5.1, cos = -24/26 ≈ -0.923, angle ≈ 157° > 90°. So ∠apb is not < π/2. This contradicts line 0048. So line 0048 is false under the assumption of line 0045.
+
+   But wait: line 0046 says "the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b." In my example, p=(5,1), projection is (5,0), which is on segment ab (since a=0, b=10). So that's fine. Line 0047 "Let the point of projection be m." Fine. So the false assertion could be line 0048.
+
+   However, maybe the text defines "diametral circle" differently. In some mesh refinement contexts, the "diametral circle" on an edge might be the circle with the edge as diameter, but the condition for encroachment might involve the angle being acute or obtuse differently. But standardly, it's as I thought. The problem says: "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we can use the writing's own assumptions to produce a counterexample. If the writing assumes p is inside the diametral circle, and then asserts ∠apb < π/2, that assertion is false because we can exhibit p inside the circle with ∠apb > π/2.
+
+   But let's check if there's another assertion that is more central and clearly false, perhaps in the lemmas. The problem might be designed so that the false assertion is one of the lemmas' claims, and the counterexample is non-trivial. Let's examine Lemma 1 and Lemma 2 more deeply, as they are the "meat" of the mathematical argument.
+
+   **Lemma 1 (line 059-064):** Claim: m' may be placed such that |am'| ≥ |pm| and p does not encroach upon am'.
+   Proof: If p encroaches upon am', |am'| ≥ 2|pm| and m lies inside am'. Thus, m' may be placed such that |pm| ≤ |am'| ≥ 2|pm|... This proof seems logically flawed. It says "if p encroaches upon the segment am', |am'| ≥ 2|pm| and m must lie inside the line segment am'." Is that true? In 2D, encroachment of p on segment am' means p is inside the diametral circle on am'? Or just that p is "encroaching" in the sense of the algorithm's criteria? The text earlier: "if the Steiner vertex for Δabp encroaches upon segment ab, a new vertex m would be added on ab... Since p is not a free vertex, it is not deleted even if it is inside the circle. Thus, we would create a triangle with a smaller edge length |mp|." And "p does not lie inside the diametral circle of edge am or mb" is stated in line 0044? Actually line 0044: "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection...". Then later: "If the point m is added to the PLC, p does not lie inside the diametral circle of edge am or mb" (line 0044? Wait, line 0044 is "If an input vertex p lies inside the diametral circle on line segment ab...". Let's find the exact line: The text at line 0043: "We recommend the same algorithm for 3D PLCs as well..." Then line 0044: "If an input vertex p lies inside the diametral circle on line segment ab..." Actually, looking at the numbering: 
+   0043 | We recommend the same algorithm for 3D PLCs as well, but
+   0044 | we do not yet have a bound on the size optimality in
+   0045 | one of the cases described below. As above, we process
+   0046 | the vertices in the order of their distance to the
+   0047 | next nearest input features, i.e., the local sizing field
+   0048 | at the vertex. Consider a point p that is encroaching
+   0049 | upon the triangular facet Δabc. Let the point of
+   0050 | projection from p onto the plane formed by Δabc
+   0051 | be m, and let us assume that m ∈ Δabc. The new
+   0052 | vertex may be added at m if it is a sufficient distance
+   0053 | from other vertices. Since p is right above  m, no
+   0054 | circumsphere of any triangle containing the vertex at m
+   0055 | can encroach upon it. Further, due to the Delaunay
+   0056 | triangulation of
+   0057 | the facet, m does not lie not inside any of the
+   0058 | circumcircles of other triangles.  If m is arbitrarily
+   0059 | close to one of the vertices of the triangle, say, a,
+   0060 | we perturb m to a new location m' on the line
+   0061 | joining a and m.  We will show that |am'| can
+   0062 | be as large as 2|pm| before p lies inside
+   0063 | the equatorial spheres of the triangular facets.  If
+   0064 | m' is too close to some other vertices, some other
+   065 | point on the line segment mm' may be chosen such that
+   066 | it maximizes the minimum distance from all other vertices.
+   
+   Wait, the numbering I have from the user input is different. Let me re-get the exact lines from the user message. The user message has:
+   P1 | Title: ...
+   TEXT:
+   0001 | 
+   0002 | \section{Extension to a General Class of Piecewise Linear Complexes}
+   ...
+   I need to use the line numbers as given in the user message. Let's scroll up and use the exact line numbers from the user's text.
+
+   User text lines:
+   0001 | 
+   0002 | \section{Extension to a General Class of Piecewise Linear Complexes}
+   0003 | In our ten-page abstract above, we assumed that the local sizing
+   0004 | field at every input vertex is equal to (or smaller than) the length
+   0005 | of the shortest edge in the input PLC.  There are PLCs for which the
+   0006 | condition does not hold.  For instance, consider a line segment $ab$
+   0007 | and a point $p$ close to it.  If no vertices other than $a$ and $b$
+   0008 | are closer to $p$, the local sizing field at $p$ is equal to
+   0009 | its distance to $ab$, which may be smaller than $pa$ and $pb$.
+   0010 | We will first analyze why our algorithm may not function as
+   0011 | an advancing-front algorithm in such instances and then provide
+   0012 | a suitable preprocessing algorithm to achieve our objective
+   0013 | of placing vertices in an advancing-front manner.
+   0014 | 
+   0015 | Let us assume that $\Delta abp$ is a poor-quality triangle.
+   0016 | If we were to carry out Steiner vertex placement as in our
+   0017 | previous algorithm, $\Delta abp$ would be split in an
+   0018 | appropriate order depending on $|pa|$ and $|pb|$.
+   0019 | Further, if the Steiner vertex for $\Delta abp$ encroaches
+   0020 | upon segment $ab$, a new vertex $m$ would be added on $ab$,
+   0021 | and all \emph{free} vertices in the circle/sphere with
+   0022 | $m$ as the center and having a radius $|ma|$ (or $|mb|$) would
+   0023 | be deleted.  Since $p$ is not a free vertex, it is not deleted
+   0024 | even if it is inside the circle.  Thus, we would create
+   0025 | a triangle with a smaller edge length $|mp|$.  This
+   0026 | sabotages our idea of introducing progressively longer
+   0027 | edges after each Steiner vertex insertion.
+   0028 | 
+   0029 | In order to tackle the issue above, we develop an
+   0030 | algorithm to preprocess the PLC to add auxiliary Steiner
+   0031 | points into the PLC such that the diametral/equatorial
+   0032 | circles/spheres on the boundary edges and facets do not
+   0033 | contain the input vertex.  Thus, whenever a new vertex
+   0034 | is introduced, the length of the shortest edge of a new
+   0035 | triangle/tetrahedron can only be greater than the length of the
+   0036 | shortest existing triangle/tetrahedron.  Such a
+   0037 | preprocessing technique would result in an advancing-front
+   0038 | Steiner vertex insertion routine.  Since additional
+   0039 | vertices are added into the PLC, the constant associated
+   0040 | with the size optimality will be compromised.
+   0041 | 
+   0042 | 
+   0043 | Let us first consider the 2D problem (see
+   0044 | Fig.~\ref{fig:aux2d}).  If an input vertex $p$
+   0045 | lies inside the diametral circle on line segment $ab$,
+   0046 | the perpendicular projection of $p$ on the line joining
+   0047 | $a$ and $b$ lies on the line segment joining $a$ and $b$.
+   0048 | Let the point of projection be $m$.  Further,
+   0049 | $\angle apb < \pi/2$.  If the point $m$ is added to the
+   0050 | PLC, $p$ does not lie inside the diametral circle of
+   0051 | edge $am$ or $mb$, but $m$ may not be the most optimal
+   0052 | location of an auxiliary Steiner point because it may be
+   0053 | arbitrarily close to $a$ or $b$.  Thus, we perturb the
+   0054 | vertex $m$ to a location $m^{'}$ such that $p$ does not
+   0055 | lie inside the new diametral circles, \emph{and}
+   0056 | its location maximizes the minimum distance from all
+   0057 | other vertices.
+   0058 | 
+   0059 | \begin{lemma}
+   0060 | In 2D refinement, $m^{'}$ may be placed such that the
+   0061 | constant associated with the size optimality does not
+   0062 | reduce, i.e., $|am^{'}| \ge |pm|$ and $p$ does not
+   0063 | encroach upon the line segment $am^{'}$.
+   0064 | \end{lemma}
+   0065 | 
+   0066 | \begin{proof}
+   0067 | If $p$ encroaches upon the segment $am^{'}$,
+   0068 | $|am^{'}| \ge 2|pm|$ and $m$ must lie inside the line segment
+   0069 | $am^{'}$.  Thus, $m^{'}$ may be placed such that
+   0070 | $|pm| \le |am^{'}| \ge 2|pm|$, and we obtain a triangulation where
+   0071 | $p$ does not encroach on the boundary segment $am^{'}$.
+   0072 | If we process vertices in the increasing order of
+   0073 | their local sizing field, no other input vertex will be
+   0074 | closer than the distance $|pm|$ to $m^{'}$.  Thus, in 2D
+   0075 | refinement, the constant associated with the size optimality
+   0076 | does not reduce.
+   0077 | \end{proof}
+   
+   0079 | We recommend the same algorithm for 3D PLCs as well, but
+   0080 | we do not yet have a bound on the size optimality in
+   0081 | one of the cases described below.  As above, we process
+   0082 | the vertices in the order of their distance to the
+   0083 | next nearest input features, i.e., the local sizing field
+   0084 | at the vertex.  Consider a point $p$ that is encroaching
+   0085 | upon the triangular facet $\Delta abc$.  Let the point of
+   0086 | projection from $p$ onto the plane formed by $\Delta abc$
+   0087 | be $m$, and let us assume that $m \in \Delta abc$.  The new
+   0088 | vertex may be added at $m$ if it is a sufficient distance
+   0090 | from other vertices.  Since $p$ is right above  $m$, no
+   0091 | circumsphere of any triangle containing the vertex at $m$
+   0092 | can encroach upon it. Further, due to the Delaunay
+   0093 | triangulation of
+   0094 | the facet, $m$ does not lie not inside any of the
+   0095 | circumcircles of other triangles.  If $m$ is arbitrarily
+   0096 | close to one of the vertices of the triangle, say, $a$,
+   0097 | we perturb $m$ to a new location $m^{'}$ on the line
+   0098 | joining $a$ and $m$.  We will show that $|am^{'}|$ can
+   0099 | be as large as $2|pm|$ before $p$ lies inside
+   00100 | the equatorial spheres of the triangular facets.  If
+   0101 | $m^{'}$ is too close to some other vertices, some other
+   0102 | point on the line segment $mm^{'}$ may be chosen such that
+   0103 | it maximizes the minimum distance from all other vertices.
+   0104 | 
+   0105 | \begin{lemma}
+   0106 | If $|am^{'}| < 2|pm|$, no diametral sphere of triangular
+   0107 | facets encroaches upon vertex $p$.
+   0108 | \end{lemma}
+   
+   0109 | \begin{proof}
+   0110 | Consider the unique plane perpendicular to the plane of
+   0111 | $\Delta abc$ and on the line joining points $a$ and $m$.
+   0112 | Consider the cross-section of a equatorial (hemi)sphere on
+   0113 | the plane.  This cross-section is similar to
+   0120 | Fig.~\ref{fig:aux2d} (c) and (d) if diametral semicircles
+   0121 | are added to it.  By construction, $|am^{'}| > |am|$.  If
+   0122 | $p$ is inside an equatorial sphere, the radius of the sphere
+   0123 | is greater than or equal to $|pm|$ because the center of
+   0124 | the sphere lies on the plane of $\Delta abc$.  The
+   0125 | cross-section of the (hemi)sphere forms an arc smaller than
+   0126 | or equal to a semicircle with the radius less than
+   0127 | $|pm|/2$.  Note that no arc on the plane may
+   0128 | enclose vertices
+   0129 | $a$ or $m^{'}$ because the triangular facets form
+   130 | the Delaunay triangulation.
+   131 | Thus, if $|am^{'}| < 2|pm|$, no equatorial
+   132 | sphere of triangular facets encroaches upon vertex $p$.
+   133 | \end{proof}
+   
+   0134 | \begin{figure*}[t]
+   ...
+   0225 | 
+   Now I have the exact lines.
+
+   Let's analyze the false assertion. I need to find one that is clearly false under the writing's own assumptions, with a concrete counterexample.
+
+   Candidate 1: Line 0048: "Further, ∠apb < π/2." As discussed, given line 0045 "If an input vertex p lies inside the diametral circle on line segment ab", the standard geometry says ∠apb > π/2. So line 0048 asserts the opposite. Is line 0048 an "assertion" that is false as written? The text says "If an input vertex p lies inside the diametral circle on line segment ab, the perpendicular projection... Let the point of projection be m. Further, ∠apb < π/2." It could be read as: in this situation (p inside diametral circle), it turns out that ∠apb < π/2. But that's geometrically incorrect. A counterexample: a=(0,0), b=(4,0), p=(2,1). p is inside circle diameter ab (center 2, radius 2, distance 1 < 2). ∠apb: vectors (-2,-1) and (2,-1), dot = -4+1=-3, lengths sqrt(5)≈2.236, cos = -3/5 = -0.6, angle ≈ 126.87° > 90°. So ∠apb is not < π/2. This contradicts line 0048. So line 0048 is false under the assumption of line 0045.
+
+   But wait: line 0046 says "the perpendicular projection of p on the line joining a and b lies on the line segment joining a and b." In my example, projection is (2,0), which is on segment [0,4]. So that's fine. Line 0047 "Let the point of projection be m." Fine. So the false assertion is line 0048.
+
+   However, is line 0048 actually asserting something that is supposed to follow, or is it just an additional assumption? The phrasing "Further, ∠apb < π/2." after "Let the point of projection be m." suggests it's part of the description of the scenario. It might be that the author mistakenly thinks that if p is inside the diametral circle, then the angle is acute, which is a common error (confusing with the outside). But the problem says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we can take the assumption that p is inside the diametral circle (line 0045) and the assertion that ∠apb < π/2 (line 0048), and show a counterexample where p is inside the circle but angle is obtuse. That seems valid.
+
+   But maybe there's a more subtle and intended false assertion in the lemmas, because the problem mentions "the false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument." And "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." So pointing at line 0048 might be considered "merely because its justification is thin" or it's just a geometric mistake, but it is an assertion. However, the problem might expect us to find a false claim in the lemmas' proofs or statements, as those are the "mathematical writing" central assertions.
+
+   Let's examine Lemma 1 (lines 059-064) and its proof (066-077). The claim: "In 2D refinement, m' may be placed such that the constant associated with the size optimality does not reduce, i.e., |am'| ≥ |pm| and p does not encroach upon the line segment am'." The proof: "If p encroaches upon the segment am', |am'| ≥ 2|pm| and m must lie inside the line segment am'. Thus, m' may be placed such that |pm| ≤ |am'| ≥ 2|pm|, and we obtain a triangulation where p does not encroach on the boundary segment am'. If we process vertices in the increasing order of their local sizing field, no other input vertex will be closer than the distance |pm| to m'. Thus, in 2D refinement, the constant associated with the size optimality does not reduce."
+
+   Let's test this proof with a concrete 2D example. Suppose we have segment ab, p inside diametral circle, projection m on ab. We want to place m' on line am (or maybe on ab?) such that |am'| ≥ |pm| and p does not encroach on am'. The proof says: if p encroaches on am', then |am'| ≥ 2|pm| and m lies inside am'. So to avoid encroachment, we need |am'| < 2|pm|? Wait, the claim is we can place m' such that |am'| ≥ |pm| and p does not encroach. The proof argues that if p encroaches, then |am'| must be at least 2|pm|, so by ensuring |am'| is between |pm| and 2|pm|, we can avoid encroachment? Actually, the logic is: "If p encroaches upon the segment am', |am'| ≥ 2|pm| and m must lie inside the line segment am'." This is presented as a fact. Is it true that if p encroaches on am', then |am'| ≥ 2|pm|? Encroachment likely means p is inside the diametral circle on am'. If p is inside the diametral circle on am', then by Thales, ∠apm' > 90°? Not exactly. Let's recall: For segment am', the diametral circle has diameter am'. If p is inside that circle, then the angle subtended by am' at p is > 90°. But how does that relate to |am'| and |pm|? There's a known relation: In a triangle, if an angle is obtuse, the side opposite is longest. But here we have points a, p, m'. m' is on line am. This is getting messy.
+
+   Maybe we can find a direct counterexample to Lemma 1's claim. The claim is: m' may be placed such that |am'| ≥ |pm| and p does not encroach upon am'. Is this always possible? Suppose we have a specific configuration. Let a=0, b=10 on x-axis. p inside diametral circle, say p=(5,1) as before. m=(5,0). Line am is from (0,0) to (5,0), so it's the x-axis from 0 to 5. m' is on line am, so m' = (t,0) for some t ≥ 0. |am'| = t. |pm| = distance from (5,1) to (5,0) = 1. The claim says we can place m' such that t ≥ 1 and p does not encroach upon am'. What does "p does not encroach upon the line segment am'" mean in this context? Earlier, encroachment might mean p is inside the diametral circle on am'. The diametral circle on am' has center (t/2, 0), radius t/2. p=(5,1). For p to be inside this circle, distance from p to center (t/2, 0) must be < t/2. Distance squared = (5 - t/2)^2 + 1^2 = 25 - 5t + t^2/4 + 1 = t^2/4 - 5t + 26. We want this < (t/2)^2 = t^2/4. So t^2/4 - 5t + 26 < t^2/4 => -5t + 26 < 0 => t > 26/5 = 5.2. But m' is on line am, which is from a=0 to m=5, so t ≤ 5 (if we only perturb on segment am). If t can be beyond m, maybe. But the text says "perturb the vertex m to a location m' such that p does not lie inside the new diametral circles, and its location maximizes the minimum distance from all other vertices." It doesn't restrict m' to be between a and m; it could be on the line extending beyond. But in the proof of Lemma 1, it says "m must lie inside the line segment am'." So m is between a and m'. If a=0, m=5, then m' must be >5 for m to lie inside am'. So t > 5. Then |am'| = t > 5. |pm| = 1. The condition |am'| ≥ |pm| is easily satisfied (t > 1). Now, does p encroach on am'? For t > 5.2, p is inside the diametral circle on am', so it encroaches. For t between 5 and 5.2, p is outside the diametral circle, so it does not encroach. So we can choose t = 5.1, then |am'| = 5.1 ≥ 1, and p does not encroach on am'. So in this example, it's possible.
+
+   But is it always possible? The proof's logic might have a hidden assumption. The problem asks for a false assertion as written, with a concrete counterexample under the assumptions in force. Maybe Lemma 1's claim is false in some configuration, or the proof is invalid, but the claim itself might be true or false. We need to find an assertion that is definitely false.
+
+   Let's look at Lemma 2 (lines 0105-0107) and its proof (0109-133). Claim: "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p." Proof as discussed. Let's try to construct a counterexample to Lemma 2. We need a 3D configuration where |am'| < 2|pm| but p is inside an equatorial (diametral) sphere of a triangular facet.
+
+   First, clarify what "equatorial sphere of triangular facets" means. From the text: "If m is arbitrarily close to one of the vertices of the triangle, say, a, we perturb m to a new location m' on the line joining a and m. We will show that |am'| can be as large as 2|pm| before p lies inside the equatorial spheres of the triangular facets." And Lemma 2: "If |am'| < 2|pm|, no diametral sphere of triangular facets encroaches upon vertex p." So the "diametral sphere of triangular facets" is likely the sphere with diameter from m' to something, or the sphere that has the triangle's edge as diameter and passes through p? Actually, in the context of adding a vertex m' on the line am, and considering the triangular facets incident on the edge am or something. The text mentions "diametral/equatorial circles/spheres on the boundary edges and facets". Earlier: "such that the diametral/equatorial circles/spheres on the boundary edges and facets do not contain the input vertex." So for a triangular facet, the "equatorial sphere" might be the sphere that has the facet's circumcircle as equator? Or perhaps it's the sphere with center at the facet's centroid and radius something. But the proof of Lemma 2 tries to relate it to 2D cross-sections.
+
+   Let's try to interpret the 3D geometry from the proof. We have triangle Δabc in plane z=0. p = (x_p, y_p, h) with h>0. m is projection of p onto plane, so m=(x_p, y_p, 0) ∈ Δabc. m' is on line am. a is a vertex of the triangle. The "equatorial sphere" of a triangular facet... maybe it's the sphere that has the triangle's circumcircle as a great circle? Or the sphere through the three vertices of the triangle? But those are circumspheres, not necessarily "equatorial". The term "equatorial sphere" might refer to the sphere that is "equatorial" with respect to the facet, i.e., the sphere for which the facet lies on its equator. That would mean the sphere's center is in the plane of the facet, and the facet's circumcircle is the equator. So the sphere has center at the circumcenter of the triangle, and radius = circumradius. Then p is inside that sphere if distance from p to circumcenter < circumradius. But the text says: "If p is inside an equatorial sphere, the radius of the sphere is greater than or equal to |pm| because the center of the sphere lies on the plane of Δabc." If the sphere's center is on the plane of Δabc, and p's projection is m, then as I said, distance from center C to p is sqrt(|Cm|^2 + h^2) ≥ h = |pm|. So if p is inside the sphere, |Cp| ≤ R, so R ≥ |Cp| ≥ |pm|. That part is correct regardless of what the sphere is, as long as its center is on the plane and m is the projection of p onto that plane.
+
+   Now, "The cross-section of the (hemi)sphere forms an arc smaller than or equal to a semicircle with the radius less than |pm|/2." This is the critical geometric claim. Let's assume the equatorial sphere has center C on the plane z=0. The cross-section plane is "unique plane perpendicular to the plane of Δabc and on the line joining points a and m." So this plane contains the line am and is perpendicular to the triangle's plane. The intersection of this plane with the sphere (center C on z=0) will be a circle. The radius of this circle depends on the distance from C to the plane. The text claims this cross-section arc has radius < |pm|/2. |pm| is the height h (since m is projection, |pm| = h). So the claim is that the radius of the cross-sectional circle is less than h/2.
+
+   Is that always true? Not necessarily. It depends on the position of C and the plane. The plane contains am. a is a vertex of the triangle. m is the projection of p. C is the circumcenter of the triangle (if equatorial sphere means circum-sphere with center on plane). The distance from C to the plane containing am and perpendicular to triangle plane... this is getting complicated. But we can try to construct a specific counterexample where |am'| < 2|pm| but p is inside the equatorial sphere.
+
+   Let's simplify: Suppose we have a very flat triangle, or specific positions. Maybe we can set up coordinates and test the lemma's condition.
+
+   Let’s define a simple 3D case. Let a = (0,0,0), b = (1,0,0), c = (0,1,0). So triangle in xy-plane. Let p = (0.5, 0.5, h). Projection m = (0.5, 0.5, 0), which is inside the triangle (centroid-like). |pm| = h. Now, m' is on line am. a=(0,0,0), m=(0.5,0.5,0), so line am is t*(0.5,0.5,0), t ≥ 0. m' = (0.5t, 0.5t, 0). |am'| = distance from a to m' = t * sqrt(0.5^2+0.5^2) = t/√2.
+
+   Now, what is the "equatorial sphere of triangular facets"? The text might mean the sphere with diameter from m' to the opposite vertex or something. But Lemma 2 says "no diametral sphere of triangular facets encroaches upon vertex p." And the proof talks about "equatorial (hemi)sphere". Maybe the "diametral sphere" is the sphere with diameter m' something. Actually, earlier in the text (lines 0019-0023): "if the Steiner vertex for Δabp encroaches upon segment ab, a new vertex m would be added on ab, and all free

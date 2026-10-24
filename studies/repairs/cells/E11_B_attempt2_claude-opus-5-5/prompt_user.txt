@@ -1,0 +1,176 @@
+# Record E11: Polynomial content: the scalar pull-out
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E11 (proofwiki_25056)
+public source: https://proofwiki.org/wiki/Content_of_Scalar_Multiple
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Title: Content of Scalar Multiple
+P0002 | 
+P0003 | Let $f$ be a [[Definition:Polynomial (Abstract Algebra)|polynomial]] with [[Definition:Rational Number|rational]] [[Definition:Polynomial Coefficient|coefficients]].
+P0004 | 
+P0005 | Let $\cont f$ denote the [[Definition:Content of Rational Polynomial|content]] of $f$.
+P0006 | 
+P0007 | Let $q \in \Q$ be a [[Definition:Rational Number|rational number]].
+P0008 | 
+P0009 | Then:
+P0010 | 
+P0011 | :$\cont {q f} = q \cont f$
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Let $q = \dfrac a b$ with $a, b \in \Z$.
+0002 | 
+0003 | Let $\Z \sqbrk X$ denote the [[Definition:Ring of Polynomials|ring of polynomials]] over $\Z$.
+0004 | 
+0005 | Let $n \in \Z$ such that $n f \in \Z \sqbrk X$. 
+0006 | 
+0007 | Then we have:
+0008 | :$b n \paren {q f} = a n f \in \Z \sqbrk X$
+0009 | 
+0010 | By the definition of [[Definition:Content of Rational Polynomial|content]], and using that $a \in \Z$:
+0011 | :$\cont {b n q f} = a \cont {n f}$
+0012 | 
+0013 | By definition of [[Definition:Content of Rational Polynomial|content]]:
+0014 | :$\cont {q f} = \dfrac 1 {b n} \cont {b n q f}$
+0015 | 
+0016 | Combining the above with the definition of $\cont f$:
+0017 | :$\cont {q f} = \dfrac a b \dfrac 1 n \cont {n f} = q \cont f$
+0018 | {{Qed}}
+0019 | 
+0020 | [[Category:Polynomial Theory]]
+0021 | [[Category:Content of Polynomial]]
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+By the definition of [[Definition:Content of Rational Polynomial|content]], and using that $a \in \Z$:
+:$\cont {b n q f} = a \cont {n f}$
+located at line label(s): 0010, 0011
+
+## Located defective declaration
+
+Declaration: `ProofWiki25056Census.LocalClaim`
+
+```lean
+def LocalClaim : Prop := ∀ (a : ℤ) (p : ℤ[X]), (C a * p).content = a * p.content
+```
+
+The source (stored lines 0010-0011) pulls the integer scalar a out of the content: cont(b n q f) = a cont(n f), i.e. cont(a p) = a cont(p) for the integer polynomial p = n f. As a universal statement over all integers a and all p ∈ ℤ[X] this is the located defect. Supply the corrected scalar factor and prove the corrected identity for every a and p; there is no separate target theorem beyond the corrected statement.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+import Mathlib.RingTheory.Polynomial.Content
+import Mathlib.RingTheory.Localization.Integral
+import Mathlib.Tactic
+/-!
+Record proofwiki_25056 (E11): ProofWiki, "Content of Scalar Multiple".
+
+Quoted local claim, for `q = a / b`, `a b n : ℤ`, `n f ∈ ℤ[X]`:  `cont (b n q f) = a cont (n f)`.
+Since `b n q f = a (n f)` as integer polynomials (for every `b ≠ 0`), the quoted line is the
+scalar pull-out `cont (a p) = a cont p` with `p = n f`, stated below as `LocalClaim`.
+Integer content is Mathlib's `Polynomial.content` (the normalised gcd of the coefficients).
+-/
+namespace ProofWiki25056Census
+open Polynomial
+
+/-- The quoted line, for every integer scalar and every integer polynomial. -/
+def LocalClaim : Prop := ∀ (a : ℤ) (p : ℤ[X]), (C a * p).content = a * p.content
+
+end ProofWiki25056Census
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record proofwiki_25056 (E11): the quoted line fails at a = -1, p = X + 1:
+cont(-(X+1)) = 1 while (-1) * cont(X+1) = -1. -/
+namespace ProofWiki25056Census
+open Polynomial
+
+noncomputable def f : ℤ[X] := X + 1
+
+theorem f_content : f.content = 1 :=
+  IsPrimitive.content_eq_one (monic_X_add_C (1 : ℤ)).isPrimitive
+
+theorem neg_f_content : (C (-1 : ℤ) * f).content = 1 := by
+  have hf := (monic_X_add_C (1 : ℤ)).isPrimitive
+  have hp : (C (-1 : ℤ) * f).IsPrimitive := by
+    intro r hr
+    apply hf r
+    have e : C (-1 : ℤ) * f = -f := by rw [C_neg, C_1, neg_one_mul]
+    rw [e, dvd_neg] at hr
+    simpa [f] using hr
+  simpa using hp.content_eq_one
+
+theorem local_claim_fails_at_neg_one : (C (-1 : ℤ) * f).content ≠ (-1 : ℤ) * f.content := by
+  rw [neg_f_content, f_content]
+  norm_num
+
+theorem local_claim_false : ¬ LocalClaim := fun h => local_claim_fails_at_neg_one (h (-1) f)
+
+end ProofWiki25056Census
+
+#print axioms ProofWiki25056Census.local_claim_fails_at_neg_one
+#print axioms ProofWiki25056Census.local_claim_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E11: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace ProofWiki25056Census
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected scalar factor `s a` in `(C a * p).content = s a * p.content`, as an expression in the
+integer `a` (the source has `a` itself). No reference to `content`; no `if`/`match`. -/
+def scalar_factor (a : ℤ) : ℤ := «HOLE»
+
+/-- The corrected pull-out identity for every integer scalar and every integer polynomial (shape fixed;
+`Polynomial.content` is Mathlib's normalised gcd of the coefficients). -/
+def CorrectedClaim : Prop :=
+  ∀ (a : ℤ) (p : Polynomial ℤ), (Polynomial.C a * p).content = scalar_factor a * p.content
+-- ===== END FIXED PART =====
+
+end ProofWiki25056Census
+```
+
+Allowed edit: Replace the hole in `scalar_factor` by an expression in a (no reference to content; no if/match); nothing else in the fixed part may change. Polynomial.content, the left-hand side C a * p and the quantification over every integer a and every integer polynomial p are fixed; no hypothesis (0 ≤ a, a ≠ 0, p ≠ 0) may be added and no rational restatement is accepted. Do not redefine LocalClaim; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): LocalClaim
+
+## OBLIGATIONS (exact names and statements, inside `namespace ProofWiki25056Census`)
+
+```lean
+theorem repair_statement : ∀ (a : ℤ) (p : Polynomial ℤ), (Polynomial.C a * p).content = ProofWiki25056Census.scalar_factor a * p.content
+```
+(universal: Universal: the corrected identity for every integer `a` and every `p ∈ ℤ[X]`.)
+
+```lean
+theorem repair_nonvacuous : (∃ a : ℤ, ProofWiki25056Census.scalar_factor a ≠ a) ∧ (∃ a : ℤ, ProofWiki25056Census.scalar_factor a ≠ 0)
+```
+(nonvacuity: Non-vacuity: the corrected factor differs from the source's `a` somewhere and is not identically zero.)
+
+```lean
+theorem final_theorem : ∀ (a : ℤ) (p : Polynomial ℤ), (Polynomial.C a * p).content = ProofWiki25056Census.scalar_factor a * p.content
+```
+(final: The endpoint of this record is the corrected universal statement itself; restate it here, e.g. `:= repair_statement`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Write work/SUBMISSION.lean as specified in the instructions, compile it with `lake env lean work/SUBMISSION.lean`, fix errors within the budget, and finish with the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

@@ -1,0 +1,41 @@
+{
+  "record_id": "fun2026_berlin_safe_house_better_than_two",
+  "stage": "ARM_NEUTRAL_BASELINE",
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "Fixed-placement feasibility has an exact matching characterization, yielding an XP exact algorithm parameterized by the number k of bugs.",
+      "proof_sketch": "Fix a multiset B of bugs and their host intervals. For each safe house v, let A(v) be the bugs hosted in N[v]. Construct a bipartite graph whose left side is the safe houses and whose right side consists of all nonempty subsets of B; join v to S exactly when S⊆A(v). A matching saturating all safe houses is precisely an assignment of distinct nonempty feasible signatures. Conversely, such signatures define each bug's monitored set. Thus one can test a placement by bipartite matching, or by the source's polynomial lexicographic test. Enumerating the binomial(n+k−1,k) multisets of k host locations gives an n^{k+O(1)} exact decision algorithm for OPT≤k."
+    },
+    {
+      "claim": "Regional information bound: for every X⊆V, at least ceil(log2(|X|+1)) bugs must be hosted in N[X]. Moreover, the optimum is additive over connected components.",
+      "proof_sketch": "Every signature of a vertex in X uses only bugs whose hosts lie in N[X]=union_{x∈X}N[x]. If h bugs are hosted there, only 2^h−1 nonempty subsets of those bugs exist, so |X|≤2^h−1. If several sets X_i have pairwise disjoint N[X_i], their bounds add. For components, no bug can hear across components, so restricting any solution to each component gives a solution there. Conversely, componentwise solutions can be united: their bug sets are disjoint, and nonempty signatures from different components therefore cannot coincide. Hence OPT(G)=sum_C OPT(C)."
+    },
+    {
+      "claim": "If every connected component C has a universal safe house, then OPT is exactly sum_C ceil(log2(|C|+1)), computable in polynomial time.",
+      "proof_sketch": "The information bound applied to a component C gives OPT(C)≥ceil(log2(|C|+1)). If u is universal in C, put that many bugs at u. Every safe house can hear all of them, so assign the |C| houses arbitrary distinct nonempty subsets. This attains the lower bound. Component additivity proves the formula. This includes cliques, stars, and disjoint unions of such universal-vertex components."
+    },
+    {
+      "claim": "Incidence-capacity lower bound: if rho=max_v |N[v]| and a solution has k bugs, then L(n,k)≤k rho, where L(n,k) is the minimum total cardinality of n distinct nonempty subsets of a k-element set.",
+      "proof_sketch": "Let the signatures be S(v). Double-count incidences: sum_v |S(v)|=sum_b |M(b)|. A bug hosted at z monitors only a subset of N[z], so the right side is at most k rho. The left side is minimized by taking subsets in increasing cardinality. Explicitly, if s is least with sum_{j=1}^s binomial(k,j)≥n, then L(n,k)=sum_{j=1}^{s−1} j binomial(k,j)+s(n−sum_{j=1}^{s−1}binomial(k,j)). In particular, since at most k signatures are singletons, L(n,k)≥2n−k."
+    },
+    {
+      "claim": "The problem is exactly solvable on interval graphs of maximum degree at most two. For every connected component C of order n, OPT(C)=floor(n/2)+1; componentwise summation gives the general answer.",
+      "proof_sketch": "A connected maximum-degree-two graph is a path or a cycle. An interval graph has no induced cycle of length at least four: choosing a cycle interval with minimum right endpoint makes its two cycle neighbors intersect at that endpoint, creating a chord. Thus only paths and K3 occur, and K3 has optimum 2. For P_n, let k be the number of bugs. Each bug can occur in at most three signatures, while distinctness gives sum|S(v)|≥2n−k. Hence k≥ceil(n/2). If n=2t and k=t, equality everywhere forces all codes to be singletons or pairs and every bug to monitor the complete three-vertex neighborhood of an internal host. Two equal or adjacent hosts would then give at least two vertices the same pair-code. Thus the t hosts would be distinct, nonadjacent internal vertices, but P_{2t} has only t−1 such vertices—a contradiction. Therefore k≥t+1. For the matching upper bound, put bugs on all odd vertices. Give odd vertex 2j+1 its bug singleton and each intervening even vertex the pair of its adjacent odd-host bugs. If n is even, add one bug at the last vertex and give it that singleton. This uses floor(n/2)+1 bugs."
+    },
+    {
+      "claim": "Running the source greedy algorithm in both timeline directions and taking the better result is not exact, even on a connected symmetric instance: both runs use seven bugs while OPT=6.",
+      "proof_sketch": "Let L1,…,L6 be [-0.4,0],[-0.4,1],[0.6,2],[1.6,3],[1.6,4],[2.6,5]; let U=[3.5,11.5]; and let Ri be the reflection of Li under x↦15−x. The timeline order is L1,L2,L3,L4,L5,L6,U,R6,R4,R5,R3,R1,R2. Direct execution adds bugs while processing positions 1,2,4,6,9,11,13, hosting them at positions 2,3,6,7,11,13,13. Reflection symmetry gives seven in the reverse run too. Six bugs suffice: place a,b,c at L2,L3,L5 and d,e,f at R5,R3,R2. Assign left codes {a},{a,b},{a,b,c},{b},{b,c},{c}; right codes symmetrically {f},{e,f},{d,e,f},{e},{d,e},{d}; and give U code {c,d}. For the lower bound, X_L={L1,…,L4} can hear only bugs hosted among the six L-intervals and therefore requires at least ceil(log2(5))=3 bugs. Symmetrically X_R={R1,…,R4} requires three bugs hosted among the disjoint six R-intervals. Hence OPT≥6."
+    }
+  ],
+  "final_writeup": "The general approximation threshold remains unresolved: I did not obtain either a polynomial-time ratio below 2 for arbitrary interval families or a matching hardness result.\n\nThe main analytic progress is a reusable family of lower bounds. A region X containing |X| houses requires at least ceil(log2(|X|+1)) bugs among host intervals touching X. Disjoint host regions give additive certificates. A second lower bound double-counts bug/signature incidences and incorporates maximum neighborhood size. Together these yield exact formulas for components with a universal interval and for all maximum-degree-two interval graphs; paths P_n have optimum floor(n/2)+1.\n\nA tempting improvement of the source construction is to run it from both ends. The explicit symmetric 13-interval family above shows that this is not an exact algorithm: both directions return seven although a regional lower-bound certificate and explicit signatures prove optimum six. Thus any proof of a sub-2 guarantee for bidirectional greedy would need a genuinely quantitative comparison, not an exactness argument.\n\nFor additional finite evidence, every canonical interval-order encoding through nine vertices was exhaustively checked, and the better of the two directional greedy runs happened to be optimal on all of them. The 13-vertex construction shows that this finite pattern does not persist generally.",
+  "checks_performed": [
+    "Read only the designated JSON input; did not use the web or inspect any other repository file.",
+    "Derived the canonical encoding p_j∈{1,…,j}: the earlier neighbors of interval j form a suffix, and every such sequence is realized by [p_j−1/3,j]. Exhaustively enumerated all sum_{n=1}^9 n! = 409113 encodings.",
+    "For each encoding through nine vertices, computed both directional greedy outputs and the exact optimum by enumerating bug-host multisets in increasing cardinality and applying the exact fixed-placement feasibility test. For n≤8, feasibility was independently cross-checked using explicit bipartite matching to signature subsets.",
+    "Enumerated all host multisets for paths P_n through n=15; the results agreed with floor(n/2)+1.",
+    "Checked the 13-interval counterexample by exact greedy traces, explicit validation of all thirteen proposed signatures, and the two disjoint regional lower bounds proving that five bugs are impossible.",
+    "The requested scratch subdirectory could not be created because /tmp was mounted read-only. Checks therefore ran entirely in memory with working directory /tmp and wrote no repository files."
+  ],
+  "self_assessment": "CONFIDENT"
+}

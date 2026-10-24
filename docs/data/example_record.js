@@ -1,0 +1,163 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["example_record"] = {
+ "source": {
+  "commit": null,
+  "label": "release:reddit_learnmath_dm6itc",
+  "caption": "Built from bugbank/core/membership.json, bugbank/sources/reddit_learnmath_dm6itc.json, bugbank/dossiers/reddit_learnmath_dm6itc.json and bugbank/certificates/reddit_learnmath_dm6itc.lean of the released evidence."
+ },
+ "record_id": "reddit_learnmath_dm6itc",
+ "membership": {
+  "eligible": true,
+  "eligibility_reasons": [
+   "SAVED_ALL_THREE_YES_WITH_CURRENT_CONTINUITY_AND_NO_RETAINED_ADVERSE_REVIEW_OR_SOURCE_FLAG"
+  ],
+  "continuity": "EXACT_CURRENT_SCIENTIFIC_CONTENT",
+  "original_primary191": true,
+  "current_gold": [
+   5
+  ],
+  "review_evidence": [
+   {
+    "cohort": "selected30",
+    "review_locator": "I016",
+    "answers": [
+     "YES",
+     "YES",
+     "YES"
+    ],
+    "continuity": "EXACT_CURRENT_SCIENTIFIC_CONTENT"
+   }
+  ],
+  "bindings": {
+   "source": "bugbank/sources/reddit_learnmath_dm6itc.json",
+   "dossier": "bugbank/dossiers/reddit_learnmath_dm6itc.json",
+   "certificate": "bugbank/certificates/reddit_learnmath_dm6itc.lean",
+   "certificate_sha256": "fecb926b5ff2762a2c85e54f607cef1b485ba0868a046450633f21c44a73cdf8",
+   "source_lines_sha256": "7b7582db711760400d5e5a64cfea0f120ed0a8c7d8e861e94a7970cdab12101b",
+   "scientific_field_names": [
+    "problem",
+    "source_context",
+    "claim_quote",
+    "witness",
+    "explanation",
+    "flaw"
+   ],
+   "scientific_fields_sha256": "e15455a56671b594234f228f7aa86d37cbc58f85020ed3798f9368c9188d3091",
+   "selected_declarations_sha256": "98ec48e219f56486fd54cfe980ce9a5f4e9606cc7fd0d85eee854d5c3f6b6a76"
+  },
+  "in_primary_100": true,
+  "in_scorable_131": true
+ },
+ "source_lines": [
+  {
+   "label": "P1",
+   "text": "Is my Proof of Even and Odd Functions Correct?"
+  },
+  {
+   "label": "1",
+   "text": "*Q1: Suppose a function has the property that whenever \"x\" is in the domain of \"f\", then so is \"-x\". Show that f can be written as the sum of an even function and an odd function.*"
+  },
+  {
+   "label": "2",
+   "text": ""
+  },
+  {
+   "label": "3",
+   "text": "**By definition, an even function has the equation f(x) = f(-x) and by definition, an odd function satisfies the equation f(-x) = -f(x).**"
+  },
+  {
+   "label": "4",
+   "text": ""
+  },
+  {
+   "label": "5",
+   "text": "**Therefore, f can be written such that f(x) = f(-x) + (-f(x)).**"
+  },
+  {
+   "label": "6",
+   "text": ""
+  },
+  {
+   "label": "7",
+   "text": "**Applying the second definition above gives f(x) = -f(x) + -f(x) or f(x) = -2f(x).**"
+  },
+  {
+   "label": "8",
+   "text": ""
+  },
+  {
+   "label": "9",
+   "text": "*Q2: Prove that a nonzero polynomial function*"
+  },
+  {
+   "label": "10",
+   "text": ""
+  },
+  {
+   "label": "11",
+   "text": "***f(x) = a\\_nx\\^n + a\\_(n-1)x\\^n-1 + ... + a\\_2x\\^2 + a\\_1x +a\\_0***"
+  },
+  {
+   "label": "12",
+   "text": ""
+  },
+  {
+   "label": "13",
+   "text": "*where \"n\" is a nonnegative integer and a\\_0, a\\_1, ... a\\_n are real numbers with a\\_0 NOT equal to 0, can be expressed as the sum of an even function and odd function.*"
+  },
+  {
+   "label": "14",
+   "text": ""
+  },
+  {
+   "label": "15",
+   "text": "**Following the formula above, then I get:**"
+  },
+  {
+   "label": "16",
+   "text": ""
+  },
+  {
+   "label": "17",
+   "text": "**f(x)= 2\\[a\\_n(-x)\\^n + a\\_n-1(-x)\\^n-1 + ... a\\_2x\\^2 - a\\_1x +a\\_0**"
+  },
+  {
+   "label": "18",
+   "text": ""
+  },
+  {
+   "label": "19",
+   "text": "How do I know if this proof is even correct? Am I missing something? Any help would be appreciated. Thank you!"
+  }
+ ],
+ "n_nonblank_text": 10,
+ "gold": [
+  5
+ ],
+ "dossier_fields": {
+  "evidence_tier": "KERNEL_ONLY",
+  "human_approval_of_current_artifact": "NOT_ESTABLISHED_BY_THIS_AUTOMATED_RELEASE",
+  "selected_declarations": [
+   {
+    "axioms": [
+     "propext",
+     "Quot.sound"
+    ],
+    "disallowed_axioms": [],
+    "kind": "theorem",
+    "name": "Audit_reddit_learnmath_dm6itc.certificate",
+    "native_candidate_axioms": [],
+    "type": "(∀ x ∈ Audit_reddit_learnmath_dm6itc.D, -x ∈ Audit_reddit_learnmath_dm6itc.D) ∧\n  1 ∈ Audit_reddit_learnmath_dm6itc.D ∧\n    Audit_reddit_learnmath_dm6itc.f 1 ≠ Audit_reddit_learnmath_dm6itc.f (-1) + -Audit_reddit_learnmath_dm6itc.f 1",
+    "unsafe": false,
+    "uses_native_reduction": false
+   }
+  ],
+  "source_correspondence": null
+ },
+ "certificate": {
+  "path": "bugbank/certificates/reddit_learnmath_dm6itc.lean",
+  "sha256": "fecb926b5ff2762a2c85e54f607cef1b485ba0868a046450633f21c44a73cdf8",
+  "text": "import Mathlib.Data.Set.Lattice\nimport Mathlib.Tactic.NormNum\nimport Mathlib.Tactic.Linarith\nimport Mathlib.Tactic.Ring\nimport Mathlib.Tactic.FieldSimp\nimport Mathlib.Tactic.FinCases\nimport Mathlib.Tactic.Tauto\nimport Mathlib.Tactic.IntervalCases\n\n/- Human-guided audit: The unchanged negation-closed domain{−1,1} and constant1 function meet the only hypothesis, while1≠1−1. Uses Set and integer operations.\n   Original witness action: KEPT. -/\nnamespace Audit_reddit_learnmath_dm6itc\ndef D : Set ℤ := {-1,1}\ndef f (_ : ℤ) : ℤ := 1\ntheorem certificate : (∀ x ∈ D, -x ∈ D) ∧ (1 : ℤ) ∈ D ∧\n    f 1 ≠ f (-1) + (-f 1) := by\n  norm_num [D, f]\nend Audit_reddit_learnmath_dm6itc\n"
+ },
+ "note": "The dossier JSON keeps the historical automated-export fields (evidence_tier, human_approval_of_current_artifact); the current human-review verdict is the membership record above, joined by record id."
+};

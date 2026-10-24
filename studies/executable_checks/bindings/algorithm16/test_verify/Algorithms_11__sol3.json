@@ -1,0 +1,27 @@
+{
+  "record_id": "Algorithms_11__sol3",
+  "verdict": "CONFIRMED",
+  "claim_kind": "CORRECTNESS",
+  "target_claim": "Claim 1 (solution lines 0043-0044): H is 3-colorable iff the constructed river-crossing instance (n = 3m, EG = {(u(i),v(i)) : (u,v) in EH} U {(v(i),v(j)) : v in VH, i != j}, k = m+1, lines 0029-0035) admits a valid crossing sequence.",
+  "verifier_oracle_path": "<workspace>/partB_feasibility/algorithm_tests/Algorithms_11__sol3/verify_oracle.py",
+  "independent_reproduction": {
+    "failing_input": "H = K1 (m = 1, VH = {v0}, EH = {}); constructed instance n = 3, k = 2, V(G) = {v0(1), v0(2), v0(3)}, E(G) = the triangle on those three copies.",
+    "oracle_3_colorable": true,
+    "oracle_crossable": false,
+    "legal_moves_from_initial_state": 0,
+    "min_S_making_left_bank_independent": 2,
+    "capacity_allows": 1,
+    "sweep": "All 75 labelled graphs H on m = 1..4 (n = 3m <= 12): 74 violations of Claim 1. The constructed instance is crossable for NO H tested, so every 3-colorable H (all but K4) is mapped to a NO-instance.",
+    "paper_schedule_replay": "Lines 0054-0063 replayed on H = K2 with chi = (1,2): step 1 is already unsafe (unattended left bank contains the edge (v0(2), v1(2)), and also the within-vertex edges v1(1)-v1(3), v1(2)-v1(3)). Moreover C1 U C2 U C3 has only m = 2 of the n = 6 passengers, so even a legal version of the schedule never reaches the goal state."
+  },
+  "flaw_hunt_on_reported_test": {
+    "unfaithful_implementation": "No. test.py transcribes the reduction (n = 3m, both edge families, k = m+1) and the state machine (initial/goal, unattended-bank independence, |S| <= k-1) verbatim from lines 0015-0035. My from-scratch oracle uses a different representation (named-vertex frozensets, edge-list independence test, explicit DFS) and reproduces its numbers exactly (74/75 mismatches; K1 the smallest).",
+    "wrong_oracle": "No. Feasibility is complete reachability over the finite state space; 3-colorability is complete 3^m enumeration. Both are exhaustive, not heuristic.",
+    "floats_deciding": "No floats, no randomness, no timing anywhere in the decision.",
+    "bound_misread": "No. k = m+1 (line 0035) with |S| <= k-1 (line 0026) is read correctly. I also re-ran under the strictly more generous (and textually wrong) reading |S| <= k = m+1: still 73/75 violations, so the refutation is not an artifact of the Charon-counts-toward-k convention.",
+    "modelling_latitude": "The only choice not fixed by the text is whether Charon may cross with S = {}. Allowing it (as the solution's own steps 2 and 4 require) only enlarges the move set, so it can only help feasibility; the infeasibility verdict is robust either way."
+  },
+  "root_cause": "The construction puts the triangle v(1)-v(2)-v(3) on the three copies of every vertex v. Hence the unattended bank can retain at most ONE copy of each vertex, so any legal first trip must carry at least 2m passengers, while capacity permits only k-1 = m. For m >= 1 the initial state has no legal successor at all, so the instance is infeasible for every H.",
+  "typo_or_substantive": "SUBSTANTIVE, not a typo. Two independent substantive defects: (1) the backward argument (lines 0073-0077) asserts 'for each v at least one copy v(i) must be in S ... since |S| <= m, exactly one copy of each vertex is in S', which is the wrong side of the triangle constraint -- independence of V(G)\\S requires at least TWO copies per vertex inside S, and the proof's core identification of S with a color class is therefore backwards; (2) the forward schedule (lines 0054-0063) ferries only C1 U C2 U C3 = m of the 3m passengers and never mentions the other 2m, so it cannot reach the goal state regardless of capacity, and its stated invariant 'the remaining passengers C2 U C3 on the left form an independent set' is false by the construction's own edge set. I checked the most charitable single-constant repair (k = 2m+1): it does make small instances crossable, but the solution's schedule and its extraction argument as written remain wrong, so the defect is not a repairable constant slip.",
+  "notes": "Report's failing input, mechanism, mismatch count (74 of 75), and faithfulness notes all independently reproduced. Deterministic run."
+}

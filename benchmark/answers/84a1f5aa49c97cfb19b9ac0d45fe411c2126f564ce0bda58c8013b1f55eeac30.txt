@@ -1,0 +1,31 @@
+analysisWe need to find a false assertion in the text. Let's analyze.
+
+The recurrence: T(n) = 2 T(n/2) + n log n. Standard Master theorem case 2? Actually f(n) = n log n, a=2, b=2, so n^{log_b a} = n. f(n) = Theta(n log n). This is n^{log_b a} log^k n with k=1. So it falls into extended case 2A. The solution is Theta(n log^2 n). That is correct. The Master theorem in CLRS doesn't cover this case; but they can extend. So the statement that the recurrence falls between case 2 and case 3 and that the theorem can be generalized is correct.
+
+But the claim "Consider f(n) = Theta(n^{log_b a} log_b^k n) for some k >= 0" is fine. They say "This case reduces to Case 2 when k=0." That's true.
+
+But maybe the false assertion: "Along each branch of the recurrence tree f(x) is being added Theta(log_b n) times." Let's examine. For f(n) = n log n, each level of the tree: at level i, there are 2^i subproblems of size n/2^i. Each contributes f(n/2^i) = (n/2^i) * log(n/2^i). Sum over i from 0 to log n -1: 2^i * (n/2^i) * (log n - i). = n * sum_{i=0}^{log n -1} (log n - i) = n * ( (log n) * log n - sum_{i=0}^{log n -1} i ). sum i = (log n)(log n -1)/2. So total = n * ( (log n)^2 - (log n)(log n -1)/2 ) = n * ( (log n)^2 - (log n)^2/2 + (log n)/2 ) = n * ( (log n)^2/2 + (log n)/2 ). So Theta(n (log n)^2). So indeed Theta(n log^2 n). So the claim that each branch adds Theta(log_b n) times? Actually each leaf? Let's think: each node's f is added once. But along each branch, the number of nodes is Theta(log_b n). So the sum along a branch is n log n + (n/2) log(n/2) + ... ~ n log n + n/2 (log n -1) + ... ~ Theta(n log n). But they claim f(x) is being added Theta(log_b n) times along each branch. That might be okay: f(x) is added at each node, there are log_b n nodes per branch. So it's added log_b n times.
+
+But maybe the false assertion is "This case reduces to Case 2 when k = 0." Actually when k=0, f(n) = Theta(n^{log_b a}), so it's exactly case 2. So yes.
+
+Let's examine the lemma: g(n) = sum_{j=0}^{log_b n-1} a^j h(n/b^j). With h(n) = n^{log_b a} log_b^k n. They claim g(n) = n^{log_b a} log_b^{k+1} n. Let's check: h(n/b^j) = (n/b^j)^{log_b a} log_b^k (n/b^j) = n^{log_b a} b^{-j log_b a} (log_b n - j)^k. Then a^j h(n/b^j) = a^j n^{log_b a} b^{-j log_b a} (log_b n - j)^k. Since a = b^{log_b a}. So a^j = b^{j log_b a}. So a^j * b^{-j log_b a} = 1. So each term is n^{log_b a} (log_b n - j)^k. Sum over j from 0 to log_b n -1 of (log_b n - j)^k = sum_{i=1}^{log_b n} i^k. That's Theta((log_b n)^{k+1}). So g(n) = n^{log_b a} Theta((log_b n)^{k+1}). So indeed Theta(n^{log_b a} log_b^{k+1} n). So lemma is correct.
+
+However, the line "Lemma A: Consider a function g(n) = sum_{j=0}^{log_b n-1} a^j h(n/b^j) where h(n) = n^{log_b a} log_b^k n. Then g(n) = n^{log_b a} log_b^{k+1} n." They omitted Theta. They claim equality, not Theta. But the sum is Theta, not exactly equal. Because sum_{i=1}^{m} i^k = (m^{k+1})/(k+1) + O(m^k). So it's not equal to m^{k+1} exactly. So the assertion g(n) = n^{log_b a} log_b^{k+1} n is false. Indeed it's Theta, not equality. But maybe they treat log_b^k n as a function, and the sum yields Theta. But the statement is false as equality. So we can pick line 0049: "Then g(n) = n^{\log_b a} \log_b^{k +1} n." That is false; the correct is Theta. So we can propose that as false assertion.
+
+Alternatively, line 0012: "T(n) = Theta(n^{log_b a} log_b^{k+1} n)." That's also Theta, not equality. But they used Theta earlier. Actually they wrote "T(n) = Theta(...)" So that's fine. But the lemma says equality, not Theta. That is false.
+
+Let's check the text lines: 0049 is part of the lemma. So we can choose that as candidate.
+
+Also, line 0045: "g(n) = sum_{j=0}^{log_b {n-1}} a^j h(n/b^j)" but the sum limit is wrong: should be log_b n -1? They wrote log_b {n-1}. That's weird. But maybe it's a typo. But the false assertion might be that g(n) equals that sum. But the lemma's statement is false.
+
+Thus candidate: line 0049. Also line 0053: they claim g(n) = n^{log_b a} log_b^k n sum ... = n^{log_b a} log_b^{k+1} n. That uses equality again. But the sum is not exactly log_b^{k+1} n but Theta. So that is false.
+
+Also line 0018: they present T(n) = Theta(n * log^2 n). That's correct.
+
+So the false assertion: "g(n) = n^{log_b a} log_b^{k+1} n." Provide counterexample: For a=2, b=2, k=1, n=8. Then g(8) = sum_{j=0}^{2} 2^j * h(8/2^j) where h(n)=n log n. Compute: j=0: 1 * 8*3 =24. j=1:2 * 4*2 =16. j=2:4 *2*1 =8. Sum=48. n^{log_b a} log_b^{k+1} n = 8 * log_2^2 8 =8*3^2=72. Not equal. So false.
+
+Thus we can give counterexample: n=8, a=2, b=2, k=1.
+
+Alternatively, we can pick line 0049.
+
+Now produce JSON.assistantfinal{"candidates": ["0049"], "claim": "Lemma A claims that for h(n)=n^{log_b a} log_b^k n, the sum g(n)=∑_{j=0}^{log_b n-1} a^j h(n/b^j) equals exactly n^{log_b a} log_b^{k+1} n.", "counterexample": "Take a=2, b=2, k=1 and n=8. Then g(8)=48 while n^{log_b a} log_b^{k+1} n = 8·3^2=72, so the equality fails."}

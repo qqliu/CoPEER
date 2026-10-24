@@ -1,0 +1,376 @@
+Here's a thinking process:
+
+1.  **Analyze User Input:**
+   - The user provides a mathematical text (appears to be a paper on complexity theory, TIME vs SPACE).
+   - The text is labeled with P1, P2, ... for titles/problems, and 0001, 0002, ... for text lines.
+   - Task: Identify at least one false assertion in the text, where a concrete counterexample exists under the assumptions the writing itself has in force.
+   - Output format: JSON with "candidates" (up to 3 line labels), "claim" (the false assertion, one sentence), "counterexample" (one sentence).
+   - Constraints: Don't point at a line that only uses the assertion later, or a step merely because its justification is thin. If same assertion appears more than once, any occurrence is accepted.
+
+2.  **Scan the Text for False Assertions:**
+   I need to carefully read the paper and find a statement that is mathematically false given its own assumptions, or at least a claim that has a concrete counterexample under the stated assumptions.
+
+   Let me go through key sections:
+
+   - P1: "Title: $\mathrm{TIME}[t]\subseteq \mathrm{SPACE}[O(\sqrt{t})]$ via Tree Height Compression"
+   - The abstract (0105): "We prove a square-root space simulation for deterministic multitape Turing machines, showing $\mathrm{TIME}[t]\subseteq \mathrm{SPACE}[O(\sqrt{t})]$." Then it describes the Height Compression Theorem, etc.
+   - Central hypothesis (0132): "The succinct computation tree associated with a time-$t$ block-respecting simulation admits a uniform, logspace-computable transform of both the tree structure and evaluation schedule that yields $H'_{\mathrm{eval}}=O\!\big(\log T\big)$, where $T=\lceil t/b\rceil$, while preserving (i) $O(b)$-cell leaf replay cost, (ii) addressing/topology checkable in $O(\log t)$ space (endpoints, adjacency), with semantic correctness certified by exact $O(b)$ bounded-window replay with semantic merge verification performed by an exact $O(b)$-window replay at the unique interface, and (iii) associativity of merge operations."
+   - Then it says: "Together with a sharpened algebraic evaluator that leverages the compressed evaluation depth, this yields the additive tradeoff (0137): $\mathrm{TIME}[t]\ \subseteq\ \mathrm{SPACE}\!\left[\,O\!\big(b\ +\ \log(t/b)\big)\right]$ for all $b\ \ge\ b_0\ \ \text{with}\ \ b_0=\Theta(\log t)$, where $b_0$ is a mild technical lower bound ensuring that addressing/topology scratch does not dominate the $O(b)$ leaf replay buffer. We adopt the canonical choice $b=\Theta(\sqrt{t})$ henceforth."
+   - Later (0283-0287): "Apply Theorem~\ref{thm:HCT} to obtain $H'_{\mathrm{eval}}=O(\log T)=O(\log(t/b))$. By Lemma~\ref{lem:normalized-space}, $S(b)\ =\ O\!\big(b + \log(t/b)\big)\ \le\ O\!\big(b + \log t\big)$. Choose $b=\lfloor \sqrt{t}\rfloor$ to obtain $S(b)=O(\sqrt{t} + \tfrac{1}{2}\log t)=O(\sqrt{t})$ cells. This completes the proof."
+
+   Let me check for potential false assertions. I need to find a statement that is contradicted by its own assumptions, or has a concrete counterexample.
+
+   Look at line 0190: "This tree has height $\Theta(T)$." Footnote: "For comparison, the balanced interval tree on $[1,T]$ has height $\Theta(\log T)$. We fix the left-deep tree here to expose the path-bookkeeping term that underlies the classical $O\!\big(b+(t/b)\log b\big)$ space bound; our height-compression transform later reshapes the tree and schedule."
+   This seems true: left-deep binary tree on T leaves has height T-1 = Theta(T).
+
+   Line 0193: "A balanced interval tree on $[1,T]$ indeed has recursion depth $\Theta(\log T)$, but prior small‑space simulations incurred a per‑level descriptor of size $\Theta(\log b)$ (for child addressing, offset encoding within $b$‑windows, and counters), so a depth‑$\Theta(\log T)$ traversal still paid $\Theta(\log T \cdot \log b)$ bits of path bookkeeping."
+   This seems plausible as the prior state of the art.
+
+   Line 0203-0205: Lemma [Canonical stack depth]: "The canonical evaluation schedule requires $H_{\mathrm{eval}} = \Theta(T) = \Theta(t/b)$ stack levels." This is about the left-deep tree, so yes, height is Theta(T).
+
+   Line 0207-0209: Lemma [Token size bound]: "Under the canonical schedule, $\log U = \Theta(\log b)$ due to the need to encode offsets within size-$b$ windows and child-addressing predicates." This seems assumed.
+
+   Line 0211-0223: Standard depth-first evaluator incurs $S(b)\ =\ O(b)\ +\ O(H_{\mathrm{eval}} \log U)$. Substituting gives $S(b)\ =\ O(b)\ +\ O((t/b)\log b)$. Optimizing gives $O(\sqrt{t\log t})$. This is the prior bound.
+
+   Line 0223: "Our work removes the multiplicative $\log b$ by compressing the evaluation stack depth and redesigning the evaluator so that per-level tokens are $O(1)$."
+
+   Now, the main claim is that they achieve $O(\sqrt{t})$ space. Is there a hidden assumption or a false step?
+
+   Let me check the Height Compression Theorem details. Line 0413-0419: Lemma [Exact midpoint shrink and depth]: "For every root-to-leaf path under midpoint recursion, if $\ell(d)$ denotes the active-interval length at depth $d$, then $\ell(d+1) \le \lceil \ell(d)/2\rceil$, and the recursion depth is at most $\lceil \log_2 T\rceil$. Along the path there is at most one active interval per depth."
+
+   Line 0428-0430: Lemma [Per-path stack-height and window usage]: "Under the midpoint recursion and DFS, the number of simultaneously active intervals (hence the evaluation stack depth) along any root-to-leaf traversal is $O(\log T)$. At most one $O(b)$ window is ever materialized at once, so additional window memory is $O(b)$ (not multiplied by $\log T$)."
+
+   Line 0447-0454: Lemma [Rigorous per-path potential decay]: 
+   (i) $\Phi = O(\log T)$ throughout.
+   (ii) Number of simultaneously active interfaces is $O(\Phi)=O(\log T)$.
+   (iii) Live window bound: Although $O(\log T)$ interfaces may be active as metadata, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells. Thus the per-path workspace bound is $O(b + \log T)$.
+
+   Line 0457-0470: Proof of the potential lemma. Let's check the proof carefully.
+
+   "Initialization. At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$."
+
+   "Monotonicity. Backtracking pops interfaces and cannot increase $\Phi$."
+
+   "Decay. When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have $w(\lceil \lambda/2\rceil) \le \lceil \log_2(1+\lambda/2)\rceil \le w(\lambda)-1+O(1)$, so over every constant number of levels the total potential drops by at least a positive constant (small-$\lambda$ cases contribute only $O(1)$ in total). Hence $\Phi=O(\log T)$ throughout."
+
+   "Interface count and workspace. Each active interval contributes at most two interfaces, so the count is $O(\Phi)$. Each interface is materialized via bounded-window replay using $O(b)$ cells; auxiliary fields are constant- or $O(\log t)$-bit values stored within these cells. Thus the live workspace is $O(b) + O(\log T)$: at most one $O(b)$ window is materialized at any time, and interface metadata contributes only $O(\log T)$ cells."
+
+   This potential argument seems standard for balanced tree traversal. I need to see if there's a subtle flaw.
+
+   Let me check line 0249: "These ingredients together produce a binary evaluation tree with $H'_{\mathrm{eval}}=O(\log T)$ and $O(1)$ per-level tokens, enabling the $O\!\big(b+\log(t/b)\big)$ space bound (optimized at $b=\Theta(\sqrt{t})$)."
+
+   Line 0271-0276: Lemma [Normalized ARE space]: "Instantiating the ARE with Lemmas~\ref{lem:const-field}, \ref{lem:indexfree}, and \ref{lem:pointerless} yields a space bound $S(b)\ =\ O(b)\ +\ O(H'_{\mathrm{eval}})\ =\ O(b + \log T)\ =\ O(b+\log(t/b))\ cells$."
+
+   Line 0278-0280: Proof: "Leaves: replaying a block's $O(b)$-cell window uses $O(b)$ cells plus $O(1)$-cell loop control by Lemma~\ref{lem:indexfree}. Internal nodes: algebraic accumulators are $O(1)$ cells by Lemma~\ref{lem:const-field}. Path bookkeeping: by Lemma~\ref{lem:pointerless}, the traversal stack uses $O(1)$ cells per level, hence $O(H'_{\mathrm{eval}})=O(\log T)$ cells in total. Summing yields the stated bound."
+
+   Line 0283-0287: Completion of proof of Theorem~\ref{thm:main}. "Apply Theorem~\ref{thm:HCT} to obtain $H'_{\mathrm{eval}}=O(\log T)=O(\log(t/b))$. By Lemma~\ref{lem:normalized-space}, $S(b)\ =\ O(b + \log(t/b))\ \le\ O(b + \log t)$. Choose $b=\lfloor \sqrt{t}\rfloor$ to obtain $S(b)=O(\sqrt{t} + \tfrac{1}{2}\log t)=O(\sqrt{t})$ cells."
+
+   Now, is there a false assertion? Let's think about the potential lemma's decay argument. The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$. At depth d, $\ell(d) \le \lceil T/2^d \rceil$ by Lemma 414. So $\Phi \le \sum_{d=0}^{\lceil \log_2 T \rceil} \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil$.
+
+   Let's compute this sum roughly: For d from 0 to log2 T, $\log_2(T/2^d) = \log_2 T - d$. So the terms are about $\log_2 T - d + 1$ (ceiling). Summing d=0 to log2 T gives about $\sum_{k=1}^{\log_2 T} k = O((\log T)^2)$. Wait! That's a crucial point.
+
+   Let's check: If $\ell(d) \approx T/2^d$, then $w(\ell(d)) = \lceil \log_2(1+\ell(d)) \rceil \approx \log_2(T/2^d) = \log_2 T - d$. Summing d=0 to L where L = \log_2 T gives $\sum_{d=0}^{\log_2 T} (\log_2 T - d) = \sum_{k=0}^{\log_2 T} k = O((\log T)^2)$.
+
+   But the lemma claims $\Phi = O(\log T)$. Is that a mistake?
+
+   Let's re-read the potential definition and the decay argument. The potential is $\Phi = \sum_{B \in \mathcal{B}} w(\mathrm{len}(B))$, where $\mathcal{B}$ is the set of active interfaces. In the DFS, there's at most one active interval per depth, so $\mathcal{B}$ has at most one element per depth level, but the depth itself goes up to $O(\log T)$. So there are at most $O(\log T)$ active intervals at any time (one per depth level). Each has length $\ell(d) \le \lceil T/2^d \rceil$. So $\Phi = \sum_{d=0}^{D} w(\ell(d))$, where D is current depth, at most $\lceil \log_2 T \rceil$.
+
+   Now, $w(\lambda) = \lceil \log_2(1+\lambda) \rceil$. If $\lambda = T/2^d$, then $w(\lambda) \approx \log_2 T - d$. Summing d=0 to $\log_2 T$ gives $\sum_{k=1}^{\log_2 T} k = O((\log T)^2)$. So $\Phi$ would be $O((\log T)^2)$, not $O(\log T)$.
+
+   But maybe the potential is defined differently, or the decay argument brings it down? Let's check the decay argument in the proof: "When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have $w(\lceil \lambda/2\rceil) \le \lceil \log_2(1+\lambda/2)\rceil \le w(\lambda)-1+O(1)$". This is true pointwise: if $\lambda$ halves, $w$ decreases by about 1. But the potential sums over all currently active intervals. In the DFS, as we go down, we replace the current interval with one child, so the length at the new depth is about half, but we still have all the previous intervals active? Wait, in a DFS on a tree, the stack contains the path from root to current node. So at depth d, there is exactly one active interval per depth level on the stack? Actually, in a standard DFS, the stack size equals the depth. If we have a tree of depth D, the stack has D elements, each corresponding to an interval on the path. But in the evaluation, they might be tracking interfaces differently.
+
+   Let's read Lemma 430: "Under the midpoint recursion and DFS, the number of simultaneously active intervals (hence the evaluation stack depth) along any root-to-leaf traversal is $O(\log T)$. At most one $O(b)$ window is ever materialized at once, so additional window memory is $O(b)$ (not multiplied by $\log T$.)"
+
+   And Lemma 452: "Although $O(\log T)$ interfaces may be active as metadata, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells."
+
+   So they claim the number of simultaneously active interfaces is $O(\log T)$, and the potential $\Phi$ is $O(\log T)$. But as I argued, the sum of $\lceil \log_2(1+\ell(d)) \rceil$ over d=0 to $\log_2 T$ is $O((\log T)^2)$. Let's verify with a concrete example. Suppose T=8. Depths: d=0, len=8, w=ceil(log2(9))=4. d=1, len<=4, w=ceil(log2(5))=3. d=2, len<=2, w=ceil(log2(3))=2. d=3, len<=1, w=ceil(log2(2))=1. d=4, len=0? Actually depth max is ceil(log2 8)=3. Sum = 4+3+2+1=10. log2 T = 3. (log T)^2 = 9. So 10 is about (log T)^2. For T=16: d=0: len=16, w=ceil(log2(17))=5. d=1: len<=8, w=4. d=2: len<=4, w=3. d=3: len<=2, w=2. d=4: len<=1, w=1. Sum=5+4+3+2+1=15. log2 T=4, (log T)^2=16. So indeed the sum is exactly $\sum_{k=1}^{\log_2 T + 1} k \approx (\log T)^2/2$.
+
+   So the potential $\Phi$ as defined in Lemma 447 is $O((\log T)^2)$, not $O(\log T)$. The lemma claims it's $O(\log T)$. This seems like a genuine mathematical error in the paper, given their own definitions and the proof they sketched.
+
+   But let's check if maybe the potential is defined per interface, and they have a different counting. The potential is $\Phi = \sum_{B \in \mathcal{B}} w(\mathrm{len}(B))$. If $\mathcal{B}$ has at most one element per depth, and depth is $O(\log T)$, then there are $O(\log T)$ terms. Each term is $w(\ell(d))$. If $\ell(d) \le \lceil T/2^d \rceil$, then $w(\ell(d)) \le \lceil \log_2(1 + T/2^d) \rceil$. The sum over d=0 to $\log_2 T$ of $\log_2(T/2^d)$ is $\sum_{k=1}^{\log_2 T} k = O((\log T)^2)$. So yes, $\Phi = O((\log T)^2)$.
+
+   However, maybe the depth is not $\log_2 T$ but something else? Lemma 413 says recursion depth is at most $\lceil \log_2 T \rceil$. So depth is $\Theta(\log T)$.
+
+   Maybe the potential decay argument is supposed to show that $\Phi$ never exceeds $O(\log T)$, but the initial value and the sum argument contradict that. Let's read the decay argument carefully: "When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have $w(\lceil \lambda/2\rceil) \le \lceil \log_2(1+\lambda/2)\rceil \le w(\lambda)-1+O(1)$, so over every constant number of levels the total potential drops by at least a positive constant (small-$\lambda$ cases contribute only $O(1)$ in total). Hence $\Phi=O(\log T)$ throughout."
+
+   This decay argument seems to assume that as we go down levels, the potential of the current interval decreases by 1 every few levels, but it doesn't account for the fact that we have multiple intervals active (one per level). In a DFS, the stack contains all intervals from root to current node. So the potential is the sum over all those intervals. If each interval's potential decreases by ~1 per level, but there are O(log T) levels, the total could be O((log T)^2) initially, and as we go down, the deeper intervals have smaller potential, but the sum might still be O((log T)^2). The decay argument might be flawed because it's considering a single interval's potential over time, not the sum over the stack.
+
+   Let's think: In the proof, they say "Initialization. At the root there are two interfaces of length T, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$." Wait, two interfaces of length T? That would give potential $2 \lceil \log_2(1+T) \rceil = O(\log T)$. But if there are interfaces at each depth, why only two at the root? Maybe they define "active interfaces" differently. Let's check Definition 239: "An active interface is the boundary state at the endpoint of a currently processed chunk during evaluation. The potential $\Phi$ measures the total 'weight' of all active interfaces. The stack discipline maintains these interfaces according to the evaluation schedule."
+
+   And in the proof of Lemma 457: "At depth d, the active interval length is $\ell(d)\le \lceil T/2^d\rceil$ by Lemma~\ref{lem:B1-midpoint}, so $\Phi_{\mathrm{path}}\ =\ \sum_{d=0}^{D} \Big\lceil \log_2\!\big(1+\ell(d)\big)\Big\rceil \ \le\ \sum_{d=0}^{\lceil\log_2 T\rceil} \big(\log_2(T/2^d)+1\big) \ =\ O(\log T)$."
+
+   Wait! Look at that inequality: $\sum_{d=0}^{\lceil\log_2 T\rceil} \big(\log_2(T/2^d)+1\big)$. Let's compute that sum: $\sum_{d=0}^{L} (\log_2 T - d + 1)$ where $L = \lceil \log_2 T \rceil$. That's $\sum_{k=1}^{L+1} k = (L+1)(L+2)/2 = O((\log T)^2)$. But they claim it's $O(\log T)$. There's a clear mistake here. They wrote $\sum_{d=0}^{\lceil\log_2 T\rceil} \big(\log_2(T/2^d)+1\big)$ and said it equals $O(\log T)$, but it's actually $O((\log T)^2)$. This is a mathematical error in the paper.
+
+   Let me double-check the text exactly as given:
+
+   Line 0451-0453 in the proof of Lemma \ref{lem:potential}:
+   ```
+   \begin{enumerate}
+     \item The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking).
+     \item The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$.
+     \item \textbf{Live window bound:} Although $O(\log T)$ interfaces may be active as \emph{metadata}, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells. Thus the per-path workspace bound is $O\big(b + \log T\big)$.
+   \end{enumerate}
+   ```
+
+   And the proof text (lines 0457-0470):
+   ```
+   \begin{proof}
+   \textbf{Initialization.} At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$.
+   
+   \textbf{Monotonicity.} Backtracking pops interfaces and cannot increase $\Phi$.
+   
+   \textbf{Decay.} When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have
+   \[
+   w(\lceil \lambda/2\rceil)\ \le\ \left\lceil \log_2\!\big(1+\tfrac{\lambda}{2}\big)\right\rceil\ \le\ w(\lambda)-1+O(1),
+   \]
+   so over every constant number of levels the total potential drops by at least a positive constant (small-$\lambda$ cases contribute only $O(1)$ in total). Hence $\Phi=O(\log T)$ throughout.
+   
+   \textbf{Interface count and workspace.} Each active interval contributes at most two interfaces, so the count is $O(\Phi)$. Each interface is materialized via bounded-window replay using $O(b)$ cells; auxiliary fields are constant- or $O(\log t)$-bit values stored within these cells. Thus the live workspace is $O(b) + O(\log T)$: at most one $O(b)$ window is materialized at any time, and interface metadata contributes only $O(\log T)$ cells.
+   
+   \end{proof}
+   ```
+
+   Wait, in the proof they don't actually do the sum over depths; they use a decay argument. But the decay argument might be insufficient or incorrect for the sum over the stack. However, the crucial error might be in the statement of the potential itself or in the initial value. They say "At the root there are two interfaces of length T, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$." If there are only two interfaces at the root, then maybe the stack doesn't accumulate all depths? But in a DFS on a tree of depth $\log T$, the stack would have $\log T$ elements. How can there be only two interfaces at the root?
+
+   Let's read the context more carefully. The potential $\Phi$ is defined in Definition 239: "For an interval (or boundary) of length $\lambda$, define weight $w(\lambda) \coloneqq \lceil \log_2(1+\lambda)\rceil$. For any fixed DFS path with active interfaces $\mathcal{B}$ on the current stack, define $\Phi\ \coloneqq\ \sum_{B\in\mathcal{B}} w\!\big(\mathrm{len}(B)\big)$."
+
+   And in the paragraph before Lemma 447: "During a depth-first evaluation along any fixed root-to-leaf path, an \emph{active interface} is the boundary state (control, head positions, and checksums) at the left or right endpoint of a currently active interval on the DFS stack. The evaluator maintains a stack of active interfaces reflecting the current path, with at most two interfaces per active interval."
+
+   So the stack has one active interval per depth level, and each active interval has at most two interfaces (left and right endpoint). So the number of active interfaces is at most $2 \times$ depth. If depth is $O(\log T)$, then number of active interfaces is $O(\log T)$. The potential $\Phi$ sums $w(\mathrm{len}(B))$ over all active interfaces $B$ in the stack.
+
+   Now, if each active interval has length $\ell(d) \le \lceil T/2^d \rceil$ at depth d (where d=0 is root, d=depth), then for each interface at depth d, $w(\ell(d)) \le \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil$. Since there are at most 2 interfaces per depth, the total potential $\Phi \le \sum_{d=0}^{D} 2 \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil$, where D is current depth $\le \lceil \log_2 T \rceil$.
+
+   This sum is $2 \sum_{d=0}^{\log_2 T} \log_2(T/2^d) \approx 2 \sum_{k=1}^{\log_2 T} k = O((\log T)^2)$. So $\Phi$ is $O((\log T)^2)$, not $O(\log T)$.
+
+   The paper claims $\Phi = O(\log T)$ throughout. This seems like a false assertion given their own definitions and the math. Is there a way it could be $O(\log T)$? Maybe the depth is not $\log_2 T$ but something like $\log \log T$? No, midpoint recursion on T intervals gives depth $\lceil \log_2 T \rceil$. Maybe the weight function is different? $w(\lambda) = \lceil \log_2(1+\lambda) \rceil$. If $\lambda$ is the interval length, and at depth d it's about $T/2^d$, then yes.
+
+   Perhaps they define $\ell(d)$ as the length of the active interval at depth d, but in the DFS, the stack only contains the current path, and the potential is summed over the interfaces on the stack. If the stack has depth D, and at each level the interval length is halved, then the sum of logs is quadratic in depth. This is a standard pitfall in such potential arguments; sometimes people mistakenly think $\sum_{i=1}^n \log i = O(n \log n)$ but here it's $\sum_{d=0}^{\log T} \log(T/2^d) = \sum_{k=1}^{\log T} k = O((\log T)^2)$.
+
+   Let me check if there's any other false assertion. Maybe the claim that "at most one $O(b)$ window is ever materialized at a time" is false, or the space bound $O(b + \log T)$ is incorrect because of this potential issue. But the question asks: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument."
+
+   I need to identify a line that contains the false assertion. The false assertion could be the lemma statement itself, or a key claim. The user says: "If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin."
+
+   So I should find a specific line number where a false assertion is made. Let's look at the lines around the potential lemma.
+
+   Line 0447-0450: "Lemma [Rigorous per-path potential decay]... (i) The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking)."
+
+   Line 0451: "(ii) The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$."
+
+   Line 0452: "(iii) Live window bound: Although $O(\log T)$ interfaces may be active as metadata, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells. Thus the per-path workspace bound is $O\big(b + \log T\big)$."
+
+   The false assertion is likely the claim that $\Phi = O(\log T)$ throughout, or the initial value $O(\log T)$, or the decay argument implying it. But I need to give a specific line label. The lemma is referenced as Lemma~\ref{lem:potential}, but the text lines are numbered 0001, 0002, ... I need to find the exact line numbers where these statements appear.
+
+   Let me scroll through the line numbers. The text starts at 0001 with document class, etc. The actual content starts later. I need to map the logical sections to line numbers.
+
+   Looking at the input:
+   - 0101: \begin{center} \Large \textbf{Abstract} \end{center}
+   - 0105: We prove a square-root space simulation...
+   - 0111: \section{Introduction}
+   - 0113: \subsection{Problem statement and context}
+   - 0114: A prominent question...
+   - 0116: Recent progress has established...
+   - 0119-0120: equation TIME[t] ⊆ SPACE[O(√(t log t))]
+   - 0122: by reducing a time-t run...
+   - 0124: This work pursues...
+   - 0126: \subsection{Central hypothesis and thesis of the paper}
+   - 0128: \begin{definition}[Evaluation stack depth]
+   - 0132: \textbf{Central Hypothesis (proved herein).} ...
+   - 0135-0139: additive tradeoff equation
+   - 0140: where $b_0$ is a mild technical lower bound...
+   - 0141: We adopt the canonical choice $b=\Theta(\sqrt{t})$ henceforth.
+   - 0142-0154: \subsection{Contributions}
+   - 0156: \subsection{Why this, why now}
+   - 0159: \section{Preliminaries and Notation}
+   - 0161: We fix asymptotic conventions...
+   - 0163: \paragraph{Asymptotics and notation.}
+   - 0164: All logarithms are base 2 unless noted...
+   - 0166: \paragraph{Key notation.}
+   - 0167-0177: table of notation
+   - 0179: \subsection{Machines, time blocking, and succinct computation trees}
+   - 0179-0197: description of machines, blocking, succinct computation trees
+   - 0190: This tree has height $\Theta(T)$.
+   - 0192: \paragraph{Why a balanced tree wasn’t previously enough.}
+   - 0193: A balanced interval tree on $[1,T]$ indeed has recursion depth $\Theta(\log T)$, but prior small‑space simulations incurred a per‑level descriptor of size $\Theta(\log b)$...
+   - 0195: \subsection{Space accounting: the canonical tradeoff}
+   - 0197: \begin{definition}[Canonical evaluation schedule]
+   - 199: The \emph{canonical evaluation schedule} performs depth-first traversal of the left-deep evaluation tree $\mathcal{T}$, storing one addressing token per tree level to enable parent-child navigation and merge verification.
+   - 201-209: lemmas about canonical stack depth and token size bound
+   - 211-223: standard depth-first evaluator space formula, optimization to $\sqrt{t\log t}$
+   - 223: "Our work removes the multiplicative $\log b$ by compressing the evaluation stack depth and redesigning the evaluator so that per-level tokens are $O(1)$."
+   - 0225: \subsection{Algebraic evaluation and low-degree extensions}
+   - 0225-0234: low-degree extension tuning
+   - 0236: \subsection{Pebbling preliminaries}
+   - 0237-0249: pebbling preliminaries, active interfaces, potential, centroid schedule, indegree-capping
+   - 0249: "These ingredients together produce a binary evaluation tree with $H'_{\mathrm{eval}}=O(\log T)$ and $O(1)$ per-level tokens, enabling the $O\!\big(b+\log(t/b)\big)$ space bound (optimized at $b=\Theta(\sqrt{t})$)."
+   - 0255: \section{The Height Compression Theorem (HCT)}
+   - 0257: In this section we give a complete construction and analysis...
+   - 0402: In this section we give a complete proof of Theorem~\ref{thm:HCT}. We start from the canonical succinct computation tree on $T=\lceil t/b\rceil$ time blocks and perform three uniform, logspace-computable transformations...
+   - 0404: \subsection{Canonical recursion via midpoint recursion with exact constants}
+   - 0406: \paragraph{Intervals and midpoints.}
+   - 0407-0410: definition of centroid (midpoint)
+   - 0413-0419: Lemma [Exact midpoint shrink and depth]
+   - 0425: \paragraph{Uniformity and logspace computability.}
+   - 0428-0430: Lemma [Per-path stack-height and window usage]
+   - 0436: \subsection{Per-path potential design with rigorous telescoping analysis}
+   - 0438: \paragraph{DFS stack discipline and active interfaces.}
+   - 0441: \paragraph{Potential function.}
+   - 0442-0444: definition of weight $w(\lambda)$ and potential $\Phi$
+   - 0447-0454: Lemma [Rigorous per-path potential decay] and its items
+   - 0457-0470: proof of the lemma
+
+   The false assertion is almost certainly in the potential lemma or its proof. Specifically, the claim that $\Phi = O(\log T)$ throughout, or the initial value $O(\log T)$, or the decay argument that it remains $O(\log T)$. Given the sum analysis, this is mathematically incorrect under their own definitions.
+
+   But I need to output a specific line label. The user says: "Give up to three candidate lines, most likely first. A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line."
+
+   I need to find the line numbers where the false assertion is stated. Let me try to pinpoint the exact line numbers in the input.
+
+   The input has lines numbered 0001, 0002, ... up to ~0813. I need to search for the relevant lines.
+
+   Let's look at the potential lemma declaration. It starts at "0447 | \begin{lemma}[Rigorous per-path potential decay]\label{lem:potential}" but the line numbers in the input might not match exactly because of the way the text is copied. The input has lines like "0447 | \begin{lemma}[Rigorous per-path potential decay]\label{lem:potential}". Actually, looking at the input:
+
+   ```
+   0447 | \begin{lemma}[Rigorous per-path potential decay]\label{lem:potential}
+   0448 | Along any root-to-leaf traversal under midpoint recursion:
+   0449 | \begin{enumerate}
+   0450 |   \item The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking).
+   0451 |   \item The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$.
+   0452 |   \item \textbf{Live window bound:} Although $O(\log T)$ interfaces may be active as \emph{metadata}, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells. Thus the per-path workspace bound is $O\big(b + \log T\big)$.
+   0453 | \end{enumerate}
+   0454 | \end{lemma}
+   0455 | 
+   0456 | 
+   0457 | \begin{proof}
+   0458 | \textbf{Initialization.} At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$.
+   0459 | 
+   0460 | \textbf{Monotonicity.} Backtracking pops interfaces and cannot increase $\Phi$.
+   0461 | 
+   0462 | \textbf{Decay.} When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have
+   0463 | \[
+   0464 | w(\lceil \lambda/2\rceil)\ \le\ \left\lceil \log_2\!\big(1+\tfrac{\lambda}{2}\big)\right\rceil\ \le\ w(\lambda)-1+O(1),
+   0465 | \]
+   0466 | so over every constant number of levels the total potential drops by at least a positive constant (small-$\lambda$ cases contribute only $O(1)$ in total). Hence $\Phi=O(\log T)$ throughout.
+   0467 | 
+   0468 | \textbf{Interface count and workspace.} Each active interval contributes at most two interfaces, so the count is $O(\Phi)$. Each interface is materialized via bounded-window replay using $O(b)$ cells; auxiliary fields are constant- or $O(\log t)$-bit values stored within these cells. Thus the live workspace is $O(b) + O(\log T)$: at most one $O(b)$ window is materialized at any time, and interface metadata contributes only $O(\log T)$ cells.
+   0469 | 
+   0470 | \end{proof}
+   ```
+
+   So the false assertion is in line 0450: "The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking)." Or line 0451: "The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$." Or line 0458: "At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$." Or line 0466: "Hence $\Phi=O(\log T)$ throughout."
+
+   The user says: "If the same assertion appears more than once, any occurrence is accepted." And "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin."
+
+   I think the most direct false assertion is the claim in the lemma statement that the potential remains $O(\log T)$ throughout. But I need to be careful: is it actually false? Let's rigorously check if $\Phi$ could be $O(\log T)$ under some interpretation.
+
+   Suppose the DFS only keeps one interface at a time, not the whole stack. But the definition says: "For any fixed DFS path with active interfaces $\mathcal{B}$ on the current stack, define $\Phi\ \coloneqq\ \sum_{B\in\mathcal{B}} w\!\big(\mathrm{len}(B)\big)$." And "The evaluator maintains a stack of active interfaces reflecting the current path, with at most two interfaces per active interval." So the stack does accumulate interfaces per depth.
+
+   If the potential is summed over all interfaces on the stack, and the stack depth is $O(\log T)$, and each interface has weight about $\log_2(T/2^d)$, then the sum is $O((\log T)^2)$. This is a solid counterexample under their own model: take T=2^k, then at depth d, interval length ~ 2^{k-d}, weight ~ k-d+1. Sum over d=0 to k of (k-d+1) = sum_{i=1}^{k+1} i = (k+1)(k+2)/2 = Theta(k^2) = Theta((log T)^2). So $\Phi$ is Theta((log T)^2), not O(log T).
+
+   Therefore, the assertion that $\Phi = O(\log T)$ throughout is false as written, given the assumptions (midpoint recursion, DFS, the defined potential). A concrete counterexample: T=8, compute $\Phi$ at the leaf: depths d=0..3, lengths 8,4,2,1, weights ceil(log2(9))=4, ceil(log2(5))=3, ceil(log2(3))=2, ceil(log2(2))=1, sum=10. log2 T = 3. (log T)^2 = 9. 10 > 9, and it grows as (log T)^2/2. So for large T, $\Phi \sim (\log T)^2/2$, which is not O(log T).
+
+   So the false assertion is the claim that $\Phi$ remains $O(\log T)$ throughout. I need to pick a line label. The user says "Give up to three candidate lines, most likely first." So I can give one line, or up to three. I'll give the line where the lemma statement makes the false claim, and maybe the initial value line, and the decay conclusion line.
+
+   But I must output exactly one JSON object with "candidates", "claim", "counterexample". The format: `{"candidates": [<line>, <line>, <line>], "claim": "<the false assertion, one sentence>", "counterexample": "<one sentence>"}`
+
+   I need to specify line labels. The line labels are integers for numbered text lines, e.g., 17, or strings like "P1". The lines I'm looking at are in the 0440-0470 range. Let me confirm the exact line numbers from the input.
+
+   Input lines:
+   0447 | \begin{lemma}[Rigorous per-path potential decay]\label{lem:potential}
+   0448 | Along any root-to-leaf traversal under midpoint recursion:
+   0449 | \begin{enumerate}
+   0450 |   \item The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking).
+   0451 |   \item The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$.
+   0452 |   \item \textbf{Live window bound:} Although $O(\log T)$ interfaces may be active as \emph{metadata}, the DFS schedule materializes at most a constant number of $O(b)$ windows at once (in fact, one). Consequently, at most one $O(b)$ window is ever materialized at a time under the DFS schedule, so the live window workspace is $O(b)$. Interface metadata contributes only $O(\log T)$ additional cells. Thus the per-path workspace bound is $O\big(b + \log T\big)$.
+   0453 | \end{enumerate}
+   0454 | \end{lemma}
+   0455 | 
+   0456 | 
+   0457 | \begin{proof}
+   0458 | \textbf{Initialization.} At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$.
+   0459 | 
+   0460 | \textbf{Monotonicity.} Backtracking pops interfaces and cannot increase $\Phi$.
+   0461 | 
+   0462 | \textbf{Decay.} When $\lambda$ is replaced by a child of length $\le \lceil \lambda/2\rceil$, we have
+   0463 | \[
+   0464 | w(\lceil \lambda/2\rceil)\ \le\ \left\lceil \log_2\!\big(1+\tfrac{\lambda}{2}\big)\right\rceil\ \le\ w(\lambda)-1+O(1),
+   \]
+   0465 | so over every constant number of levels the total potential drops by at least a positive constant (small-$\lambda$ cases contribute only $O(1)$ in total). Hence $\Phi=O(\log T)$ throughout.
+   0466 | 
+   0467 | \textbf{Interface count and workspace.} Each active interval contributes at most two interfaces, so the count is $O(\Phi)$. Each interface is materialized via bounded-window replay using $O(b)$ cells; auxiliary fields are constant- or $O(\log t)$-bit values stored within these cells. Thus the live workspace is $O(b) + O(\log T)$: at most one $O(b)$ window is materialized at any time, and interface metadata contributes only $O(\log T)$ cells.
+   0468 | 
+   0469 | \end{proof}
+
+   The false assertion is essentially the whole lemma claim that $\Phi = O(\log T)$ throughout. I'll pick line 0450 as the primary candidate, since it states the potential remains $O(\log T)$ throughout. Line 0458 also claims initial $\Phi(0) \le O(\log T)$, which is true (it's $2\lceil \log_2(1+T)\rceil = O(\log T)$), so that's not false. Line 0466 claims "Hence $\Phi=O(\log T)$ throughout" as a conclusion of the decay argument, which is false. Line 0451 says "The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$." If $\Phi$ were $O((\log T)^2)$, then this would also be false, but they're claiming $\Phi=O(\log T)$ to make this true. So the root falsehood is the $O(\log T)$ bound on $\Phi$.
+
+   I think the most precise false assertion is in line 0450: "The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking)." The "initially $O(\log T)$" part is actually true (it's $2\lceil \log_2(1+T)\rceil$), but the "remains $O(\log T)$ throughout" is false. The decay argument in line 0466 is also false. But I need one sentence for "claim". I'll formulate the claim as the statement that the potential remains $O(\log T)$ throughout under the given schedule and potential definition.
+
+   Counterexample: As computed, for T=2^k, at the leaf of the midpoint recursion tree, the potential $\Phi = \sum_{d=0}^{k} \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = \sum_{i=1}^{k+1} i = (k+1)(k+2)/2 = \Theta((\log T)^2)$, which is not $O(\log T)$.
+
+   Now, I need to output JSON with candidates, claim, counterexample. The candidates should be line labels. I'll put line 0450 as the main one, and maybe 0466 as secondary, but the user says "Give up to three candidate lines, most likely first." So I can list up to three. I'll list 0450, 0466, and maybe 0451, but I need to ensure they are valid line numbers from the input. The input has them as integers. I'll use 0450, 0466, 0451. But wait, the line numbers in the input are like "0450", but are they four-digit with leading zero? The input shows "0450 |   \item ...", so the label is "0450". But the user said "an integer for a numbered text line (for example 17)". So I should probably just use the integer without leading zeros, or as is? The example says "for example 17", so likely just the number. But the input has "0450". I'll check the format: "0001", "0002", ... up to "0813". So they are zero-padded four-digit numbers. I should probably output them as strings or integers? The user says "an integer for a numbered text line (for example 17)". But the text uses "0001". I think I should output the exact label as it appears, or just the number. To be safe, I'll output the integer value, e.g., 450, but the input has 0450. Actually, in the JSON, I can just put the number without leading zeros, or with. The user said "for example 17", so I'll use 450. But let's see: "A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line." So I can use the integer 450. However, the input lines are numbered 0001, 0002, etc. If I output 450, it might be ambiguous if 450 corresponds to line 0450. I'll output "0450" as a string? The user said "an integer for a numbered text line (for example 17)". I think I should output the number as it's commonly referenced, maybe just the digits. I'll use 450. But to match the input exactly, I'll use "0450". However, the user said "integer", so maybe just 450. I'll check the problem statement: "Give up to three candidate lines, most likely first. A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line." So I can use integer 450. I'll use 450. But the input has 0450; I'll assume the integer is 450. Actually, in the input, the line numbers are written as "0450", but the value is 450. I'll output 450. To be precise, I'll output the string "0450" if they want the exact label, but the user said "integer". I'll use 450.
+
+   Let me re-read: "A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line." So if the line is numbered 0450, the integer label is 450. I'll use 450.
+
+   Now, claim: I need one sentence describing the false assertion. "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout the DFS traversal under midpoint recursion, as claimed in Lemma 1." Or something like that.
+
+   Counterexample: "For $T = 2^k$, at a leaf of the midpoint-recursion tree, $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, which is not $O(\log T)$."
+
+   I need to make sure the counterexample is "one sentence" and concrete under the assumptions.
+
+   Let me formulate:
+
+   Claim: "The potential $\Phi = \sum_{d} \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under the midpoint recursion and DFS schedule, as stated in the Central Hypothesis and Lemma 1."
+
+   Counterexample: "For $T = 2^k$, evaluating $\Phi$ at the leaf of the midpoint-recursion tree gives $\sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, contradicting the $O(\log T)$ claim."
+
+   Now, candidates: I'll put 450, 466, 451. But maybe just 450 is enough, and the user said "most likely first". I'll put 450 as the primary, and maybe 466 and 451 as additional. But I need to output up to three. I'll output three: 450, 466, 451. However, I should verify that line 451 is indeed false given the claim. Line 451: "The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$." If $\Phi$ is claimed to be $O(\log T)$, then this follows. But if $\Phi$ is actually $\Theta((\log T)^2)$, then this line is also false because it asserts $O(\log T)$ for the interface count via $\Phi$. But the false root is the $\Phi$ bound. I'll include it.
+
+   Actually, let's read line 451 exactly: "0451 |   \item The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$." This is part of the lemma enumeration. It's claiming that the number of interfaces is $O(\log T)$ because $\Phi = O(\log T)$. If $\Phi$ is not $O(\log T)$, this line is also false, but it's derivative. The user said "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." Pointing at line 451 might be acceptable as it's part of the false lemma. I'll include 450 as the main, and maybe 466 as the conclusion.
+
+   I think the safest is to point to line 450, which is the core false claim. I'll output candidates: [450]. But the user said "Give up to three candidate lines, most likely first." I can give three. I'll give 450, 466, and maybe 0132 (the Central Hypothesis). But 0132 is a definition/problem line. The false assertion is specifically in the potential lemma. I'll stick to the lines in the proof.
+
+   Let me double-check if there's any other false assertion that might be more central. For instance, the main theorem claim $\mathrm{TIME}[t] \subseteq \mathrm{SPACE}[O(\sqrt{t})]$ might be false if the height compression is flawed, but the question asks for "at least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So I need a specific assertion that is false given its own assumptions. The potential lemma's claim is a good candidate because it's a self-contained mathematical error within the paper's framework.
+
+   Another possibility: Line 0132: "Central Hypothesis (proved herein). The succinct computation tree associated with a time-$t$ block-respecting simulation admits a uniform, logspace-computable transform of both the tree structure and evaluation schedule that yields $H'_{\mathrm{eval}}=O(\log T)$..." This is the main claim, but it's not yet proven false by a concrete counterexample under its assumptions; it's the theorem they're trying to prove. The false assertion is likely an intermediate step.
+
+   Line 0249: "These ingredients together produce a binary evaluation tree with $H'_{\mathrm{eval}}=O(\log T)$ and $O(1)$ per-level tokens, enabling the $O\!\big(b+\log(t/b)\big)$ space bound..." This depends on the potential lemma being correct.
+
+   I'm confident the potential lemma has the $O((\log T)^2)$ vs $O(\log T)$ issue. I'll go with that.
+
+   Now, format the JSON exactly as specified:
+   ```json
+   {"candidates": [<line>, <line>, <line>], "claim": "<the false assertion, one sentence>", "counterexample": "<one sentence>"}
+   ```
+
+   I need to make sure the claim and counterexample are one sentence each. I'll write them concisely.
+
+   Claim: "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under midpoint recursion and DFS, as asserted in Lemma 1."
+
+   Counterexample: "For $T=2^k$, at the leaf of the midpoint-recursion tree $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, violating the $O(\log T)$ bound."
+
+   But I need to use the line labels from the input. The lines are 0450, etc. I'll output the integers 450, 466, 451. However, the input has them as "0450", so maybe I should output "0450". The user said "an integer for a numbered text line (for example 17)". In the example, it's "17", not "017". So I think I should output the number without leading zeros. But the input uses four-digit with leading zeros. To avoid confusion, I'll output the exact string as it appears in the line number, but the user said "integer". I'll output 450. Actually, looking at the input: "0001", "0002", ... "0813". If I output 450, it might be interpreted as line 450, which is different from 0450. But in a JSON, I can just put the number. I'll put 450. The user can map it. I'll assume the line numbers are just the integers.
+
+   Let me check the very first lines: "0001 | \documentclass[11pt]{article}" etc. So line 1 is "0001". If I say candidate 1, it's 0001. So the integer label is 1. Similarly, line 0450 has integer label 450. I'll use 450.
+
+   I'll output:
+   {"candidates": [450, 466, 451], "claim": "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under midpoint recursion and DFS, as asserted in Lemma 1.", "counterexample": "For $T=2^k$, at the leaf of the midpoint-recursion tree $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, violating the $O(\log T)$ bound."}
+
+   But wait, the counterexample must be "one sentence". My counterexample has a comma and "violating...". I can make it one sentence: "For $T=2^k$, at the leaf of the midpoint-recursion tree $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, contradicting the $O(\log T)$ claim." That's one sentence.
+
+   Claim one sentence: "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under midpoint recursion and DFS, as asserted in Lemma 1."
+
+   I'll also consider if line 450 is indeed the best. Maybe the false assertion is in the initial value line 458: "At the root there are two interfaces of length $T$, so $\Phi(0)\le 2\lceil \log_2(1+T)\rceil=O(\log T)$." That's actually true. Line 466: "Hence $\Phi=O(\log T)$ throughout." That's the false conclusion. I could put 466 as the main candidate. But the lemma statement in 450 includes the "remains $O(\log T)$ throughout" which is the claim. I'll keep 450.
+
+   Let me re-read line 450: "0450 |   \item The potential $\Phi=\sum_{d} \lceil \log_2(1+\ell(d))\rceil$ remains $O(\log T)$ throughout (initially $O(\log T)$; decreases by a constant every $O(1)$ levels; never increases on backtracking)." Yes, this is the false assertion.
+
+   I'll output candidates: [450]. But the user said "Give up to three candidate lines, most likely first." I'll output three: [450, 466, 451]. However, I need to ensure they are all valid and relevant. Line 466: "0466 | Hence $\Phi=O(\log T)$ throughout." This is the conclusion of the proof, also false. Line 451: "0451 |   \item The number of simultaneously active interfaces is $O(\Phi)=O(\log T)$." This depends on the $\Phi$ claim. I'll include them.
+
+   But maybe the user wants only the most likely first, and up to three. I'll do [450, 466, 451].
+
+   Now, JSON production. I need to output exactly the JSON object and nothing else. So I'll write:
+
+   {"candidates": [450, 466, 451], "claim": "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under midpoint recursion and DFS, as asserted in Lemma 1.", "counterexample": "For $T=2^k$, at the leaf of the midpoint-recursion tree $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, contradicting the $O(\log T)$ claim."}
+
+   I should check if the counterexample uses assumptions in force. The assumptions are: midpoint recursion (definition of $\ell(d)$), DFS schedule, potential definition. The counterexample fits those.
+
+   One more thing: The user said "If the same assertion appears more than once, any occurrence is accepted." The claim "$\Phi$ remains $O(\log T)$ throughout" appears in 450 and 466. I'm pointing to both.
+
+   I'll finalize.</think>{"candidates": [450, 466, 451], "claim": "The potential $\Phi = \sum_d \lceil \log_2(1+\ell(d)) \rceil$ remains $O(\log T)$ throughout any root-to-leaf traversal under midpoint recursion and DFS, as asserted in Lemma 1.", "counterexample": "For $T=2^k$, at the leaf of the midpoint-recursion tree $\Phi = \sum_{d=0}^k \lceil \log_2(1 + \lceil T/2^d \rceil) \rceil = (k+1)(k+2)/2 = \Theta((\log T)^2)$, contradicting the $O(\log T)$ claim."}

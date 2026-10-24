@@ -1,0 +1,55 @@
+{
+  "record_id": "fun2026_fog_chess_queen_win_within_50",
+  "stage": "BASELINE_AUDIT",
+  "arm": "neutral",
+  "iteration": 0,
+  "parent_sha256": "1053f395b5625881a8c8d0451b413e2ffacc7a254afe8d29b265ae2bbc2a92a5",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Finite-horizon play is exactly represented by a perfect-recall belief-state recurrence.",
+      "claim_sha256": "cf5dc8453943ef2fc48d63ac07a5d4c1991858a20638e1b503adf42abcbdb225",
+      "verdict": "VERIFIED",
+      "evidence": "For fixed White king/queen squares, every hidden Black square gives the same legal-move observation, while every attacked Black square is individually visible. After a White move, these are exactly the block S\\A and singleton blocks {b} for b in S∩A. Legal adjacent Black replies then partition by the next observation, with king capture losing for White, protected-queen capture or movement into White's attack set winning on White's next move, and all remaining unseen destinations unioned into the successor belief. Induction on the remaining White-move horizon proves the existential-White/universal-Black recurrence. The checker exhaustively confirmed this observation equivalence for 249,984 concrete placements and 15,499,008 ordered pairs of possible Black squares. It also checked all 23,520 king-only evasion cases supporting the treatment of an unprotected queen capture as non-winning for White.",
+      "witness": "none",
+      "search_method": "Direct finite-horizon induction, supplemented by exhaustive integer/bitset checks of observation equivalence, transition geometry, and the king-only evasion invariant.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-baseline/exact_fog_audit.cpp"
+    },
+    {
+      "idx": 1,
+      "claim": "With draw termination suppressed, the exact worst-case capture time over all initial configurations is 23 White moves.",
+      "claim_sha256": "a8fe5bdd5f4daa49cb83af5e236627d1edddb4fe80af4e913ea7c8d635276087",
+      "verdict": "VERIFIED",
+      "evidence": "Independent exhaustive belief-state dynamic programming enumerated all 64·63·62=249,984 labeled placements. The numbers whose minimum capture horizons are 1 through 23 were exactly [105476,12080,13412,18928,13776,14464,7656,4484,6176,8664,11804,7492,3416,2140,5396,6108,3428,1524,1984,1212,196,136,32]. Thus every placement is winning within 23, while 32 are not winning within 22, establishing both bounds.",
+      "witness": "The 32 sharp placements are represented by WK=a1, BK=d4 and WQ=b1, h2, g5, or h7, together with their eight board symmetries.",
+      "search_method": "Exact uint64 belief-set AND/OR dynamic programming over every legal White move, observation block, and adjacent Black reply; all eight board symmetries were checked and canonicalized. No floating point was used.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-baseline/exact_fog_audit.cpp"
+    },
+    {
+      "idx": 2,
+      "claim": "Even with the source’s host-enforced repetition rule, White can guarantee capture within 28 White moves.",
+      "claim_sha256": "0d25e4dd973a301e6af830b060de0a75d19368f306d66cae240eb098e20ad4bb",
+      "verdict": "VERIFIED",
+      "evidence": "The independent history-augmented AND/OR search succeeded for all 18,081 symmetry classes covering all 144,508 initially invisible placements; the other 105,476 placements are captured on move 1. Each class was solved within its draw-suppressed optimum plus five White moves, with maximum budget 28. The augmented state records exact multiplicities of ordered White king/queen square-pairs and disallows a third occurrence. Any threefold repetition of a complete position would require its White-piece pair to occur at least three times, so these policies preclude the host repetition draw. Capture by White's 28th move also precedes the fifty-move limit.",
+      "witness": "The exhaustive run returned repetition_safe_classes_succeeded=18081 of 18081 and maximum_white_move_budget=28 after 4,396,529 history-solver calls.",
+      "search_method": "Exact history-dependent belief-state search using collision-checked sparse pair multisets and joint board/history canonicalization under all eight symmetries. No floating point was used.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-baseline/exact_fog_audit.cpp"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "FULLY_RESOLVES_TARGET",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target asks whether White can guarantee capture within 50 White moves from every source-legal initial configuration under the source draw rules. Claim 2 establishes the stronger uniform bound of 28 while structurally preventing threefold repetition; the exhaustive enumeration covers every distinct placement. Therefore the draft's affirmative final answer and FULL claimed_resolution are accurate. The separate exact value 23 applies only when draw termination is suppressed, as the draft states.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the designated source and draft JSON files; did not use the web, retrieval material, prior runs, receipts, or reports.",
+    "Verified D8 attack-set symmetry for every ordered pair of distinct White squares.",
+    "Checked 249,984 concrete observation positions and 15,499,008 ordered observation pairs; the belief partition matched exactly.",
+    "Checked 23,520 king-only pursuit/evasion cases supporting the unprotected-queen-capture branch.",
+    "Enumerated all 249,984 labeled initial placements and reproduced all 23 minimum-horizon counts exactly.",
+    "Confirmed all placements win within 23 without draw termination and exactly 32 require move 23.",
+    "Enumerated all 18,081 initially invisible symmetry classes with exact pair-history state; all succeeded within draw-suppressed optimum plus five moves, with maximum 28.",
+    "Confirmed the placement split 105,476 initially visible plus 144,508 initially invisible equals 249,984."
+  ]
+}

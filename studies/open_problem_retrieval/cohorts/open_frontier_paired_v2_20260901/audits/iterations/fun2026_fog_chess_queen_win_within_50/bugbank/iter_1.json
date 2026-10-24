@@ -1,0 +1,56 @@
+{
+  "record_id": "fun2026_fog_chess_queen_win_within_50",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 1,
+  "parent_sha256": "462b7062f26c27b3c91d40abb9e38d9675d78f2713f5c65e02e305fc6d122229",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Finite-horizon play is exactly represented by a perfect-recall belief-state recurrence.",
+      "claim_sha256": "cf5dc8453943ef2fc48d63ac07a5d4c1991858a20638e1b503adf42abcbdb225",
+      "verdict": "VERIFIED",
+      "evidence": "For a nonterminal White-turn state, k and q are known and S is the set of possible black-king squares. A hidden black king cannot block a legal White move: if it occupied a queen ray or king destination, its square would itself be observable. After White moves to k',q', the attacked set A therefore partitions the pre-Black possibilities exactly into the common invisible block S\\A and one singleton for every visible b in S∩A. Within each such observation block, universal enumeration of Black's adjacent replies is exact: capture of k' loses immediately; capture of an unprotected q' leaves K-v-K at distance at least two and is nonwinning; capture of a protected q' or any other reply into A is captured on White's next move; all remaining indistinguishable replies are unioned into the successor belief. Induction on the remaining White moves, with immediate capture as the base case, proves both soundness and completeness of the existential-White/universal-Black recurrence. The unprotected-queen branch was independently exhausted over 3,612 K-v-K positions and 23,520 White moves: Black can always capture an adjacent White king or restore Chebyshev distance at least two. Repetition is handled conservatively by the additional perfect-recall pair-history component used for claim 2.",
+      "witness": "The induction certificate is the complete observation partition and exhaustive successor construction implemented by the checker.",
+      "search_method": "Mathematical induction on the finite horizon, exhaustive integer geometry checks, D4 covariance checks, and an exact K-v-K evasion enumeration.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-revision/bugbank/iter_1/audit_exact_solver.py"
+    },
+    {
+      "idx": 1,
+      "claim": "With draw termination suppressed, the exact worst-case capture time over all initial configurations is 23 White moves.",
+      "claim_sha256": "a8fe5bdd5f4daa49cb83af5e236627d1edddb4fe80af4e913ea7c8d635276087",
+      "verdict": "VERIFIED",
+      "evidence": "Independent exhaustive minimax enumerated all 64·63·62=249,984 labeled placements. Exactly 105,476 permit capture on White move 1, leaving 144,508 placements in 18,081 D4 symmetry classes. Every class is winning within 23 White moves. Exactly four classes, comprising 32 labeled placements, are not winning within 22 moves. Their canonical representatives match the draft exactly: WK a1, BK d4, with WQ b1, h2, g5, or h7. Thus both the 23-move upper bound and its sharpness are established.",
+      "witness": "WK a1, BK d4, and WQ in {b1,h2,g5,h7}, together with their D4 images; the checker proves that no White strategy captures within 22 from these 32 placements.",
+      "search_method": "Complete exact-bitmask minimax over every White action, both observation stages, and every adversarial adjacent Black reply. The completed run visited 2,255,030 canonical draw-free states and found zero depth-23 failures.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-revision/bugbank/iter_1/audit_exact_solver.cpp"
+    },
+    {
+      "idx": 2,
+      "claim": "Even with the source’s host-enforced repetition rule, White can guarantee capture within 28 White moves.",
+      "claim_sha256": "0d25e4dd973a301e6af830b060de0a75d19368f306d66cae240eb098e20ad4bb",
+      "verdict": "VERIFIED",
+      "evidence": "The recurrence was augmented with the sorted multiset of ordered White king/queen pairs occurring at White turns, including the initial pair. A noncapturing action is rejected if its resulting pair already occurs twice. The exact history-dependent minimax succeeded at depth 28 for all 18,081 non-immediate symmetry classes; together with the 105,476 move-1 captures, all 249,984 labeled placements succeed. The completed search had 28,975,214 augmented-state entries and zero failed classes. The pair restriction is a sufficient repetition invariant: three repetitions of a complete White-turn position require three occurrences of its White pair; three repetitions at Black turns would likewise imply two prior following White-turn occurrences before the third action, which that action would reject. Hence no complete position can occur three times. Capture occurs by White move 28, strictly before 50 White moves.",
+      "witness": "The checker reconstructs successful history-dependent actions for every augmented state needed by all 18,081 initial classes; its global result is 249,984 successes and zero failures.",
+      "search_method": "Complete exact minimax over (white king, white queen, black belief, pair-history multiset, remaining horizon), with sound draw-free feasibility pruning and D4 canonicalization; no floating-point decision was used.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_fog_chess_queen_win_within_50/audit-revision/bugbank/iter_1/audit_exact_solver.cpp"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "FULLY_RESOLVES_TARGET",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target asks whether every source-legal KQ-v-K initial configuration is capturable within 50 White moves under the source's host-enforced draw rules. The draw-suppressed 23-move result alone would not answer that target, but the independently verified history-augmented result covers every one of the 249,984 distinct-square labeled placements within 28 White moves while preventing threefold repetition. Since 28<50, the host's fifty-move termination also cannot intervene. Therefore the draft's affirmative answer fully resolves the requested target, and its claimed FULL resolution is accurate.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the designated source JSON and revision draft JSON; did not use the web, retrieval databases, treatment receipts, prior frontier runs, verification reports, or other solutions.",
+    "Derived the observation and move recurrence independently from the source rules, including legal king moves into attack, adversarial full-information Black play, both observation times, and protected versus unprotected queen capture.",
+    "Enumerated all 249,984 labeled placements exactly and reproduced 105,476 immediate captures, 144,508 remaining placements, and 18,081 remaining D4 classes.",
+    "Checked all eight board symmetries for bijectivity and covariance of king neighborhoods and attack masks.",
+    "Exhaustively verified the K-v-K evasion lemma over 3,612 positions and 23,520 White moves.",
+    "Exhaustively verified zero draw-free failures at depth 23 and exactly four symmetry classes/32 labeled failures at depth 22.",
+    "Exhaustively verified zero repetition-safe failures at depth 28 across all 18,081 non-immediate classes, yielding all 249,984 labeled successes.",
+    "Used integer coordinates, Boolean recurrences, and 64-bit belief masks for every decision; floating point was not used for a verdict.",
+    "Persisted checker sources with SHA-256 4f39280b3ac0f5815f4bafaed81c06eff29b963c77fb0ec3a0c87e7eeac9d57c for audit_exact_solver.cpp and f69c735f51fb96bcd3b8ffb587bc3bde185acf85273ce1cea103a32f3cb3069f for audit_exact_solver.py."
+  ]
+}

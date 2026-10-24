@@ -1,0 +1,71 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "487f3ac59bbe80c331f0f86b77b25ee7da0acbb9dc4bb9c55a8859bda490d564",
+  "audit_sha256": "8b33f5cf0458584756f2bd68b27a466cb4fb46005dce8a2896b9ea2d864d5757",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "For the source-literal optimized FIFO algorithm, every actual queue Q_t is duplicate-free and has exactly the current descent bottoms; processing (p_t,Q_t) yields p_{t+1}=reverse(Q_t) followed by the stable deletion of Q_t from p_t, and the complexity is Θ(n+M_FIFO), where M_FIFO=Σ_t|Q_t|.",
+      "proof_sketch": "Initialization scans Θ(n) entries and queues the descent bottoms. When a queued x is removed, only its successor b can acquire a new left neighbor: if b<x it was already a current descent bottom, while the source test appends b exactly in the complementary new-descent case x<b<Prev(x). When x is prepended, the old front f becomes a descent bottom exactly when f<x, which is the second source test. These events maintain the next round's duplicate-free descent-bottom set in detection order. Processing distinct q_1,…,q_k successively prepends them, giving prefix q_k,…,q_1 and preserving every unqueued relative order. Initialization is Θ(n), and every queued item causes Θ(1) comparisons and list/queue operations, so total cost is Θ(n+M_FIFO)."
+    },
+    {
+      "claim": "There is an exact phase decomposition: if i is the largest unfixed value and starts its phase at position s_i, that phase makes exactly (i−s_i)+Σ_tℓ_t moves, where ℓ_t counts its round-t queued elements initially left of i.",
+      "proof_sketch": "All values larger than i form a permanent fixed suffix, so i is unmarked and s_i<i. Split a round's queue into ℓ_t elements left of i and q_t elements right of i. Removing and prepending a left element shifts i left and then right, for net zero. Removing a right element does not shift i, while prepending it advances i once. Thus the round advances i by q_t. Until fixation, i's immediate right neighbor is smaller and marked, so q_t≥1; summing gives Σ_tq_t=i−s_i. Adding the left moves proves the identity. The term Σ_tℓ_t remains uncontrolled in general."
+    },
+    {
+      "claim": "For every k≥1, the permutation A_k=(k+1,1,k+2,2,…,2k,k,3k+1,2k+1,2k+2,…,3k) has initial FIFO queue Q_0=(1,2,…,k,2k+1).",
+      "proof_sketch": "In each pair (k+j,j), the low value j is a descent bottom; every boundary j,k+j+1 between consecutive pairs is an ascent. The boundary from k to 3k+1 is an ascent, the boundary from 3k+1 to 2k+1 is a descent, and the remaining tail is increasing. The initialization scan therefore queues exactly 1,2,…,k,2k+1 in that order."
+    },
+    {
+      "claim": "Writing a=3k+1 and c_t=2k+1+t, the actual detection-ordered queue in round t of A_k begins (1,2,…,k−t,c_t) for every 0≤t<k.",
+      "proof_sketch": "The base is the preceding claim. For t≥1, each j≤k−t was appended in the preceding round when j+1 was moved in front of the then-front j; hence Prev(j)=j+1 at the next round's start, and later prepends preserve this adjacency. Process the displayed prefix. Element 1 creates no front mark, and its deletion test cannot find an integer strictly between 1 and Prev(1)=2. For j≥2, the preceding processed item j−1 is the front, so the front test appends j−1; the deletion test is false because Prev(j)=j+1 and it would require j<Next(j)<j+1. In round 0 the same conclusions follow from Prev(j)=k+j and the larger next separator. Consequently the next queue starts 1,…,k−t−1. Meanwhile c_t is still immediately right of a, with successor c_{t+1} when t<k−1. Its deletion test a>c_{t+1}>c_t appends c_{t+1} next, before its possible front event and before all events from the undisplayed queue suffix. This proves the induction."
+    },
+    {
+      "claim": "Let R(n) be the maximum, over source-literal executions on n values and over ordered adjacent inversion pairs (y,x), of the number of moves of x made while Prev(x)=y. Then R(n)≥⌊(n−1)/3⌋−1 for n≥4, and hence R(n)=Ω(n). Therefore a charging proof that charges every move to its actual predecessor–descent-bottom pair cannot impose a uniform O(1) capacity per pair.",
+      "proof_sketch": "For A_k, the queue-prefix induction gives, in every round 1≤t<k, both Q_t beginning with 1 and Prev_t(1)=2. Because 1 is the first queued element processed, no move in that round changes the adjacency (2,1) before 1 moves. Thus the identical ordered pair (2,1) triggers at least k−1 distinct moves. Appending the larger fixed suffix preserves these rounds, so k=⌊(n−1)/3⌋ proves the displayed bound for arbitrary n≥4. The conclusion is deliberately limited: it refutes constant-capacity charging to the move's actual triggering pair, but does not preclude recharging those moves to other objects and does not by itself prove a superquadratic lower bound."
+    },
+    {
+      "claim": "If W(n) is the worst-case source-literal move count, then W(n)≥(k²+3k)/2 for k=⌊(n−1)/3⌋; in particular W(n)=Ω(n²), improving the source lower bound for the optimized algorithm.",
+      "proof_sketch": "First take n=3k+1. The queue-prefix invariant gives at least k−t+1 moves in each of rounds t=0,…,k−1. Their sum is (k+1)+k+⋯+2=(k²+3k)/2. For arbitrary n, use k=⌊(n−1)/3⌋, run A_k on values 1,…,3k+1, and append the increasing fixed suffix 3k+2,…,n. The larger suffix remains fixed and does not affect any of the first k queue transitions, so the same bound holds. Since k=n/3+O(1), this is (1/18+o(1))n² moves and hence Ω(n²) steps under the Θ(n+M_FIFO) cost identity."
+    },
+    {
+      "claim": "The audited ordinary-transition staircase argument remains invalid for literal FIFO; the new Ω(n²) lower bound is independent of it.",
+      "proof_sketch": "The staircase recurrence used T(p)=reverse(D(p)) followed by stable deletion, with D(p) processed in shelf order. Later literal FIFO queues instead use detection order. For P_6=(6,1,2,3,4,5), three T rounds give (3,1,2,6,4,5), while three literal rounds give (1,3,2,6,4,5). Thus that transfer and its coefficient remain withdrawn. The new construction proves its queue prefix directly from the literal source tests, so it does not rely on T."
+    },
+    {
+      "claim": "For n≤9, the exact maximum source-literal move counts remain 0,1,3,6,11,18,27,38,53.",
+      "proof_sketch": "The audited exhaustive enumeration covered all Σ_{n=1}^9 n!=409,113 permutations, with direct-vector and array-backed linked-list transcriptions agreeing on every move and round count. This finite result is preserved as a check on the literal semantics; it is not used to infer the asymptotic lower bound."
+    },
+    {
+      "claim": "A twice-per-unordered-pair charging bound remains false.",
+      "proof_sketch": "For p=(2,4,…,4096,1,3,…,4095), audited exact literal execution makes 49,545,006 moves, exceeding 2·binom(4096,2)=16,773,120. This rules out that particular charging invariant, but neither it nor the new quadratic lower bound refutes an O(n²) upper bound with another argument or constant."
+    },
+    {
+      "claim": "The requested asymptotically tight worst-case complexity remains unresolved, but the proved interval for the source-literal optimized FIFO algorithm is now Ω(n²)–O(n³).",
+      "proof_sketch": "The explicit family supplies the Ω(n²) lower bound. The authorized source supplies O(n³), also recovered by the phase argument: active value i has at most i−1 rounds and at most i moves per round, summed over i. No result here bounds the general left-of-active term strongly enough to improve O(n³), and no superquadratic construction or matching upper bound is proved. Therefore PARTIAL, not FULL, is the accurate resolution."
+    }
+  ],
+  "final_writeup": "Partial progress, not a solution of the tight-complexity target, is claimed. This revision gives a direct infinite family proving a new Ω(n²) lower bound for the source-literal optimized FIFO pseudocode.\n\nLet Q_t be its actual FIFO queue. The two local tests made when a queued element is removed and prepended maintain a duplicate-free queue whose set is exactly the next shelf's descent bottoms, but whose order is detection order. Processing Q_t=(q_1,…,q_r) produces reverse(Q_t) followed by the stable deletion of Q_t from the old shelf. Hence, with M_FIFO=Σ_t|Q_t|, the literal implementation costs Θ(n+M_FIFO).\n\nFor k≥1 define\n\nA_k=(k+1,1,k+2,2,…,2k,k,3k+1,2k+1,2k+2,…,3k).\n\nPut a=3k+1 and c_t=2k+1+t. The initial descents are exactly the lows 1,…,k and c_0, so Q_0=(1,2,…,k,c_0). I claim that for every 0≤t<k, the actual queue Q_t begins\n\n(1,2,…,k−t,c_t).\n\nHere is a literal-event-order induction. For t≥1, each displayed j≤k−t was marked in the preceding round when j+1 was moved immediately before the then-front j. Thus Prev(j)=j+1 at the next round's start; later moves only prepend other elements and preserve that adjacency. When the displayed prefix is processed, 1 creates no mark. For j≥2 the preceding processed item j−1 is now the front, so the front test appends j−1 to the next queue. The deletion test cannot append anything first: it would require an integer Next(j) with j<Next(j)<j+1. In the base round, the separators k+j and their larger successors give the same conclusion. Thus the next queue first receives 1,…,k−t−1. The element c_t remains immediately right of a, and for t<k−1 its successor is c_{t+1}; because a>c_{t+1}>c_t, the deletion test appends c_{t+1} next. Any front event from c_t and every event from the undisplayed queue suffix comes later. This proves the queue-prefix invariant.\n\nTherefore the first k rounds alone make at least\n\n(k+1)+k+⋯+2=(k²+3k)/2\n\nmoves. For arbitrary n, take k=⌊(n−1)/3⌋, use A_k on the first 3k+1 ranks, and append the remaining zero, one, or two larger ranks in sorted order. That fixed suffix cannot affect these transitions. The worst-case move count is consequently at least (1/18+o(1))n², and the step complexity is Ω(n²).\n\nThe same family gives a structural obstruction to a natural local charging proof. In every round t=1,…,k−1, Q_t starts with 1 and Prev_t(1)=2. Since 1 is processed first, its move is triggered by the identical adjacent inversion (2,1) in all k−1 rounds. Thus one triggering pair can be reused Ω(n) times. This rules out a uniform constant capacity when each move is charged to its actual predecessor pair; it does not rule out an O(n²) argument that recharges moves to other objects, and it is not a superquadratic lower bound.\n\nThe exact phase identity from the parent remains useful: if i is the largest unfixed value and begins at position s_i, its phase costs (i−s_i)+Σ_tℓ_t, where ℓ_t counts queued elements left of i. It still leaves the general upper-bound obstacle Σ_tℓ_t uncontrolled. The earlier ordinary-T staircase transfer remains invalid because shelf order and literal detection order diverge; the new lower bound does not use it. The audited n≤9 maxima and the 4096-element counterexample to twice-per-pair charging also remain valid finite facts.\n\nThus the authorized Ω(n log n)–O(n³) interval is improved to Ω(n²)–O(n³), but no matching bounds are proved. The target remains open, so claimed_resolution is PARTIAL.",
+  "audit_feedback_acted_on": [
+    "The complete independent audit marks all ten claims VERIFIED, contains no REFUTED or UNRESOLVED claim and no confirmed refutation, and concludes overall VERIFIED. No material proof change is required, so claimed_resolution, every ordered claim and proof_sketch, and final_writeup are copied exactly from the parent.",
+    "The audit judges target coverage VALID_PARTIAL_PROGRESS and the PARTIAL resolution ACCURATE: the Ω(n²) lower bound is material progress over the source bound, but the retained O(n³) upper bound leaves the requested asymptotically tight complexity unresolved.",
+    "Native adversarial self-critique found no support for strengthening the resolution to FULL and no verified flaw requiring repair, narrowing, replacement, or removal; the repeated-pair and finite-execution facts do not close the Ω(n²)–O(n³) gap."
+  ],
+  "checks_performed": [
+    "Read only /evidence/source.json, /evidence/parent.json, and /evidence/audit.json; used no web, prior-run file, other solution, verification report, retrieval result, external memory, treatment receipt, or database.",
+    "Verified /evidence/parent.json SHA-256 equals 487f3ac59bbe80c331f0f86b77b25ee7da0acbb9dc4bb9c55a8859bda490d564 and /evidence/audit.json SHA-256 equals 8b33f5cf0458584756f2bd68b27a466cb4fb46005dce8a2896b9ea2d864d5757.",
+    "Mechanically confirmed that the ten parent claim strings equal the ten audited claim strings in order; audit complete is true, all ten verdicts are VERIFIED, overall is VERIFIED, and confirmed_refutations is empty.",
+    "Checked the sealed source target and its stated Ω(n log n) lower bound, O(n³) upper bound, and open exact-complexity status against the preserved PARTIAL writeup.",
+    "Checked that each preserved proof_sketch is under 500 words and that the preserved final_writeup is 531 words, under 3,000."
+  ],
+  "self_assessment": "CONFIDENT"
+}

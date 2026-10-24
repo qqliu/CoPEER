@@ -1,0 +1,53 @@
+{
+  "record_id": "fun2026_level3_additive_restoration",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 3,
+  "parent_sha256": "e2815e42564cb052ff991dc7cd55053df8b441cfbb72bb3c0d94520c7497f440",
+  "audit_sha256": "00f57f7f6089e459c050dde7631dd13525e70a6b5eddaa2e2a1c25db49b481e9",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "Counts may be truncated to {0,1,2} without losing any information relevant to level-3 restoration.",
+      "proof_sketch": "Let D={0,1,2}, where 2 means “at least two”, and define a⊕b=min(2,a+b) and a⊗b=min(2,ab). The map h(r)=min(2,r) from nonnegative integers to D preserves addition and multiplication under these saturated operations. Consequently, transfer-matrix products over D exactly distinguish zero, one, and multiple assignments. These are precisely the three cases needed by every uniqueness quantifier."
+    },
+    {
+      "claim": "Level-3 additive restoration is decidable in O(m n^3) time under the source paper’s complexity convention.",
+      "proof_sketch": "For column i, fix its local type-3 tuple x and type-2 tuple y. Define the 2×2 matrix A_i(x,y), indexed by incoming and outgoing carries β,γ∈{0,1}, whose entry is the saturated number of local type-1 tuples z satisfying the column equation. For fixed global x,y, starting with q_0=(1,0), the product recurrence q_i=q_{i-1}A_i(x_i,y_i) has q_i(γ) equal to the saturated number of type-1 assignments to the first i columns ending with carry γ. Thus ∃!v_1 holds exactly when q_m(α)=1, where α is the required final carry.\n\nThere are only |D^2|=9 possible q-states. For fixed local x, form a 9×9 matrix B_i(x) whose (p,q)-entry is the saturated number of local type-2 tuples y for which pA_i(x,y)=q. Starting with the unit vector d_0 concentrated at (1,0), the recurrence d_i=d_{i-1}B_i(x_i) counts, truncated at two, the type-2 prefixes reaching each q-state. Hence ∃!v_2:∃!v_1 holds exactly when the saturated sum of d_m(q) over q with q(α)=1 equals one.\n\nFinally, d ranges over the constant set D^9 of size 3^9. At each column, add a layered edge d→dB_i(x) for every local type-3 tuple x. A path from d_0 to an accepting final state exists exactly when some global type-3 assignment satisfies the two nested uniqueness quantifiers. Each column has at most three variable cells total, so constructing all A_i and B_i examines at most n^3 combined local tuples. The remaining state-space factors are constants."
+    },
+    {
+      "claim": "Level-3 additive restoration is formally P-complete under polynomial-time many-one reductions, but this does not provide the requested meaningful matching hardness classification.",
+      "proof_sketch": "The algorithm above gives membership in P. The language is nontrivial: in base 2 with final carry 0, the one-column puzzle x_3+0=0 is YES, while x_3+1=0 is NO. For any L∈P, a polynomial-time many-one reduction can decide its input and output the fixed YES or NO instance accordingly. This proves formal P-hardness under that reduction notion. But the argument applies to every nontrivial language in P precisely because the reduction decides L itself. It establishes neither logspace-reduction P-hardness nor another discriminating lower bound, so it does not satisfy the target’s matching-hardness requirement."
+    },
+    {
+      "claim": "The same construction places every fixed-level additive restoration problem in P.",
+      "proof_sketch": "Begin with the two carry states. Eliminating one globally unique digit track replaces an N-state automaton by a deterministic saturated-count automaton with 3^N states: its state records, for every old state, whether zero, one, or multiple assignments of the eliminated track reach it. Repeating this for type 1, then type 2, and so forth preserves exact nested-uniqueness semantics. For each fixed level k, the resulting tower-sized state set depends only on k, not on m or n; the outer type-k existential quantifier is ordinary layered reachability. Thus every fixed k has a polynomial-time algorithm, although the constant grows rapidly with k."
+    }
+  ],
+  "final_writeup": "The level-3 additive meta-restoration problem is in P. More precisely, in the source paper’s convention—where its O(nm) routines are polynomial—the algorithm above runs in O(mn^3) time; for a fixed base it is linear in the number of columns.\n\nThe key is not to test uniqueness independently in each column. Instead, propagate saturated solution counts. For fixed type-3 and type-2 digits, a two-coordinate vector records whether zero, one, or at least two type-1 prefixes reach each possible carry. This gives nine states and exactly determines whether the complete puzzle has one type-1 solution. A second saturated-count vector over those nine states records how many type-2 prefixes produce each first-level state. It has 3^9 possible values and exactly determines whether there is a unique type-2 assignment producing a unique type-1 completion. Type-3 assignments then become nondeterministic choices of transitions in a constant-width layered graph, so their existential quantifier is decided by reachability.\n\nCorrectness follows inductively because variables belonging to different columns are disjoint, and the saturated semiring preserves whether every nonnegative count is zero, one, or greater than one. Concatenating local assignments corresponds exactly to multiplication of the relevant transfer matrices.\n\nA carry-only graph retaining merely “locally unique” transitions would be unsound. For example, take two base-2 columns, make all six cells type 1, and require final carry 0. The carry path 0→1→0 has one local filling per column, but there are ten global fillings: nine through intermediate carry 0 and one through intermediate carry 1. The count-vector construction retains precisely the extra information needed to reject this instance.\n\nThe construction also places every fixed meta-level k for two-addend addition in P. Under polynomial-time many-one reductions, the nontrivial level-3 language is formally P-complete: a reduction can decide any source language in P and select a fixed YES or NO restoration instance. This observation is non-discriminating because it makes every nontrivial language in P complete under the same convention.\n\nNo meaningful matching lower bound, such as P-hardness under logspace many-one reductions, is proved here. Thus the polynomial-time upper bound and fixed-level extension are established, but the source target’s matching-hardness requirement remains unresolved. The claimed resolution is therefore PARTIAL, not FULL.",
+  "audit_feedback_acted_on": [
+    "There were no claim-level REFUTED or UNRESOLVED items and no confirmed refutations; retained all four independently verified claim wordings exactly.",
+    "Accepted the target-coverage judgment VALID_PARTIAL_PROGRESS: the upper bound and fixed-level extension are established, while a meaningful matching hardness classification remains absent.",
+    "Accepted the claimed-resolution judgment ACCURATE and retained claimed_resolution PARTIAL.",
+    "Retained the source-encoding-convention qualification identified by the audit as essential to the O(m n^3) statement.",
+    "Kept the polynomial-time-many-one P-completeness observation explicitly separated from the unresolved meaningful lower-bound requirement.",
+    "Native adversarial self-critique found no material correction to the proof state, so claimed_resolution, results, and final_writeup were copied exactly from the parent."
+  ],
+  "checks_performed": [
+    "Verified the designated parent and audit files against the supplied SHA-256 values; they matched exactly.",
+    "Read only the designated source, exact parent, and independent audit; used no web, retrieval database, retrieval result, treatment receipt, external memory, prior frontier output, other solution, or verification report.",
+    "Re-derived the saturated-semiring identities, both level-3 transfer invariants, the fixed-level lifting invariant, boundary-carry behavior, and empty-block uniqueness semantics using nonnegative integer arithmetic.",
+    "Created and ran check_revision_iter3_exact.py only in the permitted revision directory. It checked 10,201 saturation pairs and exact agreement between literal level-3 semantics and the specialized construction on 31,250 base-2 two-column instances and 432 base-3 one-column instances.",
+    "The same exact checker compared literal semantics with the generic lifted construction on 432 level-4 and 686 level-5 base-2 one-column instances.",
+    "Exactly checked the fixed base-2 YES/NO witnesses and the two-column all-type-1 counterexample, including its solution split of nine paths through carry 0 and one through carry 1.",
+    "Adversarially reassessed target coverage and found no discriminating hardness proof; retained PARTIAL rather than claiming FULL resolution.",
+    "Wrote only the exact-arithmetic checker in the permitted revision directory."
+  ],
+  "self_assessment": "CONFIDENT"
+}

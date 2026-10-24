@@ -1,0 +1,49 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "n_nonblank_text": 41,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": false
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/SE_cs_13118__a13122.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "$$ \\Delta(c^n) = (c-1)c^n, \\quad \\Sigma(c^n) = \\frac{c^n-1}{c-1}.$$",
+  "explanation": "The asserted closed form (c^n - 1)/(c - 1) is the geometric sum sum_{k=0}^{n-1} c^k, i.e. it INCLUDES the k = 0 term c^0 = 1. The proof's own summation operator has lower limit k = 1: Sigma(T)(n) = sum_{k=1}^{n-1} T(k). Hence the correct closed form under the proof's definition is sum_{k=1}^{n-1} c^k = (c^n - c)/(c - 1), which is smaller than the claimed value by exactly 1 for every n >= 1 and every c != 1. Specialized to c = 2 the correct value is 2^n - 2, not the 2^n - 1 that line 0034 uses; the derivation therefore carries an off-by-one (an extra additive +1) at that step. This is an exact, universally-failing discrepancy, not an edge-case artifact: the script verified rhs - lhs == 1 on all 1080 tested pairs. A negative control in the same script confirms the companion identity in the same verbatim sentence, Delta(c^n) = (c-1)c^n, is TRUE (0 failures over the same box), so the harness is not flagging indiscriminately — only the Sigma half of the sentence is wrong. (Note: the claim is only refutable relative to the stated Sigma convention; if one instead reads Sigma as sum_{k=0}^{n-1}, the identity holds — but the flagging system's target claim explicitly fixes the lower limit at k = 1, and the proof's own definition does too.)",
+  "flaw": "The stated identity Sigma(c^n) = (c^n - 1)/(c - 1), under the proof's own definition Sigma(T)(n) = sum_{k=1}^{n-1} T(k), together with its instantiation \"Sigma(2^n) = 2^n - 1\" used in the derivation step at proof line 0034.",
+  "problem": "Why is this sequence of recurrence relevant?\n\nI am learning how to solve the time complexity for the recurrence relation\n\n$$\n    T(n) = 2T(n - 1) + n^2\\text{, where }T(1) = 1\n$$\n\nThe solution notes that I should begin by considering the following sequence:\n\n$$\n    \\text{Define }T^k(n) = T^{k - 1}(n + 1) - T^{k - 1}(n) \\\\\n    \\text{and let }T^{(0)}(n) = T(n)\n$$\n\nHow is the sequence $T^k(n)$ relevant to solving my original recurrence relation? This just seems to be complicating the problem by defining an entirely new sequence.",
+  "source_context": "0008 | $$ T(n) = T(1) + \\sum_{k=1}^{n-1} \\Delta(T)(k). $$\n0009 | If we are only given the sequence $\\Delta(T)$ then we don't know $T(1)$, and we can think of it as a constant of integration. For concreteness, define another operator $\\Sigma$ given by\n0010 | $$ \\Sigma(T)(n) = \\sum_{k=1}^{n-1} T(k). $$\n0011 | The \"fundamental theorem of calculus\" then states that\n0012 | $$ \\Delta(\\Sigma(T)) = T $$\n0013 | and\n0014 | $$ \\Sigma(\\Delta(T)) = T - T(1). $$\n0015 | Another useful property of the operators $\\Delta$ and $\\Sigma$ is their linearity.\n0016 | \n0017 | Furthermore, we have the nice formula $$\\Delta^{(k)}(n^k) = k!,$$ which can be proved by induction on $k$. This formula also implies that $$\\Delta^{(k+1)}(n^k) = 0.$$ In fact, this is true for any polynomial of degree at most $k$. Conversely, $\\Sigma(n^k)$ is some polynomial of degree $k$.\n0018 | \n0019 | We can do the same for exponentials:\n0020 | $$ \\Delta(c^n) = (c-1)c^n, \\quad \\Sigma(c^n) = \\frac{c^n-1}{c-1}.$$\n0021 | \n0022 | Finally, it will be useful to use the shift operator $S$ given by $$S(T)(n) = T(n+1).$$\n0023 | This operator commutes with $\\Delta$: $S(\\Delta(T)) = \\Delta(S(T))$.\n0024 | \n0025 | Solving the recurrence\n0026 | ---\n0027 | \n0028 | Now to the problem at hand. The sequence $T$ satisfies $$S(T) = 2T + (n+1)^2. $$\n0029 | Taking the third difference, we get $$S(\\Delta^{(3)}(T)) = 2\\Delta^{(3)}(T).$$\n0030 | Here we used the linearity of $\\Delta$, the commutativity of $\\Delta,S$, and the fact that the third derivative of $(n+1)^2$ vanishes. We can conclude that\n0031 | $$ \\Delta^{(3)}(T) = C 2^n, \\quad C = \\Delta^{(3)}(T)(1)/2. $$\n0032 | We now want to repeatedly apply the operator $\\Sigma$. Each time we apply $\\Sigma$, we get some constant of integration. After the first time, we get",
+  "witness": "Take c = 2 and n = 3. Under the proof's OWN definition Sigma(T)(n) = sum_{k=1}^{n-1} T(k), applied to T(k) = 2^k: Sigma(2^n) at n = 3 is sum_{k=1}^{2} 2^k = 2 + 4 = 6. The claimed closed form gives (c^n - 1)/(c - 1) = (2^3 - 1)/(2 - 1) = 7, and the instantiation used at proof line 0034 says Sigma(2^n) = 2^n - 1 = 7. So the claim says the value is 7 while the definition yields 6: 6 != 7. Even smaller witnesses: c = 2, n = 1 gives an empty sum = 0 while the claim asserts (2-1)/(2-1) = 1 (0 != 1); c = 2, n = 2 gives 2 while the claim asserts 3. A non-base-2 witness: c = 3, n = 3 gives sum_{k=1}^{2} 3^k = 3 + 9 = 12 while the claim asserts (27-1)/2 = 13. Every one of the 1080 (c, n) pairs tested fails, always with claimed - actual = exactly 1."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_BY_THIS_AUTOMATED_RELEASE",
+ "record_id": "SE_cs_13118__a13122",
+ "scope_metadata": null,
+ "selected_declarations": [
+  {
+   "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+   ],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "QEDCert.SE_cs_13118__a13122.real_sum_counterexample",
+   "native_candidate_axioms": [],
+   "type": "∑ k ∈ Finset.Icc 1 2, 2 ^ k = 6 ∧ (2 ^ 3 - 1) / (2 - 1) = 7 ∧ ∑ k ∈ Finset.Icc 1 2, 2 ^ k ≠ (2 ^ 3 - 1) / (2 - 1)",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/SE_cs_13118__a13122.json",
+ "source_group": "stackexchange",
+ "supporting_evidence": []
+}

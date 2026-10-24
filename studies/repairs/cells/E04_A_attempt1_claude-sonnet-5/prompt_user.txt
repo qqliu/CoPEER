@@ -1,0 +1,201 @@
+# Record E04: Liveness: the prefix step of the safety argument
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E04 (SE_cs_156543__q)
+public source: https://cs.stackexchange.com/questions/156543/safety-vs-liveliness-property
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Safety VS. Liveliness Property
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | I have to prove whether a certain property is safety or liveliness. The property represents the absence of deadlock so I expected it to be a safety property from what I read online. 
+0002 | 
+0003 | 
+0004 | The issue is that I seem to show that it is both, but this is impossible as the only property that is both safety and liveliness would be $\left(2^{\Xi}\right)^{\omega}$, where $\Xi$ is the set of propositional symbols. I would like to understand where the mistake is, and naturally if any of the solutions would be correct. Also, I would like to do it in a formal way instead of using the "something bad never happens" intuitive idea.
+0005 | 
+0006 | \
+0007 | The property in question is: $$ \mathsf{G}((P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee  P2C))) $$
+0008 | 
+0009 |  1. The definition I have for safety property goes as follows:
+0010 | >An LT property $P_{safe}$ over $\Xi$ is called a safety property if for all words $\sigma \in\left(2^{\Xi}\right)^{\omega} \setminus P_{safe}$ there exists a finite prefix $\hat\sigma$ of $\sigma$ such that
+0011 | $$P_{safe} \cap \{\sigma^\prime\in \left(2^{\Xi}\right)^{\omega}\; |\; \hat\sigma \textrm{ is a finite prefix of }\sigma^\prime
+0012 | \} = \emptyset $$
+0013 | 
+0014 | What I tried to do is as follows:
+0015 | 
+0016 | Let $\sigma\in \left(2^{\Xi} \right)^{\omega}$ be an arbitrary word such that $\sigma\not \Vdash \mathsf{G}((P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee P2C))) $, then there exists $i\geq 0$ such that $\sigma, i\,\not \Vdash (P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee P2C)) $. Let $\hat\sigma=\sigma[..i]$, this is a bad prefix of $\sigma$, and for any word $\sigma^\prime\in \left(2^{\Xi} \right)^{\omega}$ such that $\hat\sigma$ is a prefix of $\sigma^\prime$, we have that $\sigma^\prime,i \not \Vdash(P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee P2C))$, thus:
+0017 |     $\sigma^\prime\not \Vdash \mathsf{G}((P1E \wedge P2E) \rightarrow  (\mathsf{F}\, ( P1C \vee P2C))) $. We conclude it is a **safety property**.
+0018 | 
+0019 |  2. The definition I have for liveliness property goes as follows:
+0020 | > An LT property $P_{live}$ over $\Xi$ is called a liveness property if $pref(P_{live}) = \left(2^{\Xi} \right)^{*}$.
+0021 | 
+0022 | So, I can't see why I can't prove it is a liveliness property as:
+0023 | 
+0024 | Take $\hat\sigma\in\left(2^{\Xi} \right)^{*}$ of length $n+1$, $\hat\sigma=v_0...v_n$, let $\sigma=\hat\sigma.P1C.\varnothing^{\omega}$ .
+0025 | 
+0026 | For all $i> n$, we have that $\sigma,i \not \Vdash P1E \wedge P2E $ thus $\sigma,i \Vdash (P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee  P2C))$.
+0027 | 
+0028 | For all $i\leq n$, we have $i<n+1$ and $\sigma, n+1 \Vdash P1C$ thus $\sigma, i\Vdash \mathsf{F}(P1C \vee P2C)$, hence $\sigma,i \Vdash (P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee  P2C))$.
+0029 | 
+0030 | Therefore we have that $\forall i\geq 0, \;\; \sigma, i\Vdash (P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee  P2C))$. Thus:
+0031 | 
+0032 | $$\sigma \Vdash \mathsf{G}((P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee  P2C))) $$
+0033 | 
+0034 | Hence, it is a **liveliness property**.
+0035 | 
+0036 | 
+0037 | 
+0038 | Note: This is my first time posting in this community so any comments are appreciated. Also if it were better to post this in the math.stack, let me know!
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+for any word $\sigma^\prime\in \left(2^{\Xi} \right)^{\omega}$ such that $\hat\sigma$ is a prefix of $\sigma^\prime$, we have that $\sigma^\prime,i \not \Vdash(P1E \wedge P2E) \rightarrow  (\mathsf{F}\, (P1C \vee P2C))$
+located at line label(s): 0016
+
+## Located defective declaration
+
+Declaration: `SEcs156543q.LocalClaim`
+
+```lean
+def LocalClaim : Prop :=
+  ∀ (σ : Nat → Letter) (i : Nat), ¬PhiInfinite σ i →
+    ∀ σ' : Nat → Letter, AgreeUpTo (i + 1) σ' σ → ¬PhiInfinite σ' i
+```
+
+The source's safety argument (stored line 0016) takes a word σ violating phi = (P1E ∧ P2E) → F (P1C ∨ P2C) at position i, its prefix σ[..i] (inclusive: positions 0..i), and asserts that EVERY infinite word with that prefix violates phi at i. This step is the located defect. Supply the condition on the extension under which the step is valid, prove the corrected step, show the condition is satisfiable and not trivially true, and prove the corrected classification: G phi is a liveness property and not a safety property (the source's own definition of safety).
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+
+## defs_only.lean
+
+```lean
+/-
+Record SE_cs_156543__q (E04).  Core Lean 4 only (no Mathlib, no imports).
+
+Source: two processes; letters record which of them request entry (`p1e`, `p2e`) and which
+are in the critical section (`p1c`, `p2c`).  phi = (P1E & P2E) -> F (P1C | P2C), evaluated at
+position i of an infinite word.
+Source definition of a safety property (lines 0010-0012): `IsSafety`.
+Source step (line 0016 of the question): with sigma, i |/= phi and sigma_hat = sigma[..i],
+  EVERY infinite word sigma' that has sigma_hat as a prefix satisfies sigma', i |/= phi.
+That step is the located statement `LocalClaim`, with the INCLUSIVE convention that
+sigma_hat = sigma[..i] is the prefix of length i+1 (positions 0 .. i).
+-/
+
+namespace SEcs156543q
+
+structure Letter where
+  p1e : Bool
+  p2e : Bool
+  p1c : Bool
+  p2c : Bool
+
+def emptyL : Letter := ⟨false, false, false, false⟩
+
+def eeL    : Letter := ⟨true,  true,  false, false⟩
+
+def c1L    : Letter := ⟨false, false, true,  false⟩
+
+def nthLetter : List Letter → Nat → Letter → Letter
+  | [],      _,     d => d
+  | a :: _,  0,     _ => a
+  | _ :: as, k + 1, d => nthLetter as k d
+
+def PhiInfinite (w : Nat → Letter) (i : Nat) : Prop :=
+  ((w i).p1e = true ∧ (w i).p2e = true) →
+    ∃ j : Nat, i ≤ j ∧ ((w j).p1c = true ∨ (w j).p2c = true)
+
+/-- Both processes request entry. -/
+def Request (a : Letter) : Prop := a.p1e = true ∧ a.p2e = true
+
+/-- Some process is in its critical section (a "commit"). -/
+def Commit (a : Letter) : Prop := a.p1c = true ∨ a.p2c = true
+
+instance (a : Letter) : Decidable (Request a) :=
+  inferInstanceAs (Decidable (a.p1e = true ∧ a.p2e = true))
+instance (a : Letter) : Decidable (Commit a) :=
+  inferInstanceAs (Decidable (a.p1c = true ∨ a.p2c = true))
+
+/-- `u` and `v` have the same finite prefix of length `n` (positions `0 .. n-1`). -/
+def AgreeUpTo (n : Nat) (u v : Nat → Letter) : Prop := ∀ k : Nat, k < n → u k = v k
+
+/-- The full property `G phi`. -/
+def GPhi (w : Nat → Letter) : Prop := ∀ i : Nat, PhiInfinite w i
+
+/-- The source's step at line 0016, with `sigma_hat = sigma[..i]` the prefix of length `i+1`. -/
+def LocalClaim : Prop :=
+  ∀ (σ : Nat → Letter) (i : Nat), ¬PhiInfinite σ i →
+    ∀ σ' : Nat → Letter, AgreeUpTo (i + 1) σ' σ → ¬PhiInfinite σ' i
+
+/-- Source definition of a safety property (lines 0010-0012). -/
+def IsSafety (P : (Nat → Letter) → Prop) : Prop :=
+  ∀ σ : Nat → Letter, ¬P σ →
+    ∃ n : Nat, ∀ σ' : Nat → Letter, AgreeUpTo n σ' σ → ¬P σ'
+
+/-- Standard definition of a liveness property: every finite prefix extends into `P`. -/
+def IsLiveness (P : (Nat → Letter) → Prop) : Prop :=
+  ∀ (σ : Nat → Letter) (n : Nat), ∃ σ' : Nat → Letter, AgreeUpTo n σ' σ ∧ P σ'
+
+end SEcs156543q
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E04: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace SEcs156543q
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The condition on the extension `σ'` (and the position `i`) under which the source's step becomes
+valid: an extension of the inclusive prefix `σ[..i]` that satisfies it still violates `phi` at `i`. The
+hole must be a proposition in `σ'` and `i` built from `Commit`, `Request`, letters, positions and
+quantifiers over `Nat`; it may not mention `PhiInfinite`, `GPhi`, `AgreeUpTo`, `LocalClaim`, `IsSafety`
+or `IsLiveness`, and it may not be `True` or `False`. -/
+def extension_condition (σ' : Nat → Letter) (i : Nat) : Prop := «HOLE»
+
+/-- The corrected step (shape fixed): if `σ` violates `phi` at `i`, every extension `σ'` of the inclusive
+prefix of length `i + 1` that satisfies the condition also violates `phi` at `i`. -/
+def CorrectedStep : Prop :=
+  ∀ (σ : Nat → Letter) (i : Nat), ¬PhiInfinite σ i →
+    ∀ σ' : Nat → Letter, AgreeUpTo (i + 1) σ' σ → extension_condition σ' i → ¬PhiInfinite σ' i
+-- ===== END FIXED PART =====
+
+end SEcs156543q
+```
+
+Allowed edit: Replace the hole in `extension_condition` by a proposition in σ' and i built from Commit, Request, letters, positions and quantifiers over Nat (not PhiInfinite, GPhi, AgreeUpTo, LocalClaim, IsSafety, IsLiveness; not True or False); nothing else in the fixed part may change. PhiInfinite, AgreeUpTo, the inclusive prefix convention (length i + 1), the source definition IsSafety and the quantification over all words and positions are fixed; the exclusive convention and restrictions to finitely many lengths or words are not allowed. Do not redefine Letter, emptyL, eeL, c1L, nthLetter, PhiInfinite, Request, Commit, AgreeUpTo, GPhi, LocalClaim, IsSafety or IsLiveness; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): Letter, emptyL, eeL, c1L, nthLetter, PhiInfinite, Request, Commit, AgreeUpTo, GPhi, LocalClaim, IsSafety, IsLiveness
+
+## OBLIGATIONS (exact names and statements, inside `namespace SEcs156543q`)
+
+```lean
+theorem repair_statement : ∀ (σ : Nat → SEcs156543q.Letter) (i : Nat), ¬SEcs156543q.PhiInfinite σ i → ∀ σ' : Nat → SEcs156543q.Letter, SEcs156543q.AgreeUpTo (i + 1) σ' σ → SEcs156543q.extension_condition σ' i → ¬SEcs156543q.PhiInfinite σ' i
+```
+(universal: Universal: the corrected step holds for every word, position and extension.)
+
+```lean
+theorem repair_nonvacuous : (∃ (σ : Nat → SEcs156543q.Letter) (i : Nat) (σ' : Nat → SEcs156543q.Letter), ¬SEcs156543q.PhiInfinite σ i ∧ SEcs156543q.AgreeUpTo (i + 1) σ' σ ∧ SEcs156543q.extension_condition σ' i) ∧ (∃ (σ : Nat → SEcs156543q.Letter) (i : Nat) (σ' : Nat → SEcs156543q.Letter), ¬SEcs156543q.PhiInfinite σ i ∧ SEcs156543q.AgreeUpTo (i + 1) σ' σ ∧ ¬SEcs156543q.extension_condition σ' i)
+```
+(nonvacuity: Non-vacuity: the hypotheses of the corrected step are jointly satisfiable, and the added condition is not trivially true under the other hypotheses (some extension of a violating word's prefix fails it).)
+
+```lean
+theorem final_theorem : SEcs156543q.IsLiveness SEcs156543q.GPhi ∧ ¬ SEcs156543q.IsSafety SEcs156543q.GPhi
+```
+(final: The corrected classification (the endpoint of this record): `G phi` is a liveness property and not a safety property, under the source's own definition of safety. If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Write work/SUBMISSION.lean as specified in the instructions, compile it with `lake env lean work/SUBMISSION.lean`, fix errors within the budget, and finish with the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

@@ -1,0 +1,56 @@
+{
+  "record_id": "Algorithms_27__sol3",
+  "outcome": "BUG_FOUND",
+  "claim_kind": "CORRECTNESS",
+  "target_claim": "The forward direction of the reduction 3-Partition <=p 12Partition: for a yes-instance (T,B), the subsets A_j formed by taking all four copies s^(1..4)_i of the three elements of each 3-Partition block T_j all have the same sum -- and hence the reduction maps yes-instances to yes-instances (solution lines 0123-0136, and the reverse direction / Lemma 3 at lines 0051-0057, 0137-0152).",
+  "test_path": "<workspace>/partB_feasibility/algorithm_tests/Algorithms_27__sol3/test.py",
+  "failing_input": "PRIMARY (refutes the quoted sentence): 3-Partition yes-instance m=2, T=(t1..t6)=(5,5,6,5,5,6), B=16 (promise holds: B/4=4 < t_i < 8=B/2, sum=32=mB; valid 3-partition {t1,t2,t3},{t4,t5,t6} each summing to 16). K=1+mB=33. Construction s^(j)_i = t_i + j*K*4^(3m+1-i) = t_i + j*33*4^(7-i). Forward subsets: sum(A_1)=1774144 (C_1=4^6+4^5+4^4=5376), sum(A_2)=27784 (C_2=4^3+4^2+4^1=84); difference 1746360. Same failure on the p0 instance T=(5,5,5,5,5,5), B=15, K=31: sums 1666620 vs 26100. SECONDARY (refutes answer-preservation of the whole reduction): T=(4,4,4,4,4,6), B=13 (promise holds: 3.25 < t_i < 6.5, sum=26=2*13), which is a 3-Partition NO-instance (triples sum to 12 or 14, never 13), yet the constructed S of 24 elements IS a yes-instance of 12Partition -- witness A1={(i,j)}={(1,1),(1,2),(1,3),(2,1),(3,1),(3,2),(3,3),(4,1),(5,1),(5,4),(6,1),(6,4)}, A2 = complement, both summing to 737152.",
+  "observed_vs_claimed": "CLAIMED (line 0135-0136): 'where Cj depends only on the indices. Since each index appears in exactly one partition set, all Aj have the same sum.' OBSERVED: sum(A_j) = 4B + 10K*C_j with C_j = sum of 4^(3m+1-i) over A_j's three indices; because these are DISTINCT powers of 4, different blocks get different C_j, so the A_j sums differ wildly. On T=(5,5,6,5,5,6), B=16 the two forward subsets have sums 1774144 and 27784 (ratio ~64x, difference 1746360), so the forward direction maps a 3-Partition yes-instance to a 12Partition candidate that is not a valid equal-sum partition. The inference 'each index appears in exactly one partition set => all Aj have the same sum' is a non sequitur: that fact makes the C_j a partition of the weight multiset, not equal to one another. The intended reduction (rubric) pads with 9m copies of B and scales; the positional-weight construction here has no mechanism to equalise weights across blocks. Additionally, an exhaustive sweep of all 48 promise instances with m=2 and B in [9,20] shows the equivalence '3-Partition(T,B) <=> 12Partition(reduce(T,B))' fails on 9 of them, always in the unsound direction (3P=NO but 12P=YES). Root cause of that second failure: for every m=2 instance, splitting each index i's four copies as {j=1,j=4} on one side and {j=2,j=3} on the other gives two 12-element subsets with identical weight sums (1+4 = 2+3 = 5 for every i) and identical t-sums, so S is ALWAYS a yes-instance of 12Partition regardless of T. This directly refutes Lemma 3 (lines 0051-0057, which asserts n_i in {0,4}) and the Reverse Direction. The solution's own Lemma-3 sketch even concedes the gap ('By a careful accounting argument ... we can show'), and its claim that a partial pick contributes coefficient at most 1+2+3=6 versus a needed 10 ignores that coefficients only need to sum correctly across indices, not per index. Verified with exact integer arithmetic; the 12Partition decision was cross-checked by two independent exact oracles (meet-in-the-middle over (count,sum) states and plain exhaustive enumeration of all C(23,11)=1352078 splits), which agree on every instance tested and pass a self-test including NO cases.",
+  "faithfulness_notes": "The construction is fully specified and was transcribed verbatim: K = 1 + sum_i t_i = 1 + mB (lines 0037-0038); s^(j)_i = t_i + j*K*4^(3m+1-i) for i=1..3m, j=1..4 (lines 0023-0035); S has 12m elements; the forward map A_j = {s^(l)_{i_k} : k in 1..3, l in 1..4} (lines 0125-0128). The implementation asserts at runtime that its computed sum(A_j) equals the solution's own closed form (7), 4B + 10K*C_j, so there is no transcription drift. Nothing was invented: the only genuinely hand-waved step, the 'careful accounting argument' of Lemma 3 (lines 0119-0122), was NOT implemented -- instead it was tested as a claim by exhaustively deciding 12Partition with a brute-force oracle, and it is false. Only m=2 (|T|=6 <= 12 input elements, |S|=24) was searched exhaustively, which is enough: the forward-direction refutation is an exact arithmetic identity that holds for every m >= 2 (distinct powers of 4 give distinct C_j), and the reverse-direction counterexample is exhibited with an explicit witness. Floats never decide anything; the B/4 < t_i < B/2 promise is tested with Fraction. No randomness, no sampling, no wall-clock timing.",
+  "verdict_printed": "BUG_FOUND",
+  "run_summary": {
+    "family_size_m2_B9_20": 48,
+    "instances_where_3P_iff_12P_holds": 39,
+    "instances_3P_NO_but_12P_YES": 9,
+    "instances_3P_YES_but_12P_NO": 0,
+    "smallest_unsound_instance": {
+      "T": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        6
+      ],
+      "B": 13
+    },
+    "forward_sums_instance_p1": {
+      "T": [
+        5,
+        5,
+        6,
+        5,
+        5,
+        6
+      ],
+      "B": 16,
+      "K": 33,
+      "sum_A1": 1774144,
+      "sum_A2": 27784
+    },
+    "forward_sums_instance_p0": {
+      "T": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "B": 15,
+      "K": 31,
+      "sum_A1": 1666620,
+      "sum_A2": 26100
+    }
+  }
+}

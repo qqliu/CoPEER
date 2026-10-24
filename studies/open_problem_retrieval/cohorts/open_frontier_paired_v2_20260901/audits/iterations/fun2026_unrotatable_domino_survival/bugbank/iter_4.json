@@ -1,0 +1,94 @@
+{
+  "record_id": "fun2026_unrotatable_domino_survival",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 4,
+  "parent_sha256": "2a8c81ee365d68574255326079a5e55478b02afe88b82281e635683fdd309350",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Finite-sequence survival with unrotatable dominoes is in NP.",
+      "claim_sha256": "e6a8180a85fb805d46fbcbc9e16c9b30ee69fea88b895e18fa5389149e3e9d12",
+      "verdict": "VERIFIED",
+      "evidence": "For each explicitly listed fixed-orientation domino, a certificate supplies its locking coordinate. On the current explicit W×H board, legal translations form a directed graph with O(WH) states, up to the rules' constant-size spawn region. Graph reachability verifies that coordinate; downward blockage, loss, placement, and simultaneous full-row deletion are then deterministic polynomial-time checks. Repeating for the explicit sequence is polynomial. Cyclic movement does not enlarge the certificate because reachability always has a simple path.",
+      "witness": "A certificate consists of one locking coordinate per input domino; the verifier reconstructs reachability rather than trusting a supplied movement path.",
+      "search_method": "Direct NP-verifier construction and finite-state reachability analysis under the source movement rules.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 1,
+      "claim": "For row-parallel unrotatable dominoes on an odd-width board, there is a computable linear-size upper bound on the number of pieces that can ever survive.",
+      "claim_sha256": "d7ae78cb56d31103aeaf299e7701ddb9e4b8e11fcd8e8554ce5f68210d59ebd2",
+      "verdict": "VERIFIED",
+      "evidence": "Label physical rows as tokens. Before a token clears, each initially occupied cell remains a barrier, so horizontal pieces placed in an initial empty interval of length ℓ number at most floor(ℓ/2). A token can clear only if every such interval has even length. If C is the sum of these capacities and q is the number of initial tokens passing that parity test, at most q initial tokens can clear. Each clear introduces one empty odd-width token, which cannot itself clear and accepts at most floor(W/2) pieces. Hence every play has length at most U=C+q floor(W/2)≤H(W−1), computable in O(WH). The exact checker also exhaustively found no play of length U+1 in 4,768 small board/spawn cases.",
+      "witness": "The decreasing resource is the collection of row-token capacities, augmented by at most floor(W/2) for each of the at most q possible token deletions.",
+      "search_method": "Row-token invariant proof, parity analysis, and exhaustive integer-bitmask checks for small odd boards and every possible spawn edge.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 2,
+      "claim": "On an even-width board, two initially empty top rows suffice for survival of arbitrarily many row-parallel unrotatable dominoes.",
+      "claim_sha256": "af40317e11204ffdea0925d134e338dcd1e4c09a6fcb7c55c1ce6ee8b004eceb",
+      "verdict": "VERIFIED",
+      "evidence": "Partition the even-width board into adjacent column pairs. With two empty top rows, dropping one piece into a pair equalizes that pair's column tops while leaving the top row empty. If no row clears during seeding, repeatedly raise lower pairs to the greatest pair top T; the unobstructed top row supplies access, and when every pair reaches T, row T is full. Any earlier clear simply ends the phase sooner. A clear shifts the untouched empty top row down and introduces a new empty top row, restoring the invariant. Thus finite phases repeat indefinitely. The checker executed this phase successfully in 20,901 exhaustive small-board cases across all spawn edges.",
+      "witness": "The repeatable phase is: seed every fixed column pair, equalize all pair tops, clear a row, and recover two empty top rows.",
+      "search_method": "Constructive invariant proof plus exhaustive exact phase execution on even widths 2, 4, and 6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 3,
+      "claim": "The maximum survival length on an initially empty odd-width W×H board with row-parallel unrotatable dominoes is exactly H floor(W/2).",
+      "claim_sha256": "a371bb398ad91d62717c35718d3697037650fd5b6080d2c9ce149ab393ec592a",
+      "verdict": "VERIFIED",
+      "evidence": "Starting empty, every row always has even occupancy, so an odd-width row never becomes full and no clearing occurs. Consequently each of H rows contains at most floor(W/2) disjoint horizontal dominoes. For the matching lower bound, every edge of an odd path on W vertices belongs to a maximum matching: deleting the chosen edge's endpoints leaves two paths whose matching sizes total floor(W/2)−1. Choose a maximum matching containing the fixed spawn pair and repeat it bottom-to-top. Lower copies provide support; within each level, placing edges farthest from spawn first and the spawn edge last preserves access. This places H floor(W/2) pieces. W=1 gives zero. The checker validated 81 constructions over odd widths through 9 and multiple heights/spawn edges, with exact BFS confirmation on the smaller cases.",
+      "witness": "A maximum matching of the W-cell row containing the spawn edge, repeated identically on all H levels and filled farthest-to-nearest.",
+      "search_method": "Parity upper bound, path-matching construction, reachability proof, and exact state-space checks.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 4,
+      "claim": "The row-capacity bound is not sufficient, and clearing one row does not guarantee indefinite unrotatable-domino survival.",
+      "claim_sha256": "954bd75032cb1d80a404aa71e8c70a3a7bf58be6632f7972cd13fa5d661ad598",
+      "verdict": "VERIFIED",
+      "evidence": "On the 3×3 board top/middle/bottom = .../.#./..., the token bound is U=2, but the middle obstruction forces the first horizontal domino to lock in the top row, where either possible edge blocks every next spawn; the exact maximum is one. On the 3×2 board .../..#, filling the other two bottom cells clears that row and leaves the empty board, which admits exactly two further horizontal pieces. Thus three pieces survive but four do not despite the first-move clear. Exact reachability checks confirmed both examples for both width-three spawn edges.",
+      "witness": "Capacity witness: .../.#./... has U=2 but maximum one. Clear-without-indefinite-survival witness: .../..# clears on its first placement but has total maximum three.",
+      "search_method": "Complete finite state-space enumeration using integer row bitmasks, together with the odd-width parity bound.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 5,
+      "claim": "Two initially empty top rows cannot in general be weakened to one on even-width row-parallel boards.",
+      "claim_sha256": "5c2e69a48ecd73daa097d92652179a104a3626d4550fe834da5e2d888020cd44",
+      "verdict": "VERIFIED",
+      "evidence": "For the 4×2 board top/bottom = ..../#... with centered spawn columns 2–3, the exact first-lock set is top columns 1–2, bottom columns 2–3, or bottom columns 3–4. A top lock blocks the next spawn. Either bottom lock leaves no adjacent empty bottom pair, forcing the second piece into the top row; every top-row horizontal edge intersects the centered spawn pair, so a third piece cannot spawn. Exact enumeration confirms survival of two pieces and impossibility of three.",
+      "witness": "The concrete centered-spawn board is top/bottom = ..../#..., with one initially empty top row and maximum survival length two.",
+      "search_method": "Exhaustive translation-graph and locking-position enumeration for the specified 4×2 board.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    },
+    {
+      "idx": 6,
+      "claim": "For odd-width row-parallel instances whose completely empty initial rows form a top prefix, finite clearing polynomial-time many-one reduces to finite survival.",
+      "claim_sha256": "ca8c576f08fe58537369425281cab9790b6077c38d9dbaa6bedec12ca84942a5",
+      "verdict": "VERIFIED",
+      "evidence": "Let t be the number of initially empty top rows, R the remaining nonempty row tokens, m=floor(W/2), and K0 the sum of interval capacities in R. Clearing requires every interval in R to have even length and the supplied sequence length to equal K0; otherwise a fixed NO survival instance is output. In the remaining cases C=K0+tm and q=H−t, so the token bound is U=K0+Hm. A clearing play extends with the empty-board construction for Hm pieces. Conversely, survival for U pieces forces all q eligible tokens in R to clear, because with fewer clears the token bound is strictly below U. Empty-origin tokens remain above every surviving R token and can never clear. Deleting all placements in them removes neither support below a retained lock nor any required cell from a retained route; it leaves exactly the K0 placements that clear R, with all other tokens empty. The parameters and fixed-NO test are polynomially computable. Exact checking covered 4,109 small necessity cases and 911 promised equivalences.",
+      "witness": "The reduction maps a valid core instance to the same board with sequence length L=K0+H floor(W/2); immediate parity or length failures map to an empty width-one board with one horizontal domino.",
+      "search_method": "Many-one reduction proof via saturation of the row-token bound, order-preserving token deletion, and exhaustive exact checks on small promised instances.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requests a computational-complexity classification for the unrestricted finite unrotatable-domino survival problem. The draft rigorously establishes NP membership and several structural results for the all-horizontal subfamily, including a promised clearing-to-survival reduction. It does not establish a polynomial-time algorithm or NP-hardness for the unrestricted target; in particular, the cited clearing hardness is not shown to satisfy the reduction's odd-width, row-parallel, top-prefix promise, and arbitrary starting boards and orientation patterns remain untreated. These are material but incomplete advances, so VALID_PARTIAL_PROGRESS is appropriate. The draft labels its resolution PARTIAL and explicitly disclaims a full classification, making claimed_resolution ACCURATE.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the designated source-input JSON and iteration-4 draft as external source material; did not access the web, retrieval data, receipts, prior runs, audit reports, or other solutions.",
+    "Compared the exact target against both the seven claims and the final writeup before auditing individual claims.",
+    "Reconstructed the source translation, locking, spawn, loss, and simultaneous row-deletion semantics and proved the polynomial verifier.",
+    "Independently proved the odd-width row-token capacity bound, even-width repeatable phase, empty-board matching formula, and promised reduction in both directions.",
+    "Persisted and ran /tmp/open_frontier_paired_v2/fun2026_unrotatable_domino_survival/audit-revision/bugbank/iter_4/exact_domino_audit.py using integer bitmasks only; its final SHA-256 is 72bdda20062bad0c28d9110d7744625315d6d1ca78349065e1d625fd1422fb61.",
+    "The final checker run passed 4,768 odd-token-bound cases, 20,901 even-phase cases, 81 empty-odd-board constructions, all stated finite witnesses, 4,109 reduction-necessity cases, and 911 reduction equivalences.",
+    "Checked the additional vertical-domino 3×3 cycle asserted in the final writeup for two complete six-placement iterations; both returned exactly to the empty board."
+  ]
+}

@@ -1,0 +1,99 @@
+\section{The localization benchmark: protocol and complete results}
+\label{app:certified-localization}
+
+\paragraph{Current evaluation set.}
+The main evaluation uses 100 texts from the human-approved core, each with at least ten nonblank source lines, grouped into 92 problem clusters; a supplementary evaluation adds 31 shorter texts, for 131 scorable inputs in 123 clusters. The remaining core dossiers are 12 pilot records, one unscorable record, and three records with unresolved reference-line concerns; the line concerns affect which lines to score, and those dossiers remain in the core. Appendix~\ref{app:recent-human-review} describes the reviews, the core's selection, and every exclusion.
+
+The current scores reuse the saved model answers under the original scoring rules; membership was fixed from the review evidence before the answers were rescored. The inclusion ledger is \path{bugbank/core/membership.json}, and \path{benchmark/core/README.md} explains how to reproduce both evaluation sets.
+
+\paragraph{Inputs and reference lines.}
+A critic receives the numbered source text and a request for up to three candidate lines, ranked by preference, with a brief explanation. The prompt says that the text contains an error and withholds the dossier's selected passage, counterexample, and Lean certificate. For some arXiv records the supplied text is an excerpt from the paper; the released input is in every case the text the critic was asked to assess.
+
+The reference lines of an input are its accepted error locations, including restatements and instantiations of the challenged claim; selecting any of them earns credit, and 57 of the 100 primary inputs have more than one. Model-assisted review checked and expanded these sets. Of the 100 primary inputs, 69 have a recorded positive human check of the current reference-line selection, 55 of them on the exact current source text and labels; dossier approval and reference-line review are separate checks (Appendix~\ref{app:recent-human-review}).
+
+\paragraph{Scoring and uncertainty.}
+Hit@1 counts a match in the first candidate slot, and Hit@3 a match in any of the original first three slots. An invalid, unknown, blank-line, or duplicate label leaves its slot empty, and a later candidate never moves forward to fill it. Missing answers and attempts that break the execution rules or exhaust their budget count as misses. We report these all-input rates together with the number of responses that met the rules; rates conditional on those responses have denominators that differ across configurations.
+
+Four deterministic rules choose the longest line, the line with the most words, the line with the most mathematical symbols, or the line most similar to the document's TF--IDF word profile; the comparison baseline is the strongest of the four on the evaluated population, and random line selection is reported as its exact expectation.
+
+Confidence intervals use 10,000 bootstrap resamples of problem clusters, keeping related texts together within the assignment groups specified in the released scorer~\citep{efron1979bootstrap,field2007clustered}; the comparison with the strongest rule reselects that rule in each resample. These intervals describe variation across the evaluated texts. The saved parser, scoring code, grouping, and seed settings are in \path{benchmark/code/}.
+
+\paragraph{Saved responses and reproduction.}
+The release preserves the selected responses, failure categories, and every execution attempt; recorded tokens, lower bounds for incomplete logging, and budget charges are kept as separate quantities. The settings below explain how an attempt is run, and \path{benchmark/core/README.md} reproduces the current scores from the saved responses.
+
+\input{fc__appendix__clear_ccl_complete_table}
+
+
+\subsection{Evaluated models and execution settings}
+\label{app:ccl_models}
+
+We evaluated 13 model configurations, five hosted models and eight locally run open-weight models. Haiku has two reporting views of the same calls, an outage-continuation view and a retained-notice view, so the release contains 14 reporting views for 13 configurations; their shared calls and costs are counted once in campaign accounting.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Local model configurations and exact checkpoint repositories.}
+\label{tab:local_models}
+\begin{tabular}{@{}p{0.45\linewidth} p{0.5\linewidth}@{}}
+\toprule
+\textbf{Model Label} & \textbf{Repository} \\
+\midrule
+DeepSeek-R1-Distill-Qwen-32B & \href{https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B}{\path{deepseek-ai/DeepSeek-R1-Distill-Qwen-32B}} \\
+Gemma 3 27B-IT (greedy) & \href{https://huggingface.co/unsloth/gemma-3-27b-it}{\path{unsloth/gemma-3-27b-it}} \\
+GLM-4.5-Air (FP8) & \href{https://huggingface.co/zai-org/GLM-4.5-Air-FP8}{\path{zai-org/GLM-4.5-Air-FP8}} (FP8 compressed-tensors) \\
+GPT-OSS 120B (MXFP4, medium) & \href{https://huggingface.co/openai/gpt-oss-120b}{\path{openai/gpt-oss-120b}} \\
+GPT-OSS 20B (MXFP4, medium) & \href{https://huggingface.co/openai/gpt-oss-20b}{\path{openai/gpt-oss-20b}} \\
+Kimi-Linear 48B-A3B Instruct & \href{https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct}{\path{moonshotai/Kimi-Linear-48B-A3B-Instruct}} (configuration dtype: BF16) \\
+Nemotron 3.5 Lightning 30B-A3B (BF16) & \href{https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16}{\path{nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16}} (BF16) \\
+Nemotron 3 Super 120B-A12B (FP8) & \href{https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8}{\path{nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8}} (ModelOpt FP8) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each repository identifier in Table~\ref{tab:local_models} links to its public model card; hosted model names are the preserved experiment identifiers.
+
+The GPT-OSS configurations use MXFP4 weights, medium reasoning effort, and instructions in the native Harmony developer block. All eight local configurations requested one B200 GPU and used \texttt{vLLM} 0.29.0~\citep{kwon2023vllm}.
+
+Inputs that exceed the recorded context limit receive a setup refusal and count as misses. The five hosted configurations are \texttt{claude-sonnet-5}, \texttt{claude-opus-5-5}, \texttt{claude-haiku-4-5-20251001}, \texttt{gemini-3.1-pro}, and \texttt{gpt-5.6-luna}, queried through their command-line interfaces (Claude Code CLI, the agy CLI for Gemini, and Codex CLI for Luna).
+
+\begin{table}[h]
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrll}
+\toprule
+Model & \shortstack{Context\\tokens} & Generation setting & Configured execution interface\\
+\midrule
+Haiku 4.5 & n.r. & Medium effort & Claude CLI 2.1.275\\
+Sonnet 5 & n.r. & Medium effort & Claude CLI 2.1.275\\
+Opus 5.5 & n.r. & Medium effort & Claude CLI 2.1.280\\
+DeepSeek R1 Qwen & 32,768 & $T=0.6$, $p=0.95$ & Local vLLM\\
+Gemma 3 27B & 65,536 & Greedy & Local vLLM\\
+GLM 4.5 Air & 65,536 & $T=0.6$, $p=0.95$; thinking & Local vLLM\\
+GPT-OSS 120B & 131,072 & $T=0.6$, $p=0.95$; medium & Local vLLM\\
+GPT-OSS 20B & 131,072 & $T=0.6$, $p=0.95$; medium & Local vLLM\\
+Kimi Linear & 32,768 & $T=0.6$, $p=0.95$ & Local vLLM\\
+Nemotron 3.5 Lightning & 131,072 & $T=1.0$, $p=0.95$; thinking & Local vLLM\\
+Nemotron 3 Super & 65,536 & $T=1.0$, $p=0.95$; thinking & Local vLLM\\
+Gemini 3.1 Pro & n.r. & Low effort & agy 1.2.8\\
+GPT-5.6 Luna & n.r. & Medium effort & Codex CLI 0.155.1\\
+\bottomrule
+\end{tabular}
+\caption{Saved execution settings for the 13 model configurations. Every attempt has a 16,000-token output allowance and a 600-second wall limit, with the interface-specific enforcement described below. $T$ is temperature and $p$ is top-$p$; local generation uses vLLM 0.29.0 and seed 20260921. ``n.r.'' means the hosted CLI's numeric context-window limit was not recorded. Context limits, output-budget enforcement and recovery rules are specified below. Available version receipts agree across the initial, correction and recovery passes.}
+\label{tab:ccl-execution-settings}
+\end{table}
+
+\paragraph{Prompts and context.}
+All configurations receive the same numbered text and benchmark instructions. Local models use their native chat templates, GPT-OSS places the instructions in the Harmony developer block, and Gemini places them at the start of the user turn. For local models, the prompt plus the 16,000-token output allowance must fit both the configured context and the 120,000-token attempt ceiling; longer inputs receive a recorded setup refusal and a score of zero, without truncation or a model call. The hosted runs preserve the CLI settings and receipts, whose saved configuration does not specify a numeric context-window limit.
+
+\paragraph{Output and time limits.}
+Each attempt has a 600-second wall limit and a 120,000-token attributable-usage ceiling, and the common 16,000-token output allowance is enforced differently across interfaces. Local vLLM generation sets \texttt{max\_tokens=16000}, including generated reasoning tokens, and reaching that limit counts as budget exhaustion. Claude requests a 16,000-token client limit and checks the event stream for continuations, output usage, and live estimates. Gemini and Luna have no provider-side output cap in these saved interfaces: their recorded native output usage is checked after generation, and a completed response above the allowance counts as budget exhaustion, with Gemini's output count including its recorded thinking tokens. The 120,000-token ceiling is checked during the Claude and Gemini streams and after receipt of Luna's native usage. Because of these interface differences, the shared allowances do not imply matched computation.
+
+\paragraph{Tools, retries and recovery.}
+Claude and Luna disable tools, and local generation has no tool executor. Gemini's CLI exposes tools, so the runner stops and rejects an attempt if a tool step or an additional turn appears. Ordinary runs and the input-correction pass allow one initial attempt and one retry for an eligible transport failure; responses that exhaust their budget or break the execution rules are terminal under that allowance. The separate Haiku continuation resumes the listed no-answer session-limit notices and carries forward completed answers and budget failures. The later environment-recovery pass grants one attempt per listed target, with no automatic retry, and its result replaces the notice regardless of outcome. Both Haiku reporting views use the same corrected and recovered outputs, and every attempt remains in campaign accounting.
+
+\paragraph{Usage and budget charges.}
+Recorded usage, accounting charges, and execution limits are distinct quantities. Complete native usage contributes its measured count, partial native usage contributes its recorded lower bound, and an attempt with incomplete usage receives a conservative accounting charge of at least 40,000 tokens, or a larger recorded lower bound or applicable reservation. A charge is a budget debit, not measured consumption. The results table reports selected-response usage; \path{benchmark/accounting/README.md} gives the full accounting rules and attempt ledger, and \path{benchmark/code/generation/README.md} documents the generation drivers, prompts, and settings.
+
+\IfFileExists{fc__generated__ccl_results_appendix.tex}{%
+  \input{fc__generated__ccl_results_appendix}%
+}{}

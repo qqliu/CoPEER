@@ -1,0 +1,40 @@
+{
+  "schema": "anonymous-native-grader-usage/v1",
+  "cell": "arxiv_1903.05032v4__source_enriched_codex__verify_full",
+  "attempt": 1,
+  "usage": {
+    "engine": "codex",
+    "requested_model": "gpt-6-astra",
+    "requested_effort": "max",
+    "mode": "grade",
+    "exit_code": 0,
+    "status": 0,
+    "command_count": 3,
+    "print_only_read_count": 0,
+    "extra_exec_count": 3,
+    "usage_total": {
+      "input_tokens": 569614,
+      "cached_input_tokens": 488704,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 19650,
+      "reasoning_output_tokens": 17351
+    },
+    "output_tokens_bound_model": 19650,
+    "commands": [
+      {
+        "command": "/usr/bin/bash -lc \"python - <<'PY'\nimport io, tarfile, urllib.request\nurl = 'https://arxiv.org/src/1903.05032v4'\ndata = urllib.request.urlopen(url, timeout=30).read()\nprint('Downloaded bytes:', len(data))\ntry:\n    archive = tarfile.open(fileobj=io.BytesIO(data), mode='r:*')\n    for member in archive.getmembers():\n        if member.name.endswith('.tex'):\n            source = archive.extractfile(member).read().decode('utf-8', errors='replace')\n            lines = source.splitlines()\n            print('Source:', member.name, 'lines:', len(lines))\n            for i, line in enumerate(lines):\n                if 'silly_injectivity' in line or ('D_{' in line and 'W_i' in line) or 'metabelian_injectivity' in line:\n                    for j in range(max(0, i-3), min(len(lines), i+5)):\n                        print(f'{j+1}: {lines[j]}')\nexcept tarfile.ReadError:\n    print(data[:500].decode('utf-8', errors='replace'))\nPY\"",
+        "exit_code": 1
+      },
+      {
+        "command": "/usr/bin/bash -lc \"python - <<'PY'\nimport sympy as sp\nu, v, x = sp.symbols('u v x')\nq = u*u + u*v + v*v\nr = u*v*(u+v)\nF = sp.expand(q**3 + r**2)\nf = F.subs({u:x, v:1})\nsF = F.subs({u:v, v:u}, simultaneous=True)\ntF = F.subs({u:u, v:-u-v}, simultaneous=True)\nprint('Genus-two polynomial:', f)\nprint('Discriminant:', sp.factor(sp.discriminant(f, x)))\nprint('Invariant under s:', sp.expand(sF-F) == 0)\nprint('Invariant under t:', sp.expand(tF-F) == 0)\ns = sp.Matrix([[0,1],[1,0]])\nt = sp.Matrix([[1,0],[-1,-1]])\nprint('Reflection squares:', s*s == sp.eye(2), t*t == sp.eye(2))\nprint('Product has order three:', (s*t)**3 == sp.eye(2), s*t \"'!= sp.eye(2))\ndef surface_lie4(trace_v, relation, trace_v2, relation2):\n    return sp.Rational(trace_v**4 - 4*relation*trace_v**2 + 2*relation**2 - trace_v2**2 + 2*relation2, 4)\ndef free_lie4(trace_e, trace_e2):\n    return sp.Rational(trace_e**4 - trace_e2**2, 4)\nidentity = surface_lie4(4, 1, 4, 1)\nrotation = surface_lie4(-2, 1, -2, 1)\nconjugation_reflection = surface_lie4(0, -1, 4, 1)\ncore_dim = (identity + 2*rotation)/3\ncore_plus = (core_dim + conjugation_reflection)/2\nfiltration = (free_lie4(2,2) + 2*free_lie4(-1,-1))/3\nlocal = core_dim - filtration\nglobal_dim = local - core_plus\nprint('\"'Dimensions: W_i, core, core plus, F0 core, local H1, global H1:', identity, core_dim, core_plus, filtration, local, global_dim)\nprint('Asserted inequality: ', identity-global_dim, '>=', identity-core_plus)\nPY\"",
+        "exit_code": 1
+      },
+      {
+        "command": "/usr/bin/bash -lc \"python - <<'PY'\nfrom fractions import Fraction as Q\np = 17\nf = [1,3,7,9,7,3,1]\ndef trim(a):\n    while a and a[-1] == 0:\n        a.pop()\n    return a\ndef remainder(a, b):\n    a = a.copy()\n    while len(a) >= len(b):\n        k = len(a)-len(b)\n        c = a[-1]*pow(b[-1],-1,p) % p\n        for j, v in enumerate(b):\n            a[j+k] = (a[j+k] - c*v) % p\n        trim(a)\n    return a\na, b = f, [(i*f[i])%p for i in range(1,len(f))]\nwhile b:\n    a, b = b, remainder(a,b)\nprint('Degree of gcd(f, f-prime) modulo 17:',len(a)-1)\nprint('2 and -1 are squares modulo 17:',6**2 %17,4**2 %17)\ndef lie4(t, r, t2, r2):\n    return Q(t**4-4*r*t*t+2*r*r-t2*t2+2*r2,4)\ndef free4(t,t2):\n    return Q(t**4-t2*t2,4)\nfull = lie4(4,1,4,1)\nrotation_trace = lie4(-2,1,-2,1)\ncore = (full+2*rotation_trace)/3\nc_trace = lie4(0,-1,4,1)\nplus = (core+c_trace)/2\nf0 = (free4(2,2)+2*free4(-1,-1))/3\nlocal = core-f0\nglobal_dim = local-plus\nfor name, value in [('W_i',full),('core',core),('core c-trace',c_trace),('core c-plus',plus),('F0 core',f0),('local H1',local),('global H1 under BK',global_dim),('LHS',full-global_dim),('RHS',full-plus)]:\n    print(name, '=',value)\nPY\"",
+        "exit_code": 0
+      }
+    ]
+  },
+  "original_source": "qedbench_certificate_availability_triage/runs/cost_experiment_repro_20260915/grade_usage/proofs100_task1/opus_task1/arxiv_1903.05032v4__source_enriched_codex__verify_full.json",
+  "original_sha256": "4bc02e65dfb357a8bda16ade83b76e966d7be1f5d237591b39d17a2de11d05fa"
+}

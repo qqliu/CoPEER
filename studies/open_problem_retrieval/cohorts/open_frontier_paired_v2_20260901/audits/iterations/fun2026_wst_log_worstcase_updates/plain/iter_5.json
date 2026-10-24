@@ -1,0 +1,54 @@
+{
+  "record_id": "fun2026_wst_log_worstcase_updates",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "f7c311c9a5e437b6479f3e371355a1136c0ee6df0de1cea2cb2fd1b71609c768",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Under the recorded definition, an AVL search tree is a Weak Search Tree supporting every insertion and deletion, including rebalancing, in deterministic O(log(n+2)) worst-case time.",
+      "claim_sha256": "02eba46a0189cb2bd8e6933d817d6521abb8d0da31a39fda4d2071d1421c5eaf",
+      "verdict": "VERIFIED",
+      "evidence": "The source assumes distinct keys. At every node of a strict BST, each left-subtree key l and right-subtree key r satisfy l<key(v)<r, hence l<r, exactly implying the WST invariant. Standard AVL insertion and deletion preserve strict inorder order, inspect one root-to-leaf path, and perform only constant work at each of at most O(h) affected ancestors, including deletion cascades. If M(h) is the minimum size at height h, then M(-1)=0, M(0)=1, and M(h)=1+M(h-1)+M(h-2). Monotonicity gives M(h)>=2M(h-2), so M(h)>=2^floor(h/2), implying h=O(log(n+2)). Thus the scoped AVL statement is correct, although it does not by itself meet the source-intended target.",
+      "witness": "none",
+      "search_method": "Direct invariant implication, standard AVL update analysis, induction on the exact minimum-size recurrence, and an exact-integer recurrence check through height 128.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/plain/iter_5/check_wst_rotations.py"
+    },
+    {
+      "idx": 1,
+      "claim": "For a standard right rotation at z in a WST, writing y=left(z) and A=left(y), the rotated tree is a WST if and only if every key in A is smaller than key(z); symmetrically, for a left rotation with y=right(z) and C=right(y), preservation holds if and only if key(z) is smaller than every key in C.",
+      "claim_sha256": "e5c0bfbc7dc5021e295b71af2a94eb114f1f3b0f2653a85c370ddccfc610a192",
+      "verdict": "VERIFIED",
+      "evidence": "For a right rotation, also write B=right(y) and C=right(z). Before rotation, the WST tests give A<B at y and A union {key(y)} union B<C at z. Afterwards, the test at z is B<C, already implied by the old test at z. The test at the new root y is A<{key(z)} union B union C: its A<B and A<C parts follow from the old tests, leaving exactly A<key(z). This condition is necessary from the new test at y and sufficient for every new local comparison. Internal subtree tests are unchanged, and every ancestor retains the same key set on each side. Empty sets make the corresponding universal comparisons vacuous. Reflection gives exactly key(z)<C for a left rotation. Exhaustive exact checking of every ordered shape, every relative key order, and every eligible rotation location through six nodes examined 41,342 WST-labelled trees and 101,641 rotations in each direction, finding no mismatch.",
+      "witness": "none",
+      "search_method": "Complete symbolic comparison of the pre- and post-rotation WST constraints, followed by exhaustive integer-labelled counterexample search through six nodes including rotations below ancestors and empty-subtree cases.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/plain/iter_5/check_wst_rotations.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The AVL construction and rotation criterion do not resolve the source-intended target: they provide neither deterministic O(log n) worst-case updates for WST states governed only by the weak invariant nor a matching obstruction in the source model.",
+      "claim_sha256": "0174cf98d09c36f860f70bd292649fa98b732cd19620d01222c663c2d93e8fff",
+      "verdict": "VERIFIED",
+      "evidence": "The source explicitly observes that every BST is already a WST and nevertheless states as open the worst-case WST update question. Consequently, maintaining only strict-BST AVL states is a true subclass construction but does not address rebalancing states governed only by the relaxed invariant. The rotation criterion characterizes one local transformation; it supplies neither a complete update algorithm and complexity proof nor a lower bound against guarded rotations, repairs, or other balancing methods. The three-node example exactly demonstrates failure of an unguarded rotation, but such a method-specific counterexample cannot establish the target's matching obstruction.",
+      "witness": "With z keyed 1, its left child y keyed 3, A consisting of one node keyed 2, and all other subtrees empty, the original tree is a WST by vacuity. A right rotation produces sibling subtrees keyed 2 and 1 at the new root, violating 2<1. The persisted checker reproduces this example exactly.",
+      "search_method": "Compared the construction's maintained state space and the local lemma's logical consequences with both branches of the exact target; independently reproduced the stated three-node rotation failure using exact integers.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/plain/iter_5/check_wst_rotations.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requires either deterministic O(log n) worst-case updates, including rebalancing, in the source-intended weak-invariant setting, or a matching obstruction in that model. The AVL result is correct but confined to the strict-BST subclass that the source already explicitly recognizes as WST; accepting it as full coverage would make the source's stated open question vacuous. The exact rotation criterion is a correct and directly relevant structural lemma, so material partial progress survives, but it is neither a general update construction nor an all-method obstruction. The final writeup explicitly withdraws full resolution and states both missing branches. Therefore VALID_PARTIAL_PROGRESS is appropriate and the draft's claimed_resolution of PARTIAL is ACCURATE.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the designated source-input JSON and iteration-5 draft JSON; used no web or other solution, report, receipt, database, or frontier run.",
+    "Checked the exact target against the source definition, update discussion, rotation discussion, and conclusion rather than relying on the draft claim list.",
+    "Proved the AVL-to-WST implication and logarithmic AVL height bound, and checked the minimum-size recurrence with exact integers through height 128.",
+    "Derived both directions of the right-rotation criterion and its left-right reflection, including ancestor and empty-subtree cases.",
+    "Exhaustively enumerated integer-labelled ordered binary trees through six nodes and tested every eligible rotation location: 41,342 WST trees and 101,641 rotations in each direction, with zero criterion mismatches.",
+    "Reproduced the three-node unguarded-rotation counterexample exactly; the original satisfies the WST invariant and the rotated tree does not.",
+    "Persisted and successfully ran the exact-arithmetic checker at /tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/plain/iter_5/check_wst_rotations.py."
+  ]
+}

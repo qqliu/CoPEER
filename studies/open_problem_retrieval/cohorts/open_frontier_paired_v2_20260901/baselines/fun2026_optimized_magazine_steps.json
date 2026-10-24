@@ -1,0 +1,36 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "ARM_NEUTRAL_BASELINE",
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "The optimized algorithm’s complexity is Θ(n+M), where M=Σ_t d(p_t), d counts descents, and p_{t+1}=reverse(D(p_t)) followed by U(p_t).",
+      "proof_sketch": "D(p) is the left-to-right subsequence of descent bottoms p_j with p_{j-1}>p_j; U(p) contains the other elements. Moving the elements of D to the front in their original order reverses their mutual order, leaves U’s order unchanged, and puts D before U. The optimized implementation performs one initial Θ(n) scan and then constant list/queue work per moved element, while producing exactly these same rounds."
+    },
+    {
+      "claim": "There is an exact phase decomposition that isolates the unresolved cost.",
+      "proof_sketch": "Let i be the largest unfixed value, let s_i<i be its position when its phase starts, and split each round’s descent bottoms into those left and right of i. Since larger values form the fixed suffix, i is never marked. Its position increases by exactly the number q_t of descent bottoms to its right. Hence Σ_t q_t=i−s_i during this phase. If ℓ_t counts descent bottoms left of i, the phase cost is exactly (i−s_i)+Σ_t ℓ_t. Thus M≥Σ_i(i−s_i), with the remaining difficulty precisely the accumulated left-of-active descents."
+    },
+    {
+      "claim": "The worst-case lower bound improves rigorously to Ω(n^{3/2}); indeed one explicit family incurs (4√2/3+o(1))n^{3/2} moves before its largest element is fixed.",
+      "proof_sketch": "Take P_n=(n,1,2,…,n−1). Define F_0 empty and F_{m+1}=(m+1)T(F_m). Before round m, while n is unfixed, the state is F_m,n,m+1,…,n−1, so that round moves d(F_m)+1 elements. Put a_r=(r²+5r+2)/2. A staircase induction on maximal increasing runs gives d(F_{a_r})=2r and d(F_m)=2r+1 for a_r<m<a_{r+1}. The induction uses T(R_0…R_k)=h_k…h_1R_0R_1^-…R_k^-, where h_j is the head of increasing run R_j and R_j^- its tail. At a_r the run-length vector is (1 repeated r times,r+1,r,…,1); successive applications add one leading singleton, lengthen the trailing runs one at a time, and finally append a singleton, producing the corresponding vector for r+1. Consequently d(F_m)=2√(2m)+O(1), and summation through m=n−2 gives (4√2/3+o(1))n^{3/2} moves."
+    },
+    {
+      "claim": "For n≤9, the exact maximum numbers of moves are 0,1,3,7,13,21,33,47,63.",
+      "proof_sketch": "Every permutation was enumerated and iterated under the exact transition until sorted. For each n in this range, (n,1,2,…,n−1) is one maximizing instance, although the maximizer need not be unique."
+    },
+    {
+      "claim": "A natural twice-per-unordered-pair charging bound is false.",
+      "proof_sketch": "For p=(13,1,2,…,12), exact iteration gives 161 moves over 45 rounds, exceeding 2·binom(13,2)=156. More strongly as a finite constant-factor obstruction, (2,4,…,4096,1,3,…,4095) makes 50,546,772 moves, exceeding 3·4096²=50,331,648. These are finite counterexamples only and do not disprove an O(n²) asymptotic bound."
+    }
+  ],
+  "final_writeup": "Partial resolution: the certified worst-case interval improves from Ω(n log n)–O(n³) to Ω(n^{3/2})–O(n³).\n\nFor a permutation p, let D(p) be its descent bottoms and U(p) the complementary subsequence. One marking round is exactly T(p)=reverse(D(p))·U(p). Therefore the optimized algorithm takes Θ(n+M(p)) steps, where M(p)=Σ_t|D(T^t(p))|. This removes implementation details from the open question: it is precisely a weighted orbit-length problem for T.\n\nA useful exact decomposition follows from the largest unfixed value i. During its phase, i is unmarked. If q descent bottoms lie to its right, T moves i right by exactly q positions; descent bottoms to its left contribute work but no progress for i. Thus a phase beginning with i in position s_i costs\n\n(i−s_i) + (number of descent-bottom moves made left of i during the phase).\n\nThe first term telescopes position progress; controlling the second term is the central remaining obstacle.\n\nFor a stronger lower bound, consider P_n=(n,1,2,…,n−1). While n moves one position right per round, its prefix evolves as F_0=empty and F_{m+1}=(m+1)T(F_m). If a_r=(r²+5r+2)/2, an exact staircase induction gives\n\nd(F_m)=2r when m=a_r, and d(F_m)=2r+1 when a_r<m<a_{r+1}.\n\nThe induction is most transparent through increasing runs. At m=a_r their lengths are\n\n(1,…,1︸ r copies, r+1,r,…,1).\n\nThe identity T(R_0…R_k)=h_k…h_1R_0R_1^-…R_k^- shows that prefixing the next maximum first adds a singleton run, then successively lengthens each staircase row, and finally adds the last singleton. The auxiliary order invariant tracks that each row is increasing, the removed heads have the required decreasing-then-increasing interlacing, and all unchanged row boundaries remain descents; these inequalities are preserved because the new entry is the maximum. Hence the displayed run vectors, and therefore their descent counts, follow by induction.\n\nSince a_r=r²/2+O(r), this yields d(F_m)=2√(2m)+O(1). The first n−1 rounds of P_n consequently make\n\nΣ_{m=0}^{n−2}(d(F_m)+1)=(4√2/3+o(1))n^{3/2}\n\nmoves. Thus Optimized Magazine Sort With Marking has worst-case step complexity Ω(n^{3/2}). The available arguments do not establish a matching upper bound, so the target remains only partially resolved.",
+  "checks_performed": [
+    "Compared the subsequence transition against a literal mark-then-MoveToFront implementation on all 46,233 permutations of sizes at most 8; every transition and move count agreed.",
+    "Enumerated all 409,113 permutations of sizes at most 9, obtaining exact move maxima 0,1,3,7,13,21,33,47,63.",
+    "Checked the staircase descent formula exactly for every F_m with 1≤m≤10,000.",
+    "Checked the claimed prefix identity for P_n through n=300 round by round.",
+    "Exact integer simulations gave 161 moves and 45 rounds for (13,1,…,12), and 50,546,772 moves and 63,951 rounds for the even-then-odd permutation of size 4096."
+  ],
+  "self_assessment": "CONFIDENT"
+}

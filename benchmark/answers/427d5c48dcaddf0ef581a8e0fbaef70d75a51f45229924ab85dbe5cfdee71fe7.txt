@@ -1,0 +1,157 @@
+We need to find a false assertion in the solution. Let's parse problem: Graph G with n vertices. For every subset S with size |S| = n/2, the set of neighbors of S satisfies |{w ∈ V : ∃ v∈S, (v,w)∈E}| ≥ n/2 + α n? Actually given: P5: |{w∈V: ∃v∈S, (v,w)∈E}| ≥ n P6: 2 + α n. Possibly formatting: they intended: |N(S)| ≥ n/2 + α n? Let's interpret: The inequality may be: |N(S)| ≥ n/2 + α n? However they wrote lines P5 and P6 split: line P5: "|{w ∈V : ∃v ∈S, (v, w) ∈E}| ≥n". Then line P6: "2 + αn." So maybe they meant: |N(S)| ≥ n/2 + α n. Actually they wrote "≥n" then newline "2 + αn." That seems like a formatting error: they likely intended "≥ n/2 + α n". But they split "n" and "2 + αn" maybe missing a slash. Let's examine later usage: At line 0010-0011 they claim: By the given condition on G, the neighborhood N(S) satisfies: |N(S)| ≥ n (line 0010) then line 0011: "2 + αn." So they think the condition gives |N(S)| ≥ n/2 + α n? No they have |N(S)| ≥ n then "2 + αn." Actually line 0010: |N(S)| ≥ n. Then line 0011: "2 + αn." So maybe they wrote: |N(S)| ≥ n/2 + α n, but they typed incorrectly: first part "n" then newline "2 + αn". So they think lower bound is n/2 + α n. Let's see later they compute intersection size: they use inequality: |N(S) ∩ W_{m+1}| ≥ |N(S)| + |W_{m+1}| - n. That's correct using inclusion-exclusion: |A∩B| ≥ |A| + |B| - n (since universe size n). Then they plug |N(S)| ≥ n/2 + α n (maybe they think) and |W_{m+1}| ≥ (1-α)n. So sum: (n/2 + α n) + ((1-α)n) - n = n/2 + α n + n - α n - n = n/2. Wait compute: (n/2 + α n) + ( (1-α)n ) = n/2 + α n + n - α n = n/2 + n = (3/2)n. Then subtract n yields n/2. So they'd get ≥ n/2. Then they claim it's ≥ n/2 (line 0017-0018) they got n/2. Actually they wrote after simplification: 
+```
+n
+2.
+```
+which is n/2. So they concluded intersection size at least n/2, thus non-empty for n≥2. So they think condition gives |N(S)| ≥ n/2 + α n. But actual condition given in problem statements P5-P6 maybe is |N(S)| ≥ n/2 + α n? Let's verify: Problem statement: "Assume there exists a constant α > 0 such that for every subset S ⊆V with cardinality |S| = n/2, the set of neighbors of S satisfies the inequality: |{w ∈V : ∃v ∈S, (v, w) ∈E}| ≥ n 2 + αn." That is weird. Possibly they meant: ≥ n/2 + α n. Indeed that matches typical expansion condition: For any S of size n/2, its neighbor set is at least (1/2 + α)n. So condition is |N(S)| ≥ (1/2 + α)n.
+
+Thus the false assertion may be that they used S = {vm} of size 1, but condition only applies for subsets of size exactly n/2, not for size 1. So applying the condition to S of size 1 is invalid. Indeed line 0008-0009: they let S = {vm}, |S| = 1 ≤ n/2 (assuming n≥2). They then claim "By the given condition on G, the neighborhood N(S) satisfies: |N(S)| ≥ n/2 + α n." But condition only holds for subsets of size exactly n/2, not for smaller subsets. So that's false.
+
+Thus false assertion: line 0010-0011 (or line 0009-0011). The assertion that for S = {vm} we have |N(S)| ≥ n/2 + α n. This is false in general.
+
+We need to pick a line label that contains the false assertion. Could be line 0010 (the inequality) or line 0009 (the statement). Let's see line numbers: 0009: "By the given condition on G, the neighborhood N(S) satisfies:" 0010: "|N(S)| ≥ n" 0011: "2 + αn." Actually they split across lines. The false assertion is the inequality claim: lines 0010-0011 together. Since they ask for a line label, we can pick either 0010 or 0011. Probably the assertion is on line 0010 (the inequality) but it's incomplete without line 0011. But we can pick line 0010 as containing part of false assertion. Better to pick line 0010 because it's the inequality start. Or line 0009 includes the claim that condition applies. I'd choose line 0010 as the false assertion.
+
+We need to provide claim and counterexample. Claim: "For any subset S of size 1, the neighbor set N(S) has size at least n/2 + α n." Counterexample: Consider a graph that is a matching: n vertices, each vertex connected to exactly one other vertex (perfect matching). Then for any single vertex S={v}, its neighbor set has size 1, which is less than n/2 + α n for sufficiently large n (e.g., n=10, α=0.1 gives threshold 5+1=6). But does this graph satisfy the condition for subsets of size n/2? Need to check if the condition holds for S of size n/2 in such a graph. In a perfect matching, take S consisting of n/2 vertices that are all from distinct edges, each vertex's neighbor is its partner, which may be inside or outside S depending. If we choose S to contain exactly one endpoint from each edge, then N(S) = the other endpoints, also size n/2. So |N(S)| = n/2, which is not ≥ n/2 + α n (since α>0). So the condition fails. So we need a graph that satisfies the condition for subsets of size n/2 but fails for size 1 neighbor bound.
+
+We need a graph where every subset of size exactly n/2 has neighbor set at least (1/2+α)n, but there exists a vertex with small neighbor set (< n/2+α n). Let's think: Perhaps a complete bipartite graph K_{n/2, n/2}. For any S of size n/2, if S is wholly within one part, its neighbor set is the other part of size n/2. That's exactly n/2, not enough. So fails.
+
+We need stronger expansion: maybe a graph that is a union of a large clique plus some pendant vertices? Let's think: Condition only for subsets of size exactly n/2. Perhaps we can construct a graph where any half-sized set has many neighbors due to high-degree vertices, but there exists a low-degree vertex.
+
+Consider a graph consisting of a clique of size n-1 (almost all vertices) plus one isolated vertex v0 connected to none? Then for any S of size n/2, if S does not include the isolated vertex, its neighbor set is within the clique almost all vertices (size n-1). If S includes the isolated vertex, its neighbors are none from that vertex, but the rest of S (size n/2-1) are in the clique, whose neighbors are almost all clique vertices (size n-1) plus maybe the isolated? Actually vertices in clique are adjacent to all other clique vertices, not to isolated. So N(S) would be (clique vertices) minus maybe S∩clique? Let's compute: Suppose n is even. Let clique on n-1 vertices (call C). Add isolated vertex u (no edges). For any S of size n/2. Cases: If u∉S, then S⊆C. Since C is a clique, each vertex in S is adjacent to all other vertices in C (including those not in S). So N(S) = C \ S (since each vertex in S is adjacent to all other vertices in C, also maybe to u? no). So |N(S)| = |C| - |S| = (n-1) - n/2 = n/2 -1. That's less than n/2. So fails.
+
+We need a graph where any half set expands significantly, maybe due to each vertex having high degree (≥ something). If every vertex has degree at least d, then for any S of size n/2, N(S) ≥ d (since each vertex in S has at least d neighbors, but they could overlap). Actually worst-case overlap could be small if they all share same neighbors. But if the graph is such that each vertex's neighbor set is almost the whole graph (like a dense graph), then small S also expands a lot. To have a low-degree vertex but still expansion for half sets, we need the low-degree vertex to be rare such that any half set likely includes many high-degree vertices that cover its neighbor deficiency.
+
+Consider a graph consisting of a large clique of size n-1 (call C) plus one vertex v that is connected to all vertices in C (so v is adjacent to everyone in C). So v has degree n-1 (high), not low. Need low-degree vertex: maybe a vertex u that is connected to only a few vertices, but those few are high-degree and cover many neighborhoods for half sets.
+
+Suppose we have a "star": center c connected to all leaves L (n-1 leaves). Leaves have degree 1 (connected only to center). Consider S of size n/2. If S includes the center, its neighbor set includes all leaves (size n-1). If S does not include center, then S is a set of leaves. Each leaf's neighbor is just the center, so N(S) = {center} (size 1). That's far less than n/2+α n for large n. So fails.
+
+We need a graph where any half set has many neighbors, but there exists a vertex with small neighbor set. Let's try to think: Perhaps a graph that is a union of two large cliques that are fully connected between them (complete bipartite plus cliques inside). Actually consider a graph that is the complement of a matching: i.e., take a complete graph and remove a perfect matching. Then each vertex is missing exactly one neighbor (its match). Degree = n-2. For any S of size n/2, what's N(S)? Likely large because each vertex missing only one neighbor; the union of neighborhoods likely covers almost all vertices. Let's test: For any S size n/2, the set of vertices not in N(S) are those vertices that are not adjacent to any vertex in S. A vertex w is not adjacent to any v∈S iff for each v∈S, (v,w) is a missing edge (i.e., w is the matched partner of v). Since each v has exactly one non-neighbor (its match). So w would need to be the match of every v in S, impossible unless |S|=1. So for |S|≥2, there is no vertex that is non-adjacent to all of S. Thus N(S) = V (all vertices). Actually need to check: Could there be a vertex w that is not adjacent to any v in S? For each v∈S, w must be the specific non-neighbor of v. Since each v has a unique non-neighbor (its match). For w to be non-neighbor to all v in S, w would have to equal the match of each v, which can't happen if |S|>1 unless all those matches are the same vertex, meaning all v in S share the same match, which would mean they are all matched to same vertex, impossible in a matching (each vertex matched to exactly one). So for |S|≥2, N(S)=V. For |S|=1, N(S) = V \ {its match} (since the vertex is adjacent to all except its match). So |N(S)| = n-2. That's still large (≥ n/2+α n for α small?). For n large, n-2 ~ n, which is certainly ≥ n/2+α n. So the condition holds for S size n/2 (since N(S)=V). So condition satisfied with any α ≤ 1/2? Actually N(S)=V gives |N(S)|=n, which is ≥ n/2+α n for any α ≤ 1/2. Since α>0 arbitrary but we can assume α ≤ 1/2 (maybe unspecified). The condition in problem says for every S of size n/2, |N(S)| ≥ n/2 + α n. In our graph, N(S)=V, so size = n, which satisfies for any α ≤ 1/2. If α could be >1/2, then condition fails. But α is any positive constant; we can choose α small enough to satisfy condition. However the problem statement asserts existence of a constant α>0 such that condition holds. So we can pick α=0.1. Then condition holds for our graph.
+
+Now we need a counterexample to the false assertion: they claim that for S of size 1 (the vertex vm) we have |N(S)| ≥ n/2+α n. In our graph, pick a leaf? Actually in our graph (complete graph minus a perfect matching), each vertex has degree n-2 (missing exactly its match). So for S={v}, N(S) = V \ {match(v)}. Size = n-2. For n sufficiently large, n-2 ≥ n/2+α n? Let's test: n-2 >= n/2 + α n => n-2 >= n(0.5+α) => divide n: 1 - 2/n >= 0.5 + α => α <= 0.5 - 2/n. For large n, α can be up to ~0.5. If α is say 0.1, then condition holds for single vertex as well. Actually n-2 is large enough to satisfy. So not a counterexample.
+
+We need a graph where half-sets expand a lot but some vertex has small neighbor set (less than n/2+α n). Let's think: Suppose we have a graph consisting of a large clique of size n - t (where t is small) plus t extra vertices each connected to all vertices in the clique (so they are universal to the clique) but not to each other. So each extra vertex has degree n - t (connect to all clique vertices). The clique vertices have degree (n - t -1) + t = n -1 (since they connect to all other clique vertices and all t extra). Actually they are connected to all other clique vertices (n - t -1) and to all t extra vertices, total n -1. So all vertices have high degree ~ n-1. Not helpful.
+
+We need a vertex with low degree, but any half set must include enough high-degree vertices to cover neighborhoods.
+
+Consider a graph with a "core" of high-degree vertices that forms a large expander, and a set of low-degree vertices each attached only to a few core vertices. If we take any half set S, if S contains many core vertices, its neighbor set will be large (since core expands). If S consists mostly of low-degree vertices, we need to ensure that still neighbor set large. Perhaps we can make low-degree vertices each connect to a distinct subset of core vertices such that any collection of many low-degree vertices still covers many core vertices via their neighbors.
+
+Suppose we have core C of size n/2 (exactly half). Each low-degree vertex L_i (also n/2 of them) is connected to all vertices in C (so degree n/2). Then any S of size n/2: worst case S could be all low-degree vertices (the L_i). Then N(S) = C (since each L_i connects to all C). So |N(S)| = n/2. That's exactly n/2, not enough for α>0. So need each low-degree vertex to connect to more than just C, maybe also to some other low-degree vertices to boost neighbor set when S consists of low-degree vertices.
+
+Alternatively, make the graph such that any subset of size n/2 has neighbor at least (1/2+α)n, but there exists a vertex with degree less than that. Consider a graph that is a union of a large expander on n-1 vertices plus one vertex v that is connected to only, say, n/4 vertices of the expander. Then for any S of size n/2, if S does not include v, then S is subset of expander of size n/2; due to expander properties, its neighbor set within expander is at least (1/2+α)n maybe plus maybe some outside? If S includes v, then we need to check.
+
+We need to guarantee that for any S of exactly n/2 vertices, neighbor set is large. This is a strong condition; maybe it forces minimum degree to be high. Let's examine: Does the condition that all subsets of size exactly n/2 have neighbor size at least (1/2+α)n imply a lower bound on minimum degree? Possibly yes: consider S consisting of a vertex v plus n/2 -1 other vertices chosen arbitrarily. Could we bound degree of v from this? Let's try.
+
+Let d(v) be degree of v. Consider S that contains v and n/2 -1 other vertices that are all non-neighbors of v (if possible). If v has many non-neighbors, we could pick S such that many of its vertices are non-neighbors of v, reducing neighbor contribution from v. But we need to consider worst-case S for given v. To get a lower bound on d(v), we need to show that if d(v) is too small, we can construct an S of size n/2 whose neighbor set is too small (< (1/2+α)n), contradicting condition.
+
+Assume d(v) < (1/2 - β)n for some β>0. Then v has at least n - d(v) > (1/2+β)n non-neighbors. We can try to choose S consisting of v plus n/2 -1 vertices all chosen from its non-neighbors (if enough). Need to ensure we can pick n/2 -1 non-neighbors of v besides v itself. Since number of non-neighbors of v is > (1/2+β)n, which for n large is > n/2 -1 (since (1/2+β)n > n/2 -1 for β>0 and n large). So we can pick S = {v} ∪ T where T is a set of n/2 -1 vertices all non-neighbors of v. Then N(S) includes neighbors of v (size d(v)) plus neighbors of T. But T are non-neighbors of v, but they may have other neighbors. However we can try to bound N(S) from above by assuming worst case: neighbors of T are all within S maybe? Actually we want to show N(S) is small. If we also make T be a set of vertices that have no neighbors outside S (i.e., they are isolated except maybe connections among themselves). But we don't have control over graph.
+
+Thus the condition may not force high min degree. So there might be graphs meeting condition but having a low-degree vertex.
+
+We need to find a concrete graph that satisfies: for every S of size exactly n/2, |N(S)| ≥ n/2+α n, but there exists a vertex v with |N({v})| < n/2+α n (i.e., low degree). Then the false assertion that applying condition to S={v} yields that bound is false.
+
+Let's attempt to construct such a graph. Let n be even. Let’s split vertices into two equal halves A and B, each size n/2. We'll add edges such that any subset S of size n/2 has many neighbors, but there is a vertex v in A with low degree (say degree only to a few vertices in A). We'll try to make the graph dense across between A and B, and maybe also inside B, but sparse inside A except for v.
+
+Idea: Make a complete bipartite graph between A and B (so each vertex in A connects to all B, each vertex in B connects to all A). Additionally, make B a clique (so each vertex in B connects to all other B). Inside A, make no edges except maybe v connects to a few vertices in A (low degree). Let's analyze.
+
+Now consider any S of size n/2. We need to compute N(S). Cases depending on composition.
+
+Let a = |S ∩ A|, b = |S ∩ B|, with a+b = n/2.
+
+Neighbors of S: 
+- Vertices in A that are neighbors of S: any vertex in A is adjacent to all vertices in B (due to complete bipartite) and possibly to some vertices in A (only v's few edges). So a vertex in A is neighbor of S if either it is adjacent to some vertex in B∩S (since all A adjacent to all B) OR it is adjacent to some vertex in A∩S (via the few internal edges). Since all A are adjacent to all B, if b>0 then every vertex in A is neighbor of S (because each A vertex connects to all B, and there is at least one B in S). So if b>0, N(S) includes all A (size n/2). Additionally, vertices in B that are neighbor of S: any vertex in B is adjacent to all A (due to bipartite) and to all other B (clique). So if a>0, then each B vertex is adjacent to some A in S, thus all B are neighbors. If a=0 (S⊆B), then B vertices are adjacent to each other (clique) but need at least one neighbor in S: a vertex in B is neighbor of S if it is adjacent to some vertex in S⊆B. Since B is a clique, any vertex in B is adjacent to all other B vertices. So if |S∩B| >=2, then each B vertex is neighbor (since it's adjacent to some other in S). If |S∩B|=1, then that single vertex's neighbors are all other B (size n/2 -1) plus all A (due to bipartite). So still N(S) includes all vertices except maybe that vertex itself? Actually the single vertex in S is not neighbor of itself (no loops). So N(S) = V \ {that vertex}. So size n-1.
+
+Thus in many cases N(S) is large.
+
+We need to check worst-case scenario for N(S) size. Let's try to minimize |N(S)| given constraints.
+
+We want to see if we can make |N(S)| < n/2+α n for some S of size n/2, given our construction. If we can avoid that, then condition holds.
+
+Let's compute N(S) size formula.
+
+Let a = |S∩A|, b = |S∩B|, a+b = n/2.
+
+Case 1: b > 0. Then as argued, every vertex in A is neighbor of S (since each A connects to all B, and there is at least one B in S). So A ⊆ N(S). So |N(S)| >= n/2 from A.
+
+Additionally, vertices in B may or may not be in N(S). A vertex x in B is neighbor of S if it is adjacent to some vertex in S. Since S includes some A (if a>0) or some B (if b>0). If a>0, then x is adjacent to all A, thus neighbor. So if a>0, then all B are neighbors, giving N(S)=V, size n.
+
+If a=0 (so S⊆B, b=n/2), then S consists solely of B vertices. Then N(S) includes:
+- All A (since each A adjacent to all B, and S nonempty) => A ⊆ N(S).
+- Vertices in B that are adjacent to some vertex in S. Since B is a clique, any vertex in B is adjacent to all other B. So a vertex y in B is neighbor of S if there exists z∈S, z≠y, such that edge yz exists (which is true for all y≠z). For y∈S itself, y is neighbor of S if there is another vertex in S distinct from y (since no loops). So if b>=2, then all B are neighbors (since each y in B has at least one other vertex in S). If b=1 (i.e., n/2=1 => n=2), trivial small case. For n>2, b = n/2 >=2 when n>=4. So for n>=4, all B are neighbors as well. Therefore N(S)=V, size n.
+
+Thus for b>0 and n>=4, N(S)=V (size n) except possibly when a=0 and b=1 (n=2). So for n>=4, any S with at least one vertex from B yields N(S)=V.
+
+Case 2: b=0 (S⊆A). Then S is subset of A of size n/2 = |A|. So S = A exactly (since A size n/2). So S = A. Then N(S): neighbors of A. Since A vertices have edges to all B (complete bipartite) and few internal edges (maybe only v's few edges). So each vertex in A is adjacent to all B, thus B ⊆ N(S). Also, a vertex in A may be neighbor of S if it's adjacent to some other vertex in A∩S (i.e., another A vertex). Since S=A, any vertex in A is adjacent to others in A only if there is an edge inside A. We have only few internal edges (maybe v connects to some). So N(S) = B ∪ (set of A vertices that have at least one neighbor in A). Since S=A, any vertex in A that has at least one neighbor in A (i.e., degree inside A >0) will be in N(S). Vertices in A with no internal neighbors (isolated within A) are not in N(S) because they are not adjacent to any vertex in S (since they have no edges to A, and they are not adjacent to B? Wait they are adjacent to B via bipartite edges, yes they are adjacent to all B. Actually we said complete bipartite between A and B, so each A vertex is adjacent to all B. So they definitely have neighbors in B, which are not in S (since S=A). So they are neighbor of S via B. Wait careful: N(S) = set of vertices w such that there exists v∈S with edge (v,w). For w∈A, we need an edge from some v∈S (=A) to w. If w∈A and there are no internal edges, then there is no edge from any v∈A to w (since no A-A edges). However w may still be in N(S) if there exists v∈S such that (v,w) is an edge, which could be v∈A and w∈B (but w is in A, not B). So w∈A would not be neighbor via B because edge goes to B, not to A. So w∈A only gets neighbor if there is an A-A edge. So A vertices with no internal neighbors are NOT in N(S). Meanwhile B vertices: For w∈B, we need edge from some v∈S (=A) to w. Since complete bipartite, any v∈A is adjacent to all w∈B. So all B are in N(S). So N(S) = B ∪ (A vertices that have at least one neighbor in A). So |N(S)| = |B| + (# of A vertices with internal degree >0). |B| = n/2.
+
+Now we can control internal edges in A to make # of A vertices with internal degree >0 small. For instance, let only one vertex v in A have internal edges (say connect to a few other A vertices), and all other A vertices have no internal edges. Then # of A vertices with internal degree >0 = maybe 1 (v) plus those it connects to? Actually if v connects to some other A vertices, those others then have internal degree >0 (since they are adjacent to v). So they also count. Suppose we make v connected to all other A vertices (making A a star centered at v). Then all A vertices have internal degree >0 (v connects to everyone, others connect to v). So # = n/2. Then N(S) = B ∪ A = V, size n. That's large.
+
+We want N(S) small to violate condition? Actually we need condition to hold: we need N(S) >= n/2 + α n for all S of size n/2. So we want to ensure that even worst-case S (which seems to be S = A) yields large enough neighbor set.
+
+If we make internal edges in A very sparse, we could make # of A vertices with internal degree >0 small, making N(S) size close to n/2 (just B). For condition to hold, we need n/2 + (# internal A vertices with degree>0) >= n/2 + α n => (# internal A vertices with degree>0) >= α n. So we need at least α n vertices in A that have at least one internal neighbor.
+
+Thus we can satisfy condition by ensuring that at least α n vertices in A have some internal edge (i.e., are not isolated within A). Meanwhile we can still have some vertices in A with zero internal degree (isolated within A). Those isolated vertices will not be in N(S) when S = A. So we can have low-degree vertices (within A) that have degree only to B (since they connect to all B). Wait but each A vertex has edges to all B (due to complete bipartite). So degree of an A vertex is: |B| + internal degree. |B| = n/2. So degree = n/2 + internal degree. If internal degree =0, degree = n/2. That's already >= n/2 + α n? No, because α>0, so degree = n/2 is less than n/2+α n. So such a vertex would have degree less than the claimed bound for singletons. That's perfect: we can have vertices in A with no internal edges, giving degree exactly n/2 (via B). Then the false assertion that |N({v})| >= n/2 + α n would be false for those vertices, as their neighbor set size = n/2 (just B). Wait N({v}) includes neighbors: all B (since v connects to all B) = n/2. No internal A neighbors. So |N({v})| = n/2. This is less than n/2 + α n for any α>0.
+
+Now we need to check whether the condition on subsets of size n/2 holds given this construction: A has n/2 vertices, each connects to all B (size n/2). B is a clique? We haven't defined edges within B yet. We need to ensure that for any S of size n/2, |N(S)| >= n/2 + α n.
+
+We have two parts: A (size n/2) each connects to all B; internal edges in A only among a subset of size at least α n (to satisfy condition for S=A). B we can make a clique to help expansion when S includes B vertices.
+
+Let's define: Let A be split into A1 (size α n) and A2 (size (1/2 - α)n). Actually total A size = n/2. We'll ensure that every vertex in A1 has at least one internal edge within A (maybe they form a clique among themselves). Vertices in A2 have no internal edges (i.e., only connect to B). All vertices in A connect to all B (complete bipartite). B we make a clique (so each B vertex connects to all other B). Also we may add edges between B and A? Already complete bipartite ensures A-B all edges.
+
+Now evaluate N(S) for any S of size n/2.
+
+We need to show lower bound.
+
+Let a = |S∩A|, b = |S∩B|, a+b = n/2.
+
+We need to compute N(S). We'll consider cases.
+
+First, note that any vertex in B is adjacent to all A (since complete bipartite) and to all other B (clique). So if S contains any vertex from A, then every B vertex is neighbor of S (due to A-B edges). If S contains any vertex from B, then every A vertex is neighbor of S? Let's check: For a vertex x in A, to be neighbor of S we need edge from some v∈S to x. If S contains a B vertex, then since B-A edges exist (complete bipartite), that B vertex is adjacent to all A, so all A are neighbors. So if S contains at least one vertex from B, then all A are neighbors. Similarly, if S contains at least one vertex from A, then all B are neighbors (due to A-B edges). So:
+
+- If a>0 and b>0 (S intersects both parts), then N(S) = V (all vertices). Because A vertices get neighbor from B∩S, B vertices get neighbor from A∩S. So size n.
+
+- If b=0 (S⊆A). Then S is subset of A size n/2 = |A|, so S = A exactly (since A size n/2). So S = A. As analyzed earlier: N(S) = B ∪ (A vertices that have at least one neighbor in A). Because any A vertex w is neighbor of S iff there exists v∈S (=A) such that (v,w) edge. Since there are no A-B edges contributing to w∈A (those go to B). So w∈A is neighbor iff it has an internal A neighbor. B vertices are all neighbors because each B connects to all A (since complete bipartite). So N(S) = B ∪ (A vertices with internal degree >0). So |N(S)| = |B| + |{v∈A : deg_A(v) >0}|.
+
+Now |B| = n/2. Let t = number of vertices in A with internal degree >0 (i.e., not isolated within A). We need |N(S)| >= n/2 + α n => t >= α n. So we need at least α n vertices in A that have some internal neighbor.
+
+Thus we can construct A such that exactly α n vertices have internal edges (forming a clique among themselves, say), and the remaining (n/2 - α n) vertices in A have no internal edges (i.e., only connect to B). This satisfies t = α n, giving |N(S)| = n/2 + α n exactly meets the bound.
+
+Now check case a=0 (S⊆B). Then S is subset of B of size n/2. Since B is a clique, we need to compute N(S). For any vertex w in B, w is neighbor of S if there exists v∈S, v≠w, such that edge vw exists (clique). If |S| >=2, then each w in B has at least one neighbor in S (since clique). If |S|=1 (i.e., n/2=1 => n=2), trivial. For n>=4, n/2 >=2, so all B vertices are neighbors of S. Also, any vertex w in A is neighbor of S if there exists v∈S such that (v,w) edge. Since we have complete bipartite, each v∈S (B) is adjacent to all A. So all A are neighbors. Therefore N(S) = V (all vertices). So size n, which certainly >= n/2+α n.
+
+Thus the only potentially problematic case is S = A (i.e., b=0). We've ensured that yields exactly n/2 + α n.
+
+Thus the graph satisfies the condition for all subsets S of size n/2 (with parameter α). Good.
+
+Now we have vertices in A2 (the ones with no internal edges) that have degree exactly n/2 (only to B). Their neighbor set size for singleton is n/2, which is less than n/2 + α n (since α>0). Therefore the false assertion that for S={vm} we have |N(S)| >= n/2 + α n is false. So we can provide counterexample: choose such a graph.
+
+Now we need to identify a line containing the false assertion. The false assertion is the claim that for S={vm} (size 1) we have |N(S)| >= n/2 + α n (lines 0010-0011). So we can pick line 0010 as containing the inequality (though split). Or line 0009 which says "By the given condition on G, the neighborhood N(S) satisfies:" which is also false because they apply condition to S of size 1. Either line is acceptable. We'll pick line 0010 (the inequality line) as the false assertion.
+
+Now we need to write JSON with candidates list (up to three). Provide claim and counterexample.
+
+Claim: "For the singleton set S = {v_m}, the neighborhood N(S) has size at least n/2 + α n." Counterexample: "In the constructed graph where A consists of n/2 vertices, B is a clique, all A-B edges present, and only α n vertices in A have any internal A edges, a vertex in A with no internal A edges has neighborhood exactly B, of size n/2, which is less than n/2 + α n for any α>0."
+
+We need to keep claim one sentence, counterexample one sentence.
+
+Let's craft:
+
+Claim: "For the singleton set S = {v_m}, the neighborhood N(S) satisfies |N(S)| ≥ n/2 + α n." Counterexample: "Take n even, let B be a clique of size n/2, let A be another n/2 vertices with all possible A–B edges, make only α n vertices in A have any internal A edges (e.g., form a clique among them) and the remaining vertices in A isolated within A; then any vertex in the latter set has neighborhood exactly B, of size n/2 < n/2 + α n."
+
+Make sure it's one sentence each.
+
+Now output JSON.
+
+Candidates: we can provide one line, maybe 0010. Provide up to three, but we can just give one.
+
+Thus:
+
+{"candidates": [0010], "claim": "...", "counterexample": "..."}
+
+Check JSON syntax: need double quotes around keys and strings. Ensure proper escaping.
+
+Let's write.
+
+</think>
+
+{
+  "candidates": [0010],
+  "claim": "For the singleton set S = {v_m}, the neighborhood N(S) satisfies |N(S)| ≥ n/2 + α n.",
+  "counterexample": "Take n even, let B be a clique of size n/2, let A be another n/2 vertices with all possible A–B edges, make only α n vertices in A have any internal A edges (e.g., form a clique among them) and the rest isolated within A; then any vertex in the latter set has neighborhood exactly B, of size n/2, which is less than n/2 + α n."
+}

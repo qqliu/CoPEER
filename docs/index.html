@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noai, noimageai, noarchive">
+<title>Co-PEER: Auditing Mathematics with Proofs of Error</title>
+<meta name="description" content="Co-PEER constructs and checks proofs of error: objections to mathematical arguments with a concrete counterexample, a Lean-checked certificate and a review of source correspondence. BugBank stores them. Paper, data, benchmark and interactive mathematics.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="#top">Co-<span>PEER</span></a>
+    <ul class="navlinks">
+      <li><a href="#example">Example</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#bugbank">BugBank</a></li>
+      <li><a href="#benchmark">Benchmark</a></li>
+      <li><a href="#studies">Studies</a></li>
+      <li><a href="#mathematics">Mathematics</a></li>
+      <li><a href="#paper">Paper</a></li>
+    </ul>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero wrap" id="top">
+  <p class="kicker">Project page · preprint, 2026</p>
+  <h1>Co-PEER: Auditing Mathematics with Proofs of Error</h1>
+  <p class="lead"><strong>Mathematical criticism you can check.</strong> Co-PEER connects a challenged claim to a concrete counterexample, a Lean-checked proof, and a review of whether the objection fits the source. An objection to a mathematical proof requires evidence of its own: a critic can misread a claim, overlook an assumption, or reject a valid step.</p>
+  <p class="authors">Anna Gilbert<sup>1</sup>, Stephen Xia<sup>1</sup>, Kirill Acharya<sup>2</sup>, Shayan Hundrieser<sup>1</sup>, Benjamin Li<sup>3</sup>, Jan Ondras<sup>4</sup>, Vaishali Surianarayanan<sup>1</sup>, Jason Wang<sup>5</sup>, Joon-Hyeok Yim<sup>1</sup>, Arman Cohan<sup>1</sup>, Quanquan C. Liu<sup>1</sup></p>
+  <p class="affils"><sup>1</sup> Yale University · <sup>2</sup> Stanford University · <sup>3</sup> University of Oxford · <sup>4</sup> Massachusetts Institute of Technology · <sup>5</sup> The Innovation Fellowship</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="downloads/co-peer.pdf">Read the paper (PDF)</a>
+    <a class="btn" href="#example">Explore an example</a>
+    <a class="btn" href="bugbank.html">Browse BugBank</a>
+    <a class="btn" href="benchmark.html">Benchmark</a>
+    <a class="btn" href="#paper">Cite</a>
+  </div>
+  <div class="panel elevated" style="max-width:52rem">
+    <p class="small" style="margin-bottom:.4rem">Line 5 of a proof that every function on a negation-closed domain is an even function plus an odd function asserts</p>
+    <p class="eq false">$f(x)=f(-x)+(-f(x))$</p>
+    <p class="small" style="margin:0">The constant function $f\equiv 1$ turns it into $1=0$. The theorem is true; this step is not. <a href="#example">Check it yourself below.</a></p>
+  </div>
+</header>
+
+<!-- ===================== EXAMPLE ===================== -->
+<section class="section" id="example">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">One objection, inspected</p>
+      <h2>A true theorem, a false step</h2>
+      <p>When a critic challenges a step in a proof with a counterexample, two distinct questions arise: is the counterexample mathematically valid as formalized, and does that formal statement represent the claim in the source? Together, a formal counterexample checked by Lean and a justified answer to the second question form a <em>proof of error</em>. The three tabs show the idea on the paper's own examples.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Examples" data-tabs id="example-tabs">
+      <button role="tab" id="tab-evenodd" aria-controls="panel-evenodd" aria-selected="true" type="button">1 · Even &amp; odd functions</button>
+      <button role="tab" id="tab-shellsort" aria-controls="panel-shellsort" aria-selected="false" type="button">2 · Shellsort witness repair</button>
+      <button role="tab" id="tab-sqrt" aria-controls="panel-sqrt" aria-selected="false" type="button">3 · Integer square-root family</button>
+    </div>
+
+    <div role="tabpanel" id="panel-evenodd" aria-labelledby="tab-evenodd">
+      <div class="grid-2 split-5-7">
+        <div>
+          <h3>The numbered input</h3>
+          <p class="small">Benchmark input <code>reddit_learnmath_dm6itc</code>, a question-and-answer post, as shown in Figure 1 of the paper. Theorem: a function whose domain is closed under negation is the sum of an even function and an odd function.</p>
+          <ol class="proof-lines" id="eo-excerpt"></ol>
+          <details><summary>All numbered lines of the released source text</summary><ol class="proof-lines" id="eo-full-lines"></ol><p class="small">From <code>bugbank/sources/reddit_learnmath_dm6itc.json</code>; line numbers are those the critics saw. Contact strings, if any, are omitted in this display only.</p></details>
+        </div>
+        <div>
+          <h3>Check the step</h3>
+          <div class="readout" id="eo-readout" aria-live="polite"></div>
+          <div class="controls" style="margin-top:.75rem">
+            <button class="btn btn-primary" type="button" id="eo-try">Substitute f ≡ 1</button>
+            <button class="btn" type="button" id="eo-reset" hidden>Reset</button>
+          </div>
+          <div class="note scope" id="eo-scope" hidden>
+            <p>This refutes the assertion at line 5; it says nothing against the theorem. The theorem itself holds: $f(x)=\tfrac{f(x)+f(-x)}{2}+\tfrac{f(x)-f(-x)}{2}$, and exchanging $x$ and $-x$ shows that the two summands are even and odd. A proof of error establishes that the named assertion fails under its stated assumptions; it does not establish that a proposed correction works.</p>
+          </div>
+          <details>
+            <summary>Illustration: try other functions and values of x</summary>
+            <p class="small">The certified dossier uses the exact saved witness below. This panel is a separate illustration on the real line: the identity may hold at particular points for particular functions, and the readout says so.</p>
+            <div class="controls">
+              <label>Function <select id="eo-fn"></select></label>
+              <label for="eo-x">x = <span id="eo-xval" class="mono">1.00</span></label> <input type="range" id="eo-x" min="-2" max="2" step="0.05" value="1">
+            </div>
+            <div class="readout" id="eo-illustration" aria-live="polite"></div>
+          </details>
+          <h3 style="margin-top:1.25rem">Exact saved witness and record facts</h3>
+          <div id="eo-saved"></div>
+        </div>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="panel-shellsort" aria-labelledby="tab-shellsort" hidden>
+      <p>A proposed witness can exhibit the claimed failure while violating one of the source's assumptions. In a Shellsort argument, the source assumes that a list's first entry is smaller than its last ($x_0&lt;x_n$). Under that assumption it claims that if the first gap-$m$ insertion swaps the first entry with the entry $m$ positions later, that exchanged-in entry remains first in the final $m$-sorted list. The first witness, $(3,4,2,5,1)$ with $m=2$, has a proof checked by Lean, yet $3&lt;1$ is false: it violates the endpoint assumption. The replacement $(3,5,2,6,1,7,4)$ satisfies $3&lt;4$, refutes the same step, and also has a Lean certificate. BugBank keeps both versions and the reason for the replacement.</p>
+      <div class="grid-2" id="ss-cases"></div>
+      <p class="small">Step through the gap-2 insertion pass on either input: entries two positions apart are compared and exchanged when out of order; the exchange that writes position 0 is the one the source's claim is about. The replacement theorem proves the endpoint inequality, the exchange hypothesis and the failed conclusion together (Appendix C.3 of the paper).</p>
+    </div>
+
+    <div role="tabpanel" id="panel-sqrt" aria-labelledby="tab-sqrt" hidden>
+      <p>A printed algorithm for the integer square root $\lfloor\sqrt{x}\rfloor$ starts with answer $0$ at $0$; given answer $b$ at $x-1$, it returns $b$ if $x\le(b+1)^2$ and $b+1$ otherwise. At $x=1$ the weak guard keeps the answer $0$, so the algorithm returns $0$ instead of $1$. Asking why turns one failure into the exact failure set: for every positive input the printed algorithm returns $\lfloor\sqrt{x-1}\rfloor$, lagging the true value by one input, and it is wrong exactly at the positive perfect squares. Replacing $\le$ by $&lt;$, the correction the source proposed, removes the delay. Induction proves both statements. <span class="badge badge-amber">outside the human-approved core</span> The original dossier is not in the core because a human reviewer questioned its reading of the source; the family-level result is stated and proved separately in the paper.</p>
+      <div class="controls">
+        <label>Show inputs up to <select id="sq-max"><option value="30">30</option><option value="50">50</option><option value="100">100</option></select></label>
+      </div>
+      <p class="small" id="sq-summary" aria-live="polite"></p>
+      <div class="table-wrap" style="max-height:24rem;overflow:auto">
+        <table class="data">
+          <thead><tr><th class="num">x</th><th class="num">printed algorithm (x ≤ (b+1)²)</th><th class="num">⌊√x⌋</th><th class="num">strict guard (x &lt; (b+1)²)</th><th>status</th></tr></thead>
+          <tbody id="sq-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2rem">What a dossier contains, and what it establishes</h3>
+    <p class="small">Each objection dossier preserves four groups of evidence for inspection. Select a group for its definition; the table beneath follows the active tab and shows which of the three conditions of a proof of error hold for that example.</p>
+    <div class="grid-2 split-7-5">
+      <div>
+        <div class="anatomy" id="anatomy"></div>
+        <p class="note" id="anatomy-desc" aria-live="polite" style="margin-top:.75rem"></p>
+      </div>
+      <div>
+        <div id="implications"></div>
+        <p class="small">A formal certificate proves that the encoded assumptions hold and the encoded conclusion fails at the witness. Two witness-local implications connect it to the source: the encoded assumptions must imply the source's assumptions at the witness, and the source's conclusion at the witness must imply the encoded conclusion. A positive review of source correspondence is an interpretive judgment, separate from Lean's kernel check, and is not itself a formal proof.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EVIDENCE ===================== -->
+<section class="section" id="evidence">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">How a dossier is built</p>
+      <h2>Six stages, four possible search outcomes</h2>
+      <p>Given a problem statement and a numbered proof, Co-PEER constructs an objection dossier in six stages. Prompts, search bounds and procedures are given in the paper's appendix on procedures and executable checks.</p>
+    </div>
+    <div class="grid-2 split-7-5">
+      <ol class="steps">
+        <li><h4>Selecting a candidate assertion</h4><p>Two calls to a fixed language model each select an assertion that may admit a short counterexample, quoting the source verbatim with its assumptions and conclusion; a deterministic validator checks the quotation and format, and a second model reviews each candidate.</p></li>
+        <li><h4>Searching for a counterexample</h4><p>A search agent writes and runs exact-arithmetic programs and records one of four outcomes: a concrete witness, no witness found after exhaustive search of a specified finite set, an inconclusive result, or a claim outside the permitted search setting.</p></li>
+        <li><h4>Checking the witness independently</h4><p>A separately written checker program reconstructs the condition from the quoted claim and tests the witness independently of the search script.</p></li>
+        <li><h4>Formalizing the certificate in Lean</h4><p>Human contributors and coding agents construct the formal certificate; Lean checks the proof, and an axiom audit records the assumptions and dependencies used.</p></li>
+        <li><h4>Reviewing the mathematics and source correspondence</h4><p>Three fresh model reviews: one searches for a counterexample from the claim alone, one tests the recorded witness with its own program, one compares the Lean certificate with the quoted claim and witness; a further model triages flagged records (keep, repair, exclude, or refer to human review).</p></li>
+        <li><h4>Recording the dossier</h4><p>The workflow packages the stage inputs, outputs, certificates, and any recorded review decisions into a persistent objection dossier.</p></li>
+      </ol>
+      <div>
+        <h3>Search outcomes across 604 executable tasks</h3>
+        <div id="outcomes"></div>
+        <p class="small">A failure to find a counterexample does not establish a claim: an exhaustive search verifies it only over the finite domain checked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BUGBANK ===================== -->
+<section class="section" id="bugbank">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">BugBank and its human-approved core</p>
+      <h2>Three populations, kept apart</h2>
+      <p>BugBank collects the dossiers. A dossier in BugBank shows what the workflow produced and which reviews, if any, it received; human review is not a condition of membership in the broader collection. Different subsets were reviewed by humans for different studies, and the localization benchmark draws on a human-approved core.</p>
+    </div>
+    <div class="grid-2 split-5-7">
+      <div class="tier" id="tiers"></div>
+      <div>
+        <h3>Composition of the core and the primary inputs</h3>
+        <div id="composition"></div>
+        <p class="small">Each panel counts every record once. Source collections follow the release groups, with the two Reddit groups combined; error mechanisms use the saved primary annotations. Six dossiers, including three primary inputs, retain a mechanism-annotation uncertainty flag.</p>
+      </div>
+    </div>
+    <h3 style="margin-top:1.5rem">Human review</h3>
+    <p>Reviewers answered three questions for each dossier they examined: does the dossier read the source claim correctly (Q1); is the counterexample valid under the source's assumptions (Q2); does the Lean statement correspond to the claim and witness (Q3)? The core contains the dossiers with recorded all-YES answers and current version continuity. In the final stratified audit of 100 dossiers drawn from the 284 retained ones, with earlier verdicts masked, 91 were approved, a weighted 91.0% (95% interval 81.0% to 96.5%); the nine nonapprovals are excluded from the core. The rounds have different populations and purposes, and counts are reviews of the listed artifacts, not unique dossiers.</p>
+    <details><summary>Table 3: the seven human-review rounds and their sampling frames; Table 4: the nine nonapprovals</summary><div id="review-rounds"></div></details>
+    <p><a class="btn" href="bugbank.html">Open the BugBank explorer</a></p>
+  </div>
+</section>
+
+<!-- ===================== BENCHMARK ===================== -->
+<section class="section" id="benchmark">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Evaluating critics</p>
+      <h2>Can a model point to the line that is wrong?</h2>
+      <p>In <em>certified-claim localization</em> a critic receives a problem statement and a numbered proof text that is known to contain an error, without the counterexample or the certificate, and returns up to three ranked line numbers with a brief explanation. A <em>reference line</em> is one of the input's accepted error lines, backed by a core dossier. Hit@1 counts texts whose first choice is a reference line; Hit@3 counts a reference line among the first three choices. Responses that break the format, budget or execution rules count as misses.</p>
+    </div>
+    <div class="controls">
+      <span class="segmented" id="bench-metric" role="group" aria-label="Metric"><button type="button" data-value="hit1" aria-pressed="true">Hit@1</button><button type="button" data-value="hit3" aria-pressed="false">Hit@3</button></span>
+    </div>
+    <div id="bench-chart"></div>
+    <p class="caption" id="bench-caption"></p>
+    <div class="note scope">
+      <p>The strongest evaluated critic, Gemini 3.1 Pro, selects a reference line as its first choice in 73.0% of the 100 primary texts, against 18.0% for the best of four simple text rules; two configurations reach 85.0% within three choices. This is reference-line selection on texts known to contain an error. It is not general proof-verification accuracy and not a false-accusation rate, and a separate review of saved responses shows that some responses that select a reference line do not supply a valid objection while some that miss it do. Human approval covers all core dossiers; the exact current line labels were reviewed separately on smaller samples.</p>
+    </div>
+    <details>
+      <summary>Table 1: reference-line selection on the 100 primary inputs (sortable)</summary>
+      <div class="table-wrap">
+        <table class="data" id="bench-table">
+          <thead><tr><th data-sort="text">Model configuration</th><th class="num" data-sort="num">Hit@1 (%) [95% CI]</th><th class="num" data-sort="num">Hit@3 (%) [95% CI]</th><th class="num" data-sort="num">Recorded total tokens (lower bound)</th><th class="num" data-sort="num">Met rules (of 100)</th></tr></thead>
+          <tbody id="bench-rows"></tbody>
+        </table>
+      </div>
+      <p class="small">The thirteenth configuration, Haiku 4.5, has two reporting views given with all configurations, token components and failure modes on the <a href="benchmark.html">benchmark page</a>.</p>
+    </details>
+    <p><a class="btn" href="benchmark.html">Protocol, complete results and the exercise</a></p>
+  </div>
+</section>
+
+<!-- ===================== STUDIES ===================== -->
+<section class="section" id="studies">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Search, repair, retrieval</p>
+      <h2>Does a counterexample change how a model works?</h2>
+      <p>Three studies with their own task sets and protocols: how instructions change the objections produced and the tokens used; whether a checked counterexample helps a solver complete a specified correction in Lean; and whether retrieving earlier objections helps a model develop a proof through repeated revision.</p>
+    </div>
+    <div id="studies-panels"></div>
+  </div>
+</section>
+
+<!-- ===================== MATHEMATICS ===================== -->
+<section class="section" id="mathematics">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">From a failure to the mathematics</p>
+      <h2>Asking why a counterexample works</h2>
+      <p>A checked counterexample does more than stop a broken proof. Asking why the witness works can identify missing hypotheses, guide a repair, and lead to theorems over an entire family. The initial graph and integer-colouring witnesses came from model runs asked to prove or refute the source statements without access to BugBank; with the help of AI tools, we developed the classifications, the optimality proof and the further certified families.</p>
+    </div>
+    <div id="math-labs"></div>
+    <p><a class="btn" href="mathematics.html">Statements, proofs and the full laboratories</a></p>
+  </div>
+</section>
+
+<!-- ===================== PAPER ===================== -->
+<section class="section" id="paper">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Paper, code and citation</p>
+      <h2>Co-PEER: Auditing Mathematics with Proofs of Error</h2>
+    </div>
+    <div class="grid-2 split-7-5">
+      <div>
+        <h3>Abstract</h3>
+        <p>An objection to a mathematical proof requires evidence of its own: a critic can misread a claim, overlook an assumption, or reject a valid step. Counterexamples provide checkable evidence by refuting a false assertion even inside a proof of a true theorem. We introduce Co-PEER, a workflow for constructing and checking <em>proofs of error</em>. Each <em>objection dossier</em> records the challenged source claim, its assumptions, and a concrete counterexample. It includes a Lean-checked proof that the encoded assumptions hold and the encoded conclusion fails, and a review of whether the formal statement represents the source claim. BugBank stores these dossiers and their revision histories. A human-approved core of 147 dossiers drawn from 137 distinct sources supports a benchmark of 100 proof texts known to contain an error. The strongest evaluated LLM critic selects a reference line (a line annotated as incorrect) as its first choice in 73.0% of texts, compared with 18.0% for the best of four simple text rules. We also test whether a checked counterexample helps models complete Lean repair tasks in which the correction to prove is given. Finally, with the help of AI tools, we develop selected counterexamples into explanations of entire families of failures. We characterize and count the frozen six-colorings of doubled odd cycles of length at least five. We prove that a two-threshold coloring of the integers is the unique optimum within its family and exceeds a conjectured bound. We also determine every input on which a printed integer square-root algorithm fails and prove the correction proposed in the source.</p>
+        <p class="small">Language models contributed to source triage, counterexample search, executable checkers, Lean development, semantic reviews, qualitative coding, experimental grading, mathematical follow-ups, and manuscript revision; the paper's AI-use statement records their contributions and the human responsibilities.</p>
+      </div>
+      <div>
+        <h3>Downloads</h3>
+        <div class="actions" style="flex-direction:column;align-items:flex-start">
+          <a class="btn btn-primary" href="downloads/co-peer.pdf">Paper (PDF, 63 pages)</a>
+          <a class="btn" href="downloads/co-peer-arxiv-source.tar.gz">arXiv source bundle</a>
+          <a class="btn" href="reproduce.html">Code, data and reproduction</a>
+        </div>
+        <p class="small" id="arxiv-line">arXiv identifier: pending.</p>
+        <h3>Cite</h3>
+        <pre id="bibtex" class="no-math">@article{copeer2026,
+  title  = {Co-PEER: Auditing Mathematics with Proofs of Error},
+  author = {Gilbert, Anna and Xia, Stephen and Acharya, Kirill and Hundrieser, Shayan and Li, Benjamin and Ondras, Jan and Surianarayanan, Vaishali and Wang, Jason and Yim, Joon-Hyeok and Cohan, Arman and Liu, Quanquan C.},
+  year   = {2026},
+  note   = {Preprint; identifier pending}
+}</pre>
+        <button class="btn btn-small" type="button" data-copy-target="#bibtex">Copy BibTeX</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p>Co-PEER project page. Numbers on this page are extracted from the paper source (commit <code>cb9312a</code>) and checked against the released evidence; see <a href="data/MANIFEST.md">the data manifest</a> and <a href="tests.html">the self-checks</a>. No tracking, no external requests.</p>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="data/benchmark_example.js"></script>
+<script src="data/example_record.js"></script>
+<script src="data/localization_main.js"></script>
+<script src="data/workflow_counts.js"></script>
+<script src="data/core_composition.js"></script>
+<script src="data/review_rounds.js"></script>
+<script src="data/audit_nonapprovals.js"></script>
+<script src="data/math_constants.js"></script>
+<script src="data/instruction_arms.js"></script>
+<script src="data/instruction_tokens.js"></script>
+<script src="data/instruction_summary.js"></script>
+<script src="data/claims60_sensitivity.js"></script>
+<script src="data/claims60_summary.js"></script>
+<script src="data/repair_outcomes.js"></script>
+<script src="data/repair_resources.js"></script>
+<script src="data/proof_development.js"></script>
+<script src="data/open_problem_retrieval.js"></script>
+<script src="data/certified_families.js"></script>
+<script src="data/related_resources.js"></script>
+<script src="data/projective_cube_families.js"></script>
+<script src="assets/katex/katex.min.js"></script>
+<script src="assets/katex/contrib/auto-render.min.js"></script>
+<script src="assets/js/math/labs.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/components/example.js"></script>
+<script src="assets/js/components/evidence.js"></script>
+<script src="assets/js/components/benchmark.js"></script>
+<script src="assets/js/components/studies.js"></script>
+<script src="assets/js/components/mathlabs.js"></script>
+</body>
+</html>

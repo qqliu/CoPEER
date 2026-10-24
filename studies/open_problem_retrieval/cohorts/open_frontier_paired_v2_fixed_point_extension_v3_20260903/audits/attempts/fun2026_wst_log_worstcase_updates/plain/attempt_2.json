@@ -1,0 +1,96 @@
+{
+  "record_id": "fun2026_wst_log_worstcase_updates",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 2,
+  "parent_sha256": "8d1af5d7978b17ef9d55c62217d048092570dd520b2397c5d7f13942ed92cde1",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Under the recorded definition, an AVL search tree is a Weak Search Tree supporting every insertion and deletion, including rebalancing, in deterministic O(log(n+2)) worst-case time.",
+      "claim_sha256": "02eba46a0189cb2bd8e6933d817d6521abb8d0da31a39fda4d2071d1421c5eaf",
+      "verdict": "VERIFIED",
+      "evidence": "A strict BST satisfies the WST invariant because L<key(v)<R implies every key in L is below every key in R. AVL insertion and deletion preserve strict order, perform constant rebalancing work per visited ancestor, and visit O(h) ancestors. The minimum-size recurrence M(h)=1+M(h-1)+M(h-2) implies h=O(log(n+2)), so the complete update, including rebalancing, has deterministic worst-case logarithmic cost.",
+      "witness": "An ordinary AVL tree initialized empty and maintained with the strict-BST and AVL balance invariants is a concrete data structure satisfying the recorded WST definition.",
+      "search_method": "Deductive comparison of the strict-BST and WST invariants, followed by the AVL minimum-size recurrence and update-path analysis.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 1,
+      "claim": "For a standard right rotation at z in a WST, writing y=left(z) and A=left(y), the rotated tree is a WST if and only if every key in A is smaller than key(z); symmetrically, for a left rotation with y=right(z) and C=right(y), preservation holds if and only if key(z) is smaller than every key in C.",
+      "claim_sha256": "e5c0bfbc7dc5021e295b71af2a94eb114f1f3b0f2653a85c370ddccfc610a192",
+      "verdict": "VERIFIED",
+      "evidence": "For a right rotation, write B=right(y), C=right(z). The old constraints imply A<B and A,B,key(y)<C. After rotation, z needs B<C, already implied; y needs A<{key(z)}∪B∪C, whose only previously unconstrained part is A<key(z). The subtree's key set is unchanged, so ancestor constraints persist. Reflection gives the left-rotation criterion. Exhaustive checks over all empty/singleton choices of A,B,C and every rank assignment agreed in all 60 valid inputs per rotation direction.",
+      "witness": "Unsafe right rotation: key(z)=1, key(y)=2, A is the singleton key 3, and B=C=empty. The original left chain is a WST, but after rotation the new root compares left key 3 with right-subtree key 1. Empty A demonstrates the vacuous safe boundary.",
+      "search_method": "Symbolic before/after invariant decomposition, supplemented by exhaustive finite enumeration.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/plain/attempt_2/check_wst_audit_attempt2.py"
+    },
+    {
+      "idx": 2,
+      "claim": "Let S be a WST whose left and right subtrees are recursively alpha-weight-balanced for a fixed 1/2<alpha<1, as in the source's lowest-unbalanced-subtree premise. There is a deterministic O(|S|)-time reconstruction, using O(|S|) temporary workspace, of the same nodes and keys into a perfectly balanced strict BST, hence a WST.",
+      "claim_sha256": "4ef80ef4e86f7926836bdc7ebf748ea5dc51258efbcf748e5d2b1caab80e90c3",
+      "verdict": "VERIFIED",
+      "evidence": "Postorder compilation is correct: recursively compile the two children into AVL BSTs, concatenate them because the original WST invariant gives every left key below every right key, and insert the original root node by key. This costs O(log(s+1)) at an original size-s node. Distributing that cost among its s keys, a fixed key receives log(s_i+1)/s_i along ancestor sizes satisfying s_{i+1}>=s_i/alpha. Since log(x+1)/x decreases for x>=1, the charge is bounded by a constant multiple of sum_i (i+1)alpha^i, which converges for fixed alpha. Thus each balanced child costs linear time; the possibly unbalanced root adds O(log |S|). Inorder collection and median pointer construction then take O(|S|), use linear workspace, and produce a perfectly balanced strict BST on the same nodes and keys.",
+      "witness": "The constructive witness is the deterministic postorder AVL-compile, followed by inorder extraction and median-first pointer reconstruction.",
+      "search_method": "Constructive correctness proof plus per-key geometric charging of all AVL join and insertion costs.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 3,
+      "claim": "For a fixed binary-tree shape T with distinct keys from a fixed |T|-element total order, the number F(T) of rank assignments that make T a WST is exactly the product, over all nodes v of T, of the subtree sizes |T_v|. In particular, a perfect n-node shape admits 2^{Omega(n)} WST rank assignments.",
+      "claim_sha256": "83907a82ad02526bbbadef97f9df15bfea710995bf7e163a6cadbf3a87632586",
+      "verdict": "VERIFIED",
+      "evidence": "If the root has child sizes l,r and total size s, choose its rank in s ways. The root WST condition then uniquely assigns the l smallest remaining ranks to the left and the r largest to the right; relative-order assignments inside the children are independent. Hence F(T)=sF(T_left)F(T_right), yielding the claimed product by induction. A perfect height-h tree has 2^(h-1) size-three subtrees, so F(T)>=3^(2^(h-1))=3^((n+1)/4)=2^{Omega(n)}. Exact enumeration verified the product for all 197 shapes through six nodes and found F=63 for the perfect seven-node shape.",
+      "witness": "For the perfect seven-node shape, the formula gives 7·3·3=63, exactly matching exhaustive enumeration of all 7! rank assignments.",
+      "search_method": "Induction on the root decomposition, plus exhaustive permutation enumeration for every shape through six nodes and the perfect seven-node shape.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/plain/attempt_2/check_wst_audit_attempt2.py"
+    },
+    {
+      "idx": 4,
+      "claim": "For every fixed 1/2<alpha<1, there are arbitrarily large WSTs S whose two child subtrees are recursively alpha-weight-balanced while S is alpha-weight-unbalanced, such that any deterministic comparison algorithm that converts every such S into a sorted list or a strict BST requires Omega(|S|) comparisons in the worst case. Thus the deterministic O(k) reconstruction is optimal for this atomic sorting/strict-rebuild interface.",
+      "claim_sha256": "5157b90b5f364f6c5a5462be9e8739decdfd483e2794347cf84e2b144992dfb7",
+      "verdict": "VERIFIED",
+      "evidence": "Choose fixed d with 2^d/(2^d+1)>alpha and attach P_h and P_{h-d} below a new root. Perfect children are recursively alpha-balanced, while the larger-child fraction tends from below to 2^d/(2^d+1), so the root is alpha-unbalanced for all sufficiently large h. With k=1+|P_h|+|P_{h-d}|, the larger child has Theta(k) nodes. Assign it the lowest rank interval and vary its F(P_h)=2^{Omega(k)} valid WST labelings while fixing all other labels. A deterministic comparison leaf fixes the inorder identity sequence of any sorted-list or strict-BST output, so two distinct rank assignments cannot share a correct leaf. The decision tree therefore has depth at least log2 F=Omega(k).",
+      "witness": "Exact rational checks produced valid examples for alpha=3/5,3/4,9/10,99/100 with respective height gaps d=1,2,4,7 and verified the strict root imbalance for 100 successive heights in each family.",
+      "search_method": "Explicit perfect-subtree family, the verified counting formula, and a comparison-decision-tree leaf-count argument.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/plain/attempt_2/check_wst_audit_attempt2.py"
+    },
+    {
+      "idx": 5,
+      "claim": "Under the same lowest-unbalanced-subtree and scapegoat accounting premises stated in the source, replacing the skip-list conversion by the deterministic reconstruction makes each eligible rebuild O(k) deterministically and yields deterministic O(log n) amortized updates, but not O(log n) worst-case updates.",
+      "claim_sha256": "516a3a7a9c8e6ff72e434f2c2dc318d36c69b012f69c83eccd3d9f9a367cbeea",
+      "verdict": "VERIFIED",
+      "evidence": "The claim is expressly conditional on the source's lowest-unbalanced selection and scapegoat accounting. Under that premise, each selected subtree has recursively balanced children, so claim 2 supplies a deterministic O(k) rebuild. Rebuilding to perfect balance creates constant fractional slack for fixed alpha; Omega(k) affected updates are needed before another size-k violation, while each update lies in only O(log n) maintained subtrees. Standard charging therefore gives deterministic O(log n) amortized update cost. A root-sized rebuild can nevertheless have k=Theta(n), and the described reconstruction traverses all k nodes, so a triggering operation is not worst-case logarithmic.",
+      "witness": "After a perfect root rebuild, sufficiently many updates biased toward one child eventually make the root violate the fixed alpha threshold; the final triggering update performs a Theta(n)-node atomic reconstruction.",
+      "search_method": "Conditional scapegoat charging analysis using the deterministic linear rebuild, followed by a root-rebuild worst-case construction.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 6,
+      "claim": "The strongest obstruction established here is method-specific: atomic comparison-based conversion of an eligible k-node WST to sorted order or a strict BST costs Omega(k), and the exact rotation criterion can forbid an individual local rotation. These results still provide neither deterministic O(log n) worst-case updates for general weak-only WST states nor a matching obstruction against every algorithm in the source model.",
+      "claim_sha256": "1e80e19de4ffdfc918c5612022676434aa771cb4550472b865c87f227bf72e50",
+      "verdict": "VERIFIED",
+      "evidence": "The lower bound's conclusion depends essentially on requiring sorted-list or strict-BST output, and the rotation theorem analyzes one specified rotation. Neither argument quantifies over incremental rebuilding, direct weak-to-weak transformations, guarded rotation sequences, or other representations and schedules. The disclaimer therefore accurately states the logical scope of the established obstruction.",
+      "witness": "An incremental or direct weak-to-weak balancing algorithm falls outside the output condition used by the decision-tree lower bound; a multi-step transformation likewise falls outside the single-rotation equivalence.",
+      "search_method": "Scope and quantifier audit of the premises and conclusions of claims 1 and 4.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/plain/attempt_2/check_wst_audit_attempt2.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "FULLY_RESOLVES_TARGET",
+  "claimed_resolution_verdict": "UNDERSTATED",
+  "target_evidence": "On the exact recorded target, claim 0 is already a complete construction: the source definition expressly includes every strict BST among WSTs, and an AVL tree supports every insertion and deletion, including rebalancing, in deterministic O(log(n+2))=O(log n) worst-case time. The target does not require accepting arbitrary pre-existing weak-only WST states, producing any non-BST reachable state, or avoiding a stronger invariant. The draft's phrase “general weak-only WST states” is an unstated strengthening motivated by the paper's informal intended open question. Claims 1–6 remain useful and correctly scoped, but the draft's PARTIAL label understates resolution of the exact target as written.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read no evidence except /evidence/source.json and /evidence/parent.json; used no web, retrieval database, treatment receipt, other arm, prior-run evidence, or other solution.",
+    "Verified SHA-256(/evidence/parent.json) exactly equals 8d1af5d7978b17ef9d55c62217d048092570dd520b2397c5d7f13942ed92cde1.",
+    "Audited the exact target quantifiers against Definition 1 and identified the draft's added general-weak-only requirement as a statement-strength mismatch.",
+    "Reproved the AVL inclusion and worst-case height/update bound, the complete rotation equivalence, and the deterministic reconstruction with geometric per-key charging.",
+    "Derived the exact recurrence F(T)=|T|F(T_left)F(T_right) and its perfect-tree exponential consequence.",
+    "Checked the alpha-unbalanced perfect-subtree construction and the comparison-decision-tree lower bound, including output-identity distinguishability.",
+    "Checked the conditional amortized argument separately from its lack of an atomic worst-case bound.",
+    "Created and ran /work/check_wst_audit_attempt2.py using exact integer and Fraction arithmetic. It checked 197 shapes and 100452 assignments, obtained 63 perfect-seven-node labelings, tested 60 valid inputs in each rotation direction, and checked representative alpha families.",
+    "Verified SHA-256(/work/check_wst_audit_attempt2.py) = d5228d3af9974c15c0c8cd755a536357fb62115cd624b45bc344ab3a00eee538."
+  ]
+}

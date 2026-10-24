@@ -1,0 +1,352 @@
+We need to identify a false assertion in the given text, find a concrete counterexample under the assumptions in force at that point, and output up to three candidate lines (most likely first), the false assertion (one sentence), and a counterexample (one sentence). The output must be a JSON object with keys "candidates" (array of up to three line labels), "claim" (the false assertion), "counterexample" (one sentence). Exactly one JSON object and nothing else.
+
+First, parse the problem. The text is about SSD-sequences, vectors, and a false assertion somewhere. We need to find an assertion that is false as written, with a concrete counterexample under the assumptions in force. Let's read carefully.
+
+Lines are labeled P1-P8 (title/problem lines) and 0001-0050 (text). We need to find a false assertion. The false assertion may be a theorem, problem statement, lemma, or intermediate assertion inside an argument. It might be in the text or in the problem lines.
+
+Goal: identify a line containing the false assertion. If same assertion appears more than once, any occurrence accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin.
+
+We need to output candidates (up to three line labels), the false assertion (one sentence), and a counterexample (one sentence). Candidates are line numbers (integers) or strings like "P1". Most likely first.
+
+We need to search for an assertion that is false. Let's examine the content.
+
+First, P1: "Number of vectors so that no two subset sums are equal". P2: description. P3: "What is the maximum number of vectors one can choose that have this property? Is there a counting argument that solves this?" P4: "A small clarification. The sum of two vectors in this problem is another vector." P5: "Current records:". P6: "Lower bound: 19. First given by Brendan McKay over at MO." P7: "Upper bound: 30. First given by Brendan McKay over at MO." P8: "Cross-posted to ...".
+
+Now text:
+
+0001: "An SSD-sequence is a sequence of positive integer numbers in which distinct subsets have distinct sums. If we fill our vectors with the binary representations of the elements of such a sequence, we clearly end with a sum-disjoint set of vectors. For istance, taking the SSD-sequence 3,5,6,7 we have that 011,101,110,111 are four sum-disjoint vectors in {0,1}^3."
+
+Check: SSD-sequence definition: positive integers, distinct subsets have distinct sums. They take binary representations of elements. For 3,5,6,7, binary in 3 bits: 3=011,5=101,6=110,7=111. Are these sum-disjoint? They need to have the property that distinct subsets of these vectors have distinct sums (over R, element-wise). Since they are binary vectors, subset sum is adding vectors. They claim that 011,101,110,111 are sum-disjoint. Let's test: Subsets sums: The four vectors. Distinct subsets: we need to check if any two distinct subsets have the same sum. Since there are 4 vectors, 2^4=16 subsets (including empty set? Usually "distinct subsets have distinct sums" might include empty set sum zero. But they say "distinct subsets have distinct sums." Usually empty set sum zero. But if we consider nonempty? The example might be false. Let's test: vectors v1=011, v2=101, v3=110, v4=111. Subset sums: {} = (0,0,0). {v1}=011, {v2}=101, {v3}=110, {v4}=111. {v1,v2}=011+101=112? Actually addition over R component-wise: 0+1=1,1+0=1,1+1=2 => (1,1,2). {v1,v3}=011+110=121 (1,2,1). {v1,v4}=011+111=122 (1,2,2). {v2,v3}=101+110=211 (2,1,1). {v2,v4}=101+111=212 (2,1,2). {v3,v4}=110+111=221 (2,2,1). {v1,v2,v3}=011+101+110=222 (2,2,2). {v1,v2,v4}=011+101+111=223 (2,2,3). {v1,v3,v4}=011+110+111=232 (2,3,2). {v2,v3,v4}=101+110+111=322 (3,2,2). {v1,v2,v3,v4}=011+101+110+111=333 (3,3,3). All sums are distinct? Check if any duplicates. For instance, {v1} and {some other}? No. But need to check if any two distinct subsets have same sum. The sums are all distinct because they are essentially numbers in base 3? Actually these vectors correspond to the rows of a matrix where each column has two 1s? Actually they are all vectors with exactly two 1s? 3=011 has two 1s; 5=101 has two 1s; 6=110 has two 1s; 7=111 has three 1s. They might have distinct sums. But is it always true? The problem statement says "for instance, taking the SSD-sequence 3,5,6,7 we have that 011,101,110,111 are four sum-disjoint vectors in {0,1}^3." Might be true. Not obviously false.
+
+But careful: The text later says in 0013: "We are clearly wasting a lot of information, since, for istance, {3,4,5,6,8} is not an SSD-set (due to 5+6=8+3), but the binary representations of {3,4,5,6,8} give a five-elements sum-disjoint set of vectors in {0,1}^4." So they claim that {3,4,5,6,8} is not an SSD-set because 5+6=8+3, but the binary representations give sum-disjoint vectors. That's a key point.
+
+Let's check 0013: "We are clearly wasting a lot of information, since, for istance, {3,4,5,6,8} is not an SSD-set (due to 5+6=8+3), but the binary representations of {3,4,5,6,8} give a five-elements sum-disjoint set of vectors in {0,1}^4." We need to verify if binary representations of 3,4,5,6,8 are indeed sum-disjoint in {0,1}^4. Binary representations: 3=0011? Actually 4 bits: 3=0011, 4=0100, 5=0101, 6=0110, 8=1000. These five vectors: 0011, 0100, 0101, 0110, 1000. Are they sum-disjoint? Let's test subset sums. We need to check if any two distinct subsets have the same sum. Let's compute quickly. But maybe it's true? Actually they claim it's sum-disjoint despite the original numbers having 5+6=8+3. That is interesting: the subset sums over integers are not distinct, but over binary vectors (with carries?) they are distinct. The binary representation addition is done without carry? The text says "simple element-wise addition over R". So we treat each coordinate independently, but with carries? Actually "simple element-wise addition over R" means we add the integers in each coordinate separately, but since the numbers are represented in binary, the bits are added as integers 0 or 1, but without carry? Wait: "simple element-wise addition over R" probably means we add the vectors as real numbers component-wise. But if the vectors are binary (0/1), adding them component-wise yields integer entries that could be >1, representing the number of vectors in subset that have a 1 in that coordinate. There's no carry across coordinates; each coordinate is just sum of 0/1 bits. So the sum vector's components are counts. So indeed {3,4,5,6,8} binary vectors: 3=0011, 4=0100, 5=0101, 6=0110, 8=1000. Let's test subset sums. Empty set = (0,0,0,0). Single vectors: (0,0,1,1), (0,1,0,0), (0,1,0,1), (0,1,1,0), (1,0,0,0). Two-element subsets: many. We need to check if any two distinct subsets produce same sum vector. Let's attempt to find a counterexample within this claim. But the assertion in 0013 might be true or false. The problem says at least one assertion is false. We need to find a concrete false assertion.
+
+Maybe the false assertion is somewhere else. Let's read the text thoroughly.
+
+0002: "Erdos conjectured that M_n = min{max(S) | S is a SSD sequence of length n} satisfies M_n >= c * 2^n for some constant c, and the problem is still open." Is that true? Erdos conjectured something about maximal sum? I'm not sure. Might be false? But it's a known conjecture? Actually Erdos studied distinct subset sums, and there's a known conjecture that the maximum element is at least c 2^n. That might be true as a conjecture. But we need a false assertion as written, with a concrete counterexample under the assumptions in force. So maybe it's not that.
+
+0003: "M_n = min{max(S) | S is a SSD sequence of length n}". That's definition.
+
+0004: "satisfies M_n >= c * 2^n for some constant c, and the problem is still open. On the other hand, it is easy to see that M_n <= 1/2 2^n by simply taking powers of two (or the identity matrix in our initial problem)." Check: M_n <= 1/2 2^n? If we take powers of two: 1,2,4,...,2^{n-1}. Max element = 2^{n-1}. 2^{n-1} = 1/2 * 2^n. So yes. And identity matrix vectors? But the definition of M_n is about SSD sequences, not vectors. The text says "by simply taking powers of two (or the identity matrix in our initial problem)." Might be fine.
+
+0005: "Bohman proved in 1996 that the k elements s_i = a_k - a_{k-i} are an SSD-set, where 1 <= i <= k and {a_n}_{n in N} is the Conway-Guy sequence 0,1,2,4,7,13,24,44,84,161,309,594,1164,2284,4484,8807,17305,34301,68008,134852,267420,530356,1051905,2095003,4172701,8311101,16554194,32973536,65679652,130828948,261127540,521203175,1040311347,2076449993,...". This seems to define a sequence. The text says "Bohman proved in 1996 that the k elements s_i = a_k - a_{k-i} are an SSD-set". We need to check if that's true or false. Possibly the assertion is false? But we need a concrete counterexample under the assumptions in force. Might be later.
+
+0006: gives Conway-Guy sequence numbers.
+
+0007: "defined by a_0=0, a_1=1 and a_{n+1} = 2a_n - a_{n-floor(1/2+sqrt(2n))}."
+
+0008: formula.
+
+0009: "This gave the bound M_n <= 2^{n-2} for n>=20, for instance. Taking k=11 we get the eleven-elements SSD set: {594,593,592,590,587,581,570,550,510,433,285} and by taking binary representations we have eleven sum-disjoint vectors in {0,1}^10 - in general, n+2 sum-disjoint vectors in {0,1}^n for any n>=20 - not so many, but still better than the trivial bound."
+
+0010: The set of 11 numbers.
+
+0011: "and by taking binary representations we have eleven sum-disjoint vectors in {0,1}^{10} - in general, n+2 sum-disjoint vectors in {0,1}^n for any n>=20 - not so many, but still better than the trivial bound."
+
+0012: blank.
+
+0013: "We are clearly wasting a lot of information, since, for istance, {3,4,5,6,8} is not an SSD-set (due to 5+6=8+3), but the binary representations of {3,4,5,6,8} give a five-elements sum-disjoint set of vectors in {0,1}^4."
+
+0014: blank.
+
+0015: "Since there are 4 sum-disjoint vectors in {0,1}^3, a clever tensor-trick gives that there are at least floor(4n/3) sum-disjoint vectors in {0,1}^n. In the case n=10, these thirteen vectors are: ..." Then they list vectors 1 to 29.
+
+0016: list of vectors 1,0,... up to 29. Actually they list 29 vectors? Let's count: 0017 to 0029 is 13 vectors? 0017 to 0029 inclusive is 13 lines. They label 0017 to 0029, that's 13 vectors. And then 0030, etc.
+
+0030: "For the same reason, since there are 7 sum-disjoint vectors in {0,1}^5, there are at least 14 sum-disjoint vectors in {0,1}^{10} and at least floor(7n/5) sum-disjoint vectors in {0,1}^n."
+
+0031.
+
+0032: blank.
+
+0033: "Monte-Carlo computations below seem to suggest that there are at least 2n-3 sum-disjoint vectors in {0,1}^n for any n>=4. In order to fix notation, let I_n be the maximum number of sum-disjoint vectors in {0,1}^n. If we manage to prove I_{n+1} >= I_n + 2, (1) we prove the 2n-3-bound."
+
+0034.
+
+0035.
+
+0036: "A simple way to achieve (1) would be to take the vectors giving I_n, augment them with a zero in the first coordinate, then take the two additional vectors (1,0,0,...) and (1,1,1,...). Unluckily, this naive construction does not work since (1,1,1,1)=(1,0,0,0)+(0,1,0,0)+(0,0,1,1), but may be we can fix it."
+
+0037.
+
+0038: "There is also a graph-theoretic interpretation that may be useful. Consider a bipartite undirected graph G with m red nodes and n (10 in the original problem) blue nodes (emitters), where distinct blue nodes have distinct neighbourhoods and there are only edges between a blue node and a red node. Every emitter can give a +1,0 or -1 weight to the elements of the set of its outcoming edges; the weight of a blue vertex is the sum of the weigths of its incoming edges. Sum-free property: if for every non-trivial weigth-assignment there exists a blue vertex with non-zero weight, we get m sum-disjoint elements in {0,1}^n. For istance, the following "sum-free" graph:"
+
+0039: blank? Actually 0039 is blank maybe.
+
+0040: "gives I_3 >= 4 through the set of sum-free vectors 110,101,110,001 corresponding to the neighbourhoods of the red nodes. The graph corresponding to the SSD-set 011,101,110,111 is even nicer:"
+
+0041.
+
+0042: "In the this paper Lev shows, through the probabilistic method, I_n >= 1/(log_2 9) * (1+o(1)) * n log_2(n), and I think it is worth to reproduce its arguments in the specific n=10 case. Let S={-1,0,1}^{17}. For any s in S, let m^+ be the number of positive coordinates of s and m^- the number of negative coordinates of s. For a random chosen vector d in {0,1}^{17} the probability of being orthogonal to s is equal to: ..."
+
+0043.
+
+0044: (probability expression). Actually 0044 is the formula? Wait the text: "0044 | and I think it is worth to reproduce its arguments in the specific n=10 case. Let S={-1,0,1}^{17}. For any s in S, let m^+ be the number of positive coordinates of s and m^- the number of negative coordinates of s. For a random chosen vector d in {0,1}^{17} the probability of being orthogonal to s is equal to:" but then line 0045 is the formula? Let's see: The user provided lines 0045-0050. Actually in the block, after 0042 there is 0043: "In the this paper Lev shows, through the probabilistic method," and then 0044: "I_n \geq \frac{1}{\log_2 9}\cdot(1+o(1))\cdot n\log_2(n)," and then 0045: "and I think it is worth to reproduce its arguments in the specific n=10 case. Let S=\{-1,0,1\}^{17}. For any s\in S, let m^+ be the number of positive coordinates of s and m^- the number of negative coordinates of s. For a random chosen vector d\in\{0,1\}^{17} the probability of being orthogonal to s is equal to:" But the user's formatting might have merged. Let's list lines as given:
+
+The JSON block in user message:
+
+"0045 | 
+0046 | 
+$$ \frac{1}{2^{m^+ + m^-}}\sum_{j=0}^{\min(m^-,m^+)}\binom{m^+}{j}\binom{m^-}{j}=\frac{1}{2^{m^+ + m^-}}\binom{m^+ + m^-}{m^+},$$
+0047 | 
+0048 | 
+hence the probability for 10 randomly chosen vectors to be simultaneously orthogonal to s is very small. Since the number of elements of S of a given (m^-,m^+)-type is just \binom{17}{m^+ + m^-}\binom{m^+ + m^-}{m^+}, in order to prove I_{10}\geq 17 it is sufficient to show that:
+0049 | 
+0050 | 
+$$\sum_{1\leq m^+ + m^- \leq 17}\binom{17}{m^+ + m^-}\binom{m^+ + m^-}{m^+}\left(\frac{1}{2^{m^+ + m^-}}\binom{m^+ + m^-}{m^+}\right)^{10} that is true by direct computation. Moreover, I am now noticing that through a probabilistic argument (the Hoeffding bound) Seva on MO pushed the upper bound down to 30."
+
+So lines 0045-0050 are there.
+
+Now we need to find a false assertion. Let's examine each claim.
+
+Potential false assertions:
+
+- The claim in 0002 that Erdos conjectured M_n >= c 2^n and problem still open. Is that actually a known conjecture? I recall Erdos distinct subset sums problem: For a set S of n positive integers with distinct subset sums, the maximum element is at least c 2^n. This is indeed a known conjecture (Erdos distinct subset sums conjecture). Actually Erdos conjectured that if S is a set of n positive integers with all subset sums distinct, then max(S) >= c 2^n. That is a famous open problem. So it's plausible that this is true as an assertion of what Erdos conjectured. But the problem says "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So maybe some assertion is false given the context, not necessarily a known theorem.
+
+- 0003 defines M_n = min{max(S) | S is SSD sequence of length n}. That's definition, not assertion.
+
+- 0004: "satisfies M_n >= c * 2^n for some constant c, and the problem is still open." This is stated as part of Erdos conjecture? It's saying "Erdos conjectured that M_n = ... satisfies M_n >= c 2^n ... and the problem is still open." Actually the text: "Erdos conjectured that M_n = min{max(S) | S SSD sequence of length n} satisfies M_n >= c * 2^n for some constant c, and the problem is still open." That's a statement. Might be true as conjecture, but not a false assertion as written, because it's a conjecture; but the writing might be claiming it as a fact? The problem says "the false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument." So it could be a false statement. But we need a concrete counterexample under the assumptions the writing itself has in force at that point. So we need to find an assertion that is false given the premises/context of the writing. The writing might have internal assumptions that make some claim false.
+
+Let's read the writing carefully for any internal contradictions or false claims.
+
+0001: "An SSD-sequence is a sequence of positive integer numbers in which distinct subsets have distinct sums. If we fill our vectors with the binary representations of the elements of such a sequence, we clearly end with a sum-disjoint set of vectors. For istance, taking the SSD-sequence 3,5,6,7 we have that 011,101,110,111 are four sum-disjoint vectors in {0,1}^3."
+
+Check if 3,5,6,7 is indeed an SSD-sequence. Distinct subsets have distinct sums. As we computed earlier, subset sums over integers are all distinct? Let's verify: The set {3,5,6,7}. Subsets and sums: {}=0, {3}=3, {5}=5, {6}=6, {7}=7, {3,5}=8, {3,6}=9, {3,7}=10, {5,6}=11, {5,7}=12, {6,7}=13, {3,5,6}=14, {3,5,7}=15, {3,6,7}=16, {5,6,7}=18, {3,5,6,7}=21. Are all distinct? 0,3,5,6,7,8,9,10,11,12,13,14,15,16,18,21. Yes all distinct. So it is an SSD-sequence. Good.
+
+0002: "Erdos conjectured that M_n = min{max(S) | S is SSD sequence of length n} satisfies M_n >= c * 2^n for some constant c, and the problem is still open. On the other hand, it is easy to see that M_n <= 1/2 2^n by simply taking powers of two (or the identity matrix in our initial problem)."
+
+Wait: "by simply taking powers of two (or the identity matrix in our initial problem)". The identity matrix? The initial problem is about vectors with 1 or 0. But M_n is about SSD sequences. The identity matrix vectors might give SSD sequences? Possibly they refer to something else. But anyway.
+
+0003: definition.
+
+0005: "Bohman proved in 1996 that the k elements s_i = a_k - a_{k-i} are an SSD-set, where 1 <= i <= k and {a_n} is the Conway-Guy sequence". Is that true? We might need to check if that statement is correct. Possibly the Conway-Guy sequence is known for distinct subset sums, and Bohman proved something. But we need a concrete counterexample under the assumptions in force. Maybe the assertion is false because the Conway-Guy sequence defined by that recurrence might not produce SSD-set as claimed. But we need to see if there's a clear false assertion with a counterexample.
+
+0009: "This gave the bound M_n <= 2^{n-2} for n>=20, for instance. Taking k=11 we get the eleven-elements SSD set: {594,593,592,590,587,581,570,550,510,433,285} and by taking binary representations we have eleven sum-disjoint vectors in {0,1}^10 - in general, n+2 sum-disjoint vectors in {0,1}^n for any n>=20 - not so many, but still better than the trivial bound."
+
+Check: M_n <= 2^{n-2} for n>=20? They claim from Bohman's result? Actually 0005 says Bohman proved that the k elements s_i = a_k - a_{k-i} are an SSD-set. Then 0009 says "This gave the bound M_n <= 2^{n-2} for n>=20". Need to verify if that's correct. But maybe it's true. However, the statement "n+2 sum-disjoint vectors in {0,1}^n for any n>=20" might be derived from that SSD set? They say "Taking k=11 we get the eleven-elements SSD set ... and by taking binary representations we have eleven sum-disjoint vectors in {0,1}^10 - in general, n+2 sum-disjoint vectors in {0,1}^n for any n>=20". That seems to be an extrapolation. But we need to see if it's false. However, the problem says "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we need to find an assertion that is demonstrably false given the text's own premises, perhaps a calculation error or misstatement.
+
+Let's examine 0013: "We are clearly wasting a lot of information, since, for istance, {3,4,5,6,8} is not an SSD-set (due to 5+6=8+3), but the binary representations of {3,4,5,6,8} give a five-elements sum-disjoint set of vectors in {0,1}^4." Is this true? Let's test binary representations in 4 bits: 3=0011, 4=0100, 5=0101, 6=0110, 8=1000. Are these five vectors sum-disjoint? We need to check if any two distinct subsets have the same sum (over R component-wise). Let's compute all subset sums or at least check for collisions.
+
+Vectors:
+v1 = 0011 (3)
+v2 = 0100 (4)
+v3 = 0101 (5)
+v4 = 0110 (6)
+v5 = 1000 (8)
+
+We need to consider subsets of these 5 vectors. There are 32 subsets (including empty). Sums are 4-dimensional vectors with integer entries 0..5. Let's compute sums systematically or find a collision.
+
+First, note that v3 = v2 + v1? 4+3=7, binary 0111 = 7, but v3 is 5=0101. Actually 3+4=7, not 5. But 5=3+2, but 2 not present. However we need subset sums. Let's compute some sums:
+
+Empty: (0,0,0,0)
+{v1}: (0,0,1,1)
+{v2}: (0,1,0,0)
+{v3}: (0,1,0,1)
+{v4}: (0,1,1,0)
+{v5}: (1,0,0,0)
+
+Two-element subsets:
+{v1,v2}: (0,1,1,1) -> 3+4=7 => bits: 0+0=0? Wait 3=0011, 4=0100 => sum bits: first bit 0, second 0+1=1, third 1+0=1, fourth 1+0=1 => (0,1,1,1). Yes.
+{v1,v3}: 3+5=8 => 0011+0101 = 0110? Actually 0+0=0, 0+1=1, 1+0=1, 1+1=2 => (0,1,1,2). But careful: 5=0101, 3=0011, sum bits: 0,1,1,2.
+{v1,v4}: 3+6=9 => 0011+0110 = 0101? 0+0=0, 0+1=1, 1+1=2, 1+0=1 => (0,1,2,1).
+{v1,v5}: 3+8=11 => 0011+1000 = 1011 => (1,0,1,1).
+{v2,v3}: 4+5=9 => 0100+0101 = 0101? 0+0=0, 1+1=2, 0+0=0, 0+1=1 => (0,2,0,1).
+{v2,v4}: 4+6=10 => 0100+0110 = 0110? 0+0=0, 1+1=2, 0+1=1, 0+0=0 => (0,2,1,0).
+{v2,v5}: 4+8=12 => 0100+1000 = 1100 => (1,1,0,0).
+{v3,v4}: 5+6=11 => 0101+0110 = 0111? 0+0=0, 1+1=2, 0+1=1, 1+0=1 => (0,2,1,1).
+{v3,v5}: 5+8=13 => 0101+1000 = 1101 => (1,1,0,1).
+{v4,v5}: 6+8=14 => 0110+1000 = 1110 => (1,1,1,0).
+
+Three-element subsets:
+{v1,v2,v3}: 3+4+5=12 => 0011+0100+0101 = combine: 0+0+0=0, 0+1+1=2, 1+0+0=1, 1+0+1=2 => (0,2,1,2). But also could compute from earlier two-sums: {v1,v2}=(0,1,1,1), add v3=(0,1,0,1) => (0,2,1,2).
+{v1,v2,v4}: 3+4+6=13 => {v1,v2}=(0,1,1,1) + v4=(0,1,1,0) => (0,2,2,1).
+{v1,v2,v5}: 3+4+8=15 => (0,1,1,1)+(1,0,0,0)=(1,1,1,1).
+{v1,v3,v4}: 3+5+6=14 => {v1,v3}=(0,1,1,2) + v4=(0,1,1,0) => (0,2,2,2).
+{v1,v3,v5}: 3+5+8=16 => (0,1,1,2)+(1,0,0,0)=(1,1,1,2).
+{v1,v4,v5}: 3+6+8=17 => (0,1,2,1)+(1,0,0,0)=(1,1,2,1).
+{v2,v3,v4}: 4+5+6=15 => {v2,v3}=(0,2,0,1) + v4=(0,1,1,0) => (0,3,1,1).
+{v2,v3,v5}: 4+5+8=17 => (0,2,0,1)+(1,0,0,0)=(1,2,0,1).
+{v2,v4,v5}: 4+6+8=18 => (0,2,1,0)+(1,0,0,0)=(1,2,1,0).
+{v3,v4,v5}: 5+6+8=19 => (0,2,1,1)+(1,0,0,0)=(1,2,1,1).
+
+Four-element subsets:
+{v1,v2,v3,v4}: 3+4+5+6=18 => from {v1,v2,v3,v4} maybe (0,3,2,2)? Let's compute: {v1,v2,v3}=(0,2,1,2) + v4=(0,1,1,0) => (0,3,2,2).
+{v1,v2,v3,v5}: 3+4+5+8=20 => (0,2,1,2)+(1,0,0,0)=(1,2,1,2).
+{v1,v2,v4,v5}: 3+4+6+8=21 => {v1,v2,v4}=(0,2,2,1)+(1,0,0,0)=(1,2,2,1).
+{v1,v3,v4,v5}: 3+5+6+8=22 => {v1,v3,v4}=(0,2,2,2)+(1,0,0,0)=(1,2,2,2).
+{v2,v3,v4,v5}: 4+5+6+8=23 => {v2,v3,v4}=(0,3,1,1)+(1,0,0,0)=(1,3,1,1).
+
+Five-element subset: all five sum to 3+4+5+6+8=26 => (1,3,2,2)? Actually sum all: v1(0,0,1,1)+v2(0,1,0,0)+v3(0,1,0,1)+v4(0,1,1,0)+v5(1,0,0,0) = (1,3,2,2). Yes.
+
+Now we need to check if any two distinct subsets have the same sum vector. Let's list all sum vectors we have computed and see duplicates.
+
+List by subset size, but we can just look for equality.
+
+First, note that some sums have different sizes, but we compare across all subsets.
+
+Let's compile a set of sum vectors (including empty). I'll list each subset and its sum vector (as tuple). I'll do systematically.
+
+I'll create a table in mind, but maybe easier to find collision. Let's note that many sums have first coordinate 0 or 1. v5 has first coordinate 1, others have 0 except when v5 included. So subsets containing v5 will have first coordinate 1; those not containing v5 have first coordinate 0. So no collision between subsets with/without v5 because first coordinate differs (unless some subset without v5 also has first coordinate 1? But v5 is the only vector with first coordinate 1 (1000). Others: v1=0011 (first 0), v2=0100 (first 0), v3=0101 (first 0), v4=0110 (first 0). So indeed first coordinate is 1 iff v5 is in subset. So no cross collisions between those containing v5 and those not.
+
+Now within subsets without v5, we have vectors v1..v4. Their sums will have first coordinate 0. We need to see if any two distinct subsets of {v1,v2,v3,v4} have same sum.
+
+Subsets of {v1,v2,v3,v4}: 16 subsets. Let's list their sums (first coordinate 0, second, third, fourth as computed).
+
+We have earlier some:
+
+Empty: (0,0,0,0)
+{v1}: (0,0,1,1)
+{v2}: (0,1,0,0)
+{v3}: (0,1,0,1)
+{v4}: (0,1,1,0)
+{v1,v2}: (0,1,1,1)
+{v1,v3}: (0,1,1,2)
+{v1,v4}: (0,1,2,1)
+{v2,v3}: (0,2,0,1)
+{v2,v4}: (0,2,1,0)
+{v3,v4}: (0,2,1,1)
+{v1,v2,v3}: (0,2,1,2)
+{v1,v2,v4}: (0,2,2,1)
+{v1,v3,v4}: (0,2,2,2)
+{v2,v3,v4}: (0,3,1,1)
+{v1,v2,v3,v4}: (0,3,2,2)
+
+Check for duplicates among these 16. Let's list them as tuples (second,third,fourth) because first is 0.
+
+(0,0,0,0) empty
+(0,0,1,1) v1
+(0,1,0,0) v2
+(0,1,0,1) v3
+(0,1,1,0) v4
+(0,1,1,1) {v1,v2}
+(0,1,1,2) {v1,v3}
+(0,1,2,1) {v1,v4}
+(0,2,0,1) {v2,v3}
+(0,2,1,0) {v2,v4}
+(0,2,1,1) {v3,v4}
+(0,2,1,2) {v1,v2,v3}
+(0,2,2,1) {v1,v2,v4}
+(0,2,2,2) {v1,v3,v4}
+(0,3,1,1) {v2,v3,v4}
+(0,3,2,2) {v1,v2,v3,v4}
+
+Now look for duplicates: (0,1,1,1) appears only once. (0,1,1,2) only. (0,1,2,1) only. (0,2,0,1) only. (0,2,1,0) only. (0,2,1,1) only. (0,2,1,2) only. (0,2,2,1) only. (0,2,2,2) only. (0,3,1,1) only. (0,3,2,2) only. Empty only. v1..v4 only. So within these 16, all sums are distinct! Good.
+
+Now subsets containing v5. We have those with v5 and possibly some of v1..v4. Their sum vectors will have first coordinate 1, and the remaining coordinates are 1 (from v5) plus the sum from the subset of {v1..v4}. So we can take the 16 sums from above (with first coordinate 0) and add 1 to first coordinate. So they will be (1, second, third, fourth) where (second,third,fourth) are from the list above. But careful: The sum vector for a subset containing v5 is (1, s2, s3, s4) where (s2,s3,s4) is the sum of the chosen subset of {v1..v4} (including possibly empty). So we have 16 such vectors.
+
+Now we need to check if any of these 16 vectors coincide with any of the 16 without v5 (which have first coordinate 0). They can't because first coordinate differs. But could two different subsets containing v5 produce the same sum? That would require two different subsets of {v1..v4} to have the same (s2,s3,s4). But we just saw all 16 subsets of {v1..v4} have distinct (s2,s3,s4). So all 16 subsets containing v5 have distinct sums. However, we also have the possibility that a subset containing v5 and some of v1..v4 might have the same sum as a subset not containing v5 but with some other combination? Already first coordinate differs. But wait: Are there any subsets that contain v5 and maybe also some vectors that make first coordinate 0? No, v5 always contributes 1 to first coordinate, so first coordinate is 1. So no cross collisions.
+
+But we must also consider the empty set? Already covered.
+
+Thus, it appears that the five vectors {3,4,5,6,8} binary representations are indeed sum-disjoint! That would make the assertion in 0013 true. However, the text says "We are clearly wasting a lot of information, since, for istance, {3,4,5,6,8} is not an SSD-set (due to 5+6=8+3), but the binary representations of {3,4,5,6,8} give a five-elements sum-disjoint set of vectors in {0,1}^4." So they claim that the original numbers are not SSD, but the binary representations give sum-disjoint vectors. We just verified that the binary representations are indeed sum-disjoint. So that assertion is true. So 0013 is not false.
+
+Now 0015: "Since there are 4 sum-disjoint vectors in {0,1}^3, a clever tensor-trick gives that there are at least floor(4n/3) sum-disjoint vectors in {0,1}^n. In the case n=10, these thirteen vectors are: ..." Then they list vectors 1,0,... up to 29. We need to check if that construction actually yields at least floor(4n/3) sum-disjoint vectors. The text says "a clever tensor-trick gives that there are at least floor(4n/3) sum-disjoint vectors in {0,1}^n." Is that assertion true? We need to see if it's a known result or if it's false. The text might be making a claim that might be false. But we need a concrete counterexample under the assumptions in force. Maybe the construction actually yields fewer than floor(4n/3) sum-disjoint vectors, or the tensor trick doesn't work as stated. But we need to identify a false assertion. Let's examine the construction described.
+
+0015: "Since there are 4 sum-disjoint vectors in {0,1}^3, a clever tensor-trick gives that there are at least floor(4n/3) sum-disjoint vectors in {0,1}^n." They then list for n=10: thirteen vectors. 4*10/3 = 40/3 = 13.333, floor 13. So they claim at least 13 sum-disjoint vectors in {0,1}^10. They list 13 vectors (0017 to 0029). Let's verify if those 13 vectors are indeed sum-disjoint. The text says "In the case n=10, these thirteen vectors are:" and then a matrix. We should check if those 13 vectors are sum-disjoint as claimed. If they are not, then the assertion that there are at least 13 sum-disjoint vectors (or the tensor trick) is false. But the problem says "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So we need to find an assertion that is definitely false given the text's own context. Maybe the tensor trick is actually a known result, but maybe the specific vectors listed are not sum-disjoint. Let's test the 13 vectors listed.
+
+The vectors are given as rows 1 to 13? They list 0017 to 0029, that's 13 vectors. Let's extract them:
+
+0017: 1,0,0,0,0,0,0,0,0,0 (weight 1 at position 1)
+0018: 0,1,1,0,0,0,0,0,0,0 (positions 2 and 3 are 1)
+0019: 0,1,0,1,0,0,0,0,0,0 (positions 2 and 4 are 1)
+0020: 0,1,0,0,0,0,0,0,0,0 (position 2 is 1)
+0021: 0,0,1,1,0,0,0,0,0,0 (positions 3 and 4 are 1)
+0022: 0,0,0,0,1,1,0,0,0,0 (positions 5 and 6 are 1)
+0023: 0,0,0,0,1,0,1,0,0,0 (positions 5 and 7 are 1)
+0024: 0,0,0,0,1,0,0,0,0,0 (position 5 is 1)
+0025: 0,0,0,0,0,1,1,0,0,0 (positions 6 and 7 are 1)
+0026: 0,0,0,0,0,0,0,1,1,0 (positions 8 and 9 are 1)
+0027: 0,0,0,0,0,0,0,1,0,1 (positions 8 and 10 are 1)
+0028: 0,0,0,0,0,0,0,1,0,0 (position 8 is 1)
+0029: 0,0,0,0,0,0,0,0,1,1 (positions 9 and 10 are 1)
+
+So these 13 vectors are all vectors with at most two 1s? Actually 0017 has one 1, 0018 has two, 0019 two, 0020 one, 0021 two, 0022 two, 0023 two, 0024 one, 0025 two, 0026 two, 0027 two, 0028 one, 0029 two. They are essentially the standard basis vectors e1, e2+e3, e2+e4, e2, e3+e4, e5+e6, e5+e7, e5, e6+e7, e8+e9, e8+e10, e8, e9+e10. Wait there are some repetitions? Let's list with coordinates (1-indexed):
+
+v1: (1,0,0,0,0,0,0,0,0,0)
+v2: (0,1,1,0,0,0,0,0,0,0)
+v3: (0,1,0,1,0,0,0,0,0,0)
+v4: (0,1,0,0,0,0,0,0,0,0)
+v5: (0,0,1,1,0,0,0,0,0,0)
+v6: (0,0,0,0,1,1,0,0,0,0)
+v7: (0,0,0,0,1,0,1,0,0,0)
+v8: (0,0,0,0,1,0,0,0,0,0)
+v9: (0,0,0,0,0,1,1,0,0,0)
+v10: (0,0,0,0,0,0,0,1,1,0)
+v11: (0,0,0,0,0,0,0,1,0,1)
+v12: (0,0,0,0,0,0,0,1,0,0)
+v13: (0,0,0,0,0,0,0,0,1,1)
+
+Are these 13 vectors sum-disjoint? We need to check if any two distinct subsets have the same sum (over R component-wise). Since they are binary vectors, sum is just count of 1s in each coordinate. The vectors are sparse. Let's see if there's a collision.
+
+We can attempt to find two different subsets with same sum. The vectors have 1s in different positions. Some vectors share coordinates. For instance, v4 is (0,1,0,0,0,0,0,0,0,0) e2. v2 is (0,1,1,0,...) e2+e3. v3 is (0,1,0,1,...) e2+e4. v1 is e1. v5 is e3+e4. v6 is e5+e6. v7 is e5+e7. v8 is e5. v9 is e6+e7. v10 is e8+e9. v11 is e8+e10. v12 is e8. v13 is e9+e10.
+
+We need to see if any two distinct subsets produce same sum vector. Let's try to find a collision. Because the coordinates are mostly disjoint except for the first few coordinates (1-4) and 5-7, and 8-10.
+
+Coordinates breakdown:
+- Coord 1: only v1 has 1.
+- Coord 2: v2, v3, v4 have 1.
+- Coord 3: v2, v5 have 1.
+- Coord 4: v3, v5 have 1.
+- Coord 5: v6, v7, v8 have 1.
+- Coord 6: v6, v9 have 1.
+- Coord 7: v7, v9 have 1.
+- Coord 8: v10, v11, v12 have 1.
+- Coord 9: v10, v13 have 1.
+- Coord 10: v11, v13 have 1.
+
+We need to check subset sums. Since the sets of coordinates for different groups are mostly separate, maybe collisions only occur within groups. But we must consider subsets that include vectors from different groups; the sums add across groups, so if two subsets have same total sum, they must have same contributions in each coordinate. Since coordinates are independent, we can analyze per block.
+
+Block A: coordinates 1-4, with vectors v1..v5. But v1..v5 are exactly the 5 vectors we examined earlier: {3,4,5,6,8} in 4 bits? Actually earlier we had vectors 0011,0100,0101,0110,1000 for 3,4,5,6,8. Here v1..v5 correspond to? Let's map: v1 = (1,0,0,0,0,0,0,0,0,0) is like 1000? Actually 1000 is 8, which had first coordinate 1. Here v1 has first coordinate 1, others 0. v2 = (0,1,1,0,...) is like 0110? 6 is 0110 in 4 bits, but here coord 2,3,4. v3 = (0,1,0,1,...) is 0101? v4 = (0,1,0,0,...) is 0100? v5 = (0,0,1,1,...) is 0011? Wait order: In the earlier example, we had vectors: 3=0011, 4=0100, 5=0101, 6=0110, 8=1000. Here we have v1 = (1,0,0,0,0,...) which is like 8 (first coord 1). v2 = (0,1,1,0,0,...) has 1s in coords 2 and 3, which could be 6 (0110) if we ignore coord 1. v3 = (0,1,0,1,0,...) is 5 (0101). v4 = (0,1,0,0,0,...) is 4 (0100). v5 = (0,0,1,1,0,0,...) is 3 (0011). So indeed v1..v5 are exactly the 5 vectors from the earlier example, which we proved are sum-disjoint. So the subset sums of v1..v5 are all distinct.
+
+Block B: coordinates 5-7, with vectors v6,v7,v8,v9: v6=(0,0,0,0,1,1,0,0,0,0) (e5+e6), v7=(0,0,0,0,1,0,1,0,0,0) (e5+e7), v8=(0,0,0,0,1,0,0,0,0,0) (e5), v9=(0,0,0,0,0,1,1,0,0,0) (e6+e7). These four vectors are exactly the binary representations of 3,4,5,6? Actually 3=0011, 4=0100, 5=0101, 6=0110 in 3 bits? But here they are in coordinates 5-7, with 3 bits. The earlier example with 3,5,6,7 gave four sum-disjoint vectors in {0,1}^3. Here we have v6,v7,v8,v9: v8 is e5 (like 1?), v6 e5+e6 (like 3? 3 is 011), v7 e5+e7 (like 5? 5 is 101), v9 e6+e7 (like 6? 6 is 110). Indeed, these four vectors are sum-disjoint as per 0001 example (SSD-sequence 3,5,6,7). So any subset sums of these four are distinct.
+
+Block C: coordinates 8-10, with vectors v10,v11,v12,v13: v10=(0,0,0,0,0,0,0,1,1,0) (e8+e9), v11=(0,0,0,0,0,0,0,1,0,1) (e8+e10), v12=(0,0,0,0,0,0,0,1,0,0) (e8), v13=(0,0,0,0,0,0,0,0,1,1) (e9+e10). These four are again sum-disjoint as per earlier example with 3,5,6,7 but in 3 bits. So any subset sums of these four are distinct.
+
+Now, the 13 vectors include v1..v5 (5 vectors), v6..v9 (4 vectors), v10..v13 (4 vectors). Total 13. Are these 13 vectors sum-disjoint as a whole? Since the coordinate blocks are disjoint (coordinates 1-4, 5-7, 8-10 have no overlap), the sum of any subset will have coordinates determined by the sum within each block, independently. If we have two distinct subsets of the 13 vectors, we can compare their sums block by block. If the subsets are different, then either they differ in block A, or block B, or block C, or some combination. Because the blocks are independent, if two subsets have the same total sum, then their projections onto each block must have the same sum within that block. Since the vectors within each block are sum-disjoint (i.e., all subset sums within that block are distinct), the only way two subsets of the whole set have the same total sum is if they have the same subset within each block. But wait: The 13 vectors are a specific set; we are considering subsets of this set. If we have two different subsets of the whole 13 vectors, they could differ in which vectors from block A, block B, block C they include. Because the blocks are disjoint in coordinates, the sum vector's coordinates in block A only depend on which of v1..v5 are included; similarly for B and C. Since within each block, all subset sums are distinct, if two subsets of the whole set have the same total sum, then they must have the exact same selection from block A, same from block B, same from block C. Therefore, the two subsets are identical. So the 13 vectors are indeed sum-disjoint! This is a standard tensor-product or direct sum construction: if you have sum-disjoint sets in disjoint coordinate blocks, their union is sum-disjoint. So the tensor trick in 0015 is valid and the 13 vectors are sum-disjoint. So 0015's assertion is true.
+
+Thus, 0015 is not false.
+
+Now 0030-0031: "For the same reason, since there are 7 sum-disjoint vectors in {0,1}^5, there are at least 14 sum-disjoint vectors in {0,1}^{10} and at least floor(7n/5) sum-disjoint vectors in {0,1}^n." Need to check if there are indeed 7 sum-disjoint vectors in {0,1}^5. The text earlier said "since there are 4 sum-disjoint vectors in {0,1}^3" and "since there are 7 sum-disjoint vectors in {0,1}^5". Is that true? We might need to verify if the claim that there are 7 sum-disjoint vectors in {0,1}^5 is correct. The text might be asserting it, but maybe it's false. However, the problem says "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So maybe the assertion that there are 7 sum-disjoint vectors in {0,1}^5 is false, or the derived bound is false. But we need a concrete counterexample under the assumptions in force. Perhaps the writing assumes something that makes the claim false.
+
+Let's examine the context: 0030 says "For the same reason, since there are 7 sum-disjoint vectors in {0,1}^5, there are at least 14 sum-disjoint vectors in {0,1}^{10} and at least floor(7n/5) sum-disjoint vectors in {0,1}^n." The "same reason" refers to the tensor trick from 0015: since there are 4 sum-disjoint vectors in {0,1}^3 giving floor(4n/3), now since there are 7 sum-disjoint vectors in {0,1}^5, we get floor(7n/5). But are there really 7 sum-disjoint vectors in {0,1}^5? The text doesn't provide an explicit construction, just asserts it. Maybe it's a known fact, but we need to see if it's false as written. Could there be a concrete counterexample? The problem might be that the maximum number of sum-disjoint vectors in {0,1}^n, I_n, is not known to be at least 7 for n=5? Actually we can try to find 7 sum-disjoint vectors in {0,1}^5. Is that possible? The total number of vectors in {0,1}^5 is 32. The empty set and singletons? But sum-disjoint means distinct subsets have distinct sums. The maximum size of a sum-disjoint set in {0,1}^n is related to the problem. I recall that for n=5, the maximum might be less than 7? Let's think. The trivial upper bound: each vector has 5 coordinates, subset sums are vectors with counts 0..k. The number of possible sums is at most something. But maybe 7 is possible. However, the text might be making an incorrect claim. But we need a false assertion that has a concrete counterexample under the assumptions in force. Perhaps the assertion in 0033 or 0034 is false.
+
+Let's read 0033: "Monte-Carlo computations below seem to suggest that there are at least 2n-3 sum-disjoint vectors in {0,1}^n for any n>=4. In order to fix notation, let I_n be the maximum number of sum-disjoint vectors in {0,1}^n. If we manage to prove I_{n+1} >= I_n + 2, (1) we prove the 2n-3-bound."
+
+This is a statement about a sufficient condition. It's not asserting that 2n-3 is true, just that if (1) holds, then the bound is proved. That's a conditional statement, not a false assertion per se. But the problem says "the false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument." So a conditional statement could be false if the premise is true but conclusion false, or if the premise is actually false? But we need a concrete counterexample under the assumptions the writing itself has in force at that point. So maybe the writing assumes something that makes (1) false or the bound not follow.
+
+0036: "A simple way to achieve (1) would be to take the vectors giving I_n, augment them with a zero in the first coordinate, then take the two additional vectors (1,0,0,...) and (1,1,1,...). Unluckily, this naive construction does not work since (1,1,1,1)=(1,0,0,0)+(0,1,0,0)+(0,0,1,1), but may be we can fix it." This is an observation, not an assertion.
+
+0038-0041: graph-theoretic interpretation, maybe not false.
+
+0042-0050: probabilistic method, Lev's bound. The text says: "In the this paper Lev shows, through the probabilistic method, I_n >= 1/(log_2 9) * (1+o(1)) * n log_2(n), and I think it is worth to reproduce its arguments in the specific n=10 case. Let S={-1,0,1}^{17}. For any s in S, let m^+ be the number of positive coordinates of s and m^- the number of negative coordinates of s. For a random chosen vector d in {0,1}^{17} the probability of being orthogonal to s is equal to: ..." Then they compute probability and say "in order to prove I_{10} >= 17 it is sufficient to show that: sum_{...} that is true by direct computation. Moreover, I am now noticing that through a probabilistic argument (the Hoeffding bound) Seva on MO pushed the upper bound down to 30."
+
+We need to check if any of these assertions are false. The text says "in order to prove I_{10} >= 17 it is sufficient to show that: sum_{1<= m^+ + m^- <= 17} C(17, m^+ + m^-) C(m^+ + m^-, m^+) ( (1/2^{m^+ + m^-}) C(m^+ + m^-, m^+) )^10 that is true by direct computation." This is a sufficient condition. If the sum is indeed true by direct computation, then the assertion that it's sufficient might be true. But maybe the computation is actually false? However, the problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So maybe the assertion that the sum is true by direct computation is false, or the condition is not sufficient, or the upper bound down to 30 is misstated.
+
+But we need to find a clear false assertion with a concrete counterexample. Let's read the problem again: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument. Identify a line that contains the false assertion. If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin. Give up to three candidate lines, most likely first. A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line. Answer with one JSON object and nothing else: {"candidates": [<line>, <line>, <line>], "claim": "<the false assertion, one sentence>", "counterexample": "<one sentence>"}"
+
+So we need to output up to three candidate line labels (most likely first), the false assertion (one sentence), and a counterexample (one sentence). The false assertion should be a sentence that is false as written. The counterexample should be one sentence describing a concrete counterexample under the assumptions in force.
+
+We need to identify which line contains the false assertion. Let's scan for potential false statements.
+
+Possibilities:
+
+- P2: "Consider all 10-tuple vectors each element of which is either 1 or 0. It is very easy to select a set v_1,...,v_10 = S of 10 such vectors so that no two distinct subsets of vectors S_1 subset S and S_2 subset S have the same sum. Here sum_{v in S_i} v assumes simple element-wise addition over R. For example, if we take the vectors that are the columns of the identity matrix as S this will do." Is this true? If we take the 10 columns of the 10x10 identity matrix, those are vectors e1,...,e10. Distinct subsets of these vectors will have sums that are just the indicator vectors of the subset. Since each subset corresponds to a unique binary vector (the characteristic vector), the sums are distinct. So yes, it's easy. So P2 is true.
+
+- P3: "What is the maximum number of vectors one can choose that have this property? Is there a counting argument that solves this?" This is a question, not an assertion. The problem says "the false assertion may be a theorem or problem statement". A problem statement could be false if it asks something impossible? But usually a problem is not false; it's a question. But maybe the problem statement itself is false? The writing says "P3 | What is the maximum number of vectors one can choose that have this property? Is there a counting argument that solves this?" That's just a problem posed. It might be that the maximum is not known, but that's not a false assertion; it's an open question. The problem says "At least one assertion in it is false as written". So probably not P3.
+
+- P4: "A small clarification. The sum of two vectors in this problem is another vector." That's true.
+
+- P5: "Current records:" just a header.
+
+- P6: "Lower bound: 19. First given by Brendan McKay over at MO." Could be a claim that lower bound is 19. Is that true? Might be false, but we need a concrete counterexample under the assumptions in force. The assumptions in force might be the definitions and context. If the writing claims a lower bound of 19, but maybe it's actually lower? But we need a counterexample that shows the assertion false under the writing's assumptions. Not sure.
+
+- P7: "Upper bound: 30. First given by Brendan McKay over at MO." Similar.
+
+- P8: cross-posted, not an assertion.
+
+Now text lines:
+
+0001: "An SSD-sequence is a sequence of positive integer numbers in which distinct subsets have distinct sums. If we fill our vectors with the binary representations of the elements of such a sequence, we clearly end with a sum-disjoint set of vectors. For istance, taking the SSD-sequence 3,5,6,7 we have that 011,101,110,111 are four sum-disjoint vectors in {0,1}^3." We already verified 3,5,6,7 works. So true.
+
+0002: "Erdos conjectured that M_n = min{max(S) | S SSD

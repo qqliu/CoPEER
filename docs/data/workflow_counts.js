@@ -1,0 +1,23 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["workflow_counts"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "text:executable-checks",
+  "main_tex_lines": [
+   2968,
+   2968
+  ],
+  "caption": "Executable checks paragraph of the procedures appendix"
+ },
+ "executable_tasks": 604,
+ "witnesses": 351,
+ "exhaustive_without_witness": 12,
+ "inconclusive": 221,
+ "outside_permitted_setting": 20,
+ "checker_confirmed": 348,
+ "checker_rejected": 3,
+ "programs_replayed": 955,
+ "selected_algorithmic_failures_checked": 16,
+ "selected_algorithmic_failures_confirmed": 16
+};

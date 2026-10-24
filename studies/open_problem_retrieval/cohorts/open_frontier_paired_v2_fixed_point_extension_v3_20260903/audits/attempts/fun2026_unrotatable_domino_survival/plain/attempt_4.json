@@ -1,0 +1,153 @@
+{
+  "record_id": "fun2026_unrotatable_domino_survival",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 4,
+  "parent_sha256": "154a03db2a6826059e2729bca92092344686b7ffd7f6e3da19e2a59b2b832a5c",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Finite-sequence survival with unrotatable dominoes is in NP.",
+      "claim_sha256": "e6a8180a85fb805d46fbcbc9e16c9b30ee69fea88b895e18fa5389149e3e9d12",
+      "verdict": "VERIFIED",
+      "evidence": "For an explicitly represented board and sequence, certify one locking translation per piece. From each reconstructed board, the collision-free translations of the fixed-orientation domino form a polynomial-size graph with left, right, and down edges. BFS verifies reachability from the prescribed spawn; the verifier then checks downward blocking, the source loss conditions, insertion, and deterministic line deletion. Any reachable translation has a simple path, so no exponentially long movement transcript is needed. Repeating this polynomial computation for all listed pieces is a sound and complete NP verifier.",
+      "witness": "A certificate is the sequence of n locking translations; BFS reconstructs a legal movement path for every accepted translation.",
+      "search_method": "Constructed the verifier directly and checked certificate size, movement cycles, lock legality, loss testing, and deterministic updates.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 1,
+      "claim": "Finite-sequence unrotatable-domino survival is exactly reachability in a finite layered acyclic graph: layer i consists of settled board masks obtainable after the first i prescribed pieces, and an edge represents one source-legal, nonlosing placement and its deterministic row-deletion result.",
+      "claim_sha256": "7a3afe643f647e66a7c594cf7b3b63c4eaf08bff93590b1dd317994d3d021f51",
+      "verdict": "VERIFIED",
+      "evidence": "For each layer-i mask, enumerate the next fixed-orientation domino's reachable, downward-blocked translations and retain precisely the nonlosing locks, mapping each through deterministic simultaneous row deletion. A surviving play yields one such edge per piece. Conversely, each edge includes a reachable legal lock witness; induction on the layer reconstructs a surviving play with exactly the recorded masks. The layer index prevents cycles, and under the stated rules no history beyond sequence position and settled occupancy affects future moves.",
+      "witness": "The two directions are play prefix to layered path, and layered path plus edge movement witnesses to play prefix.",
+      "search_method": "Proved both directions by induction and checked for omitted state such as orientation, active-piece position, or history-dependent effects.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 2,
+      "claim": "If A=WH is the explicit board area, the layered-graph reformulation gives an exact deterministic 2^{O(A)}poly(n,A)-time and 2^{O(A)}poly(A)-space algorithm; therefore finite-sequence survival is fixed-parameter tractable when parameterized by board area.",
+      "claim_sha256": "c37b9a18f51c7465662eb1ab36246b9da162cb2b732521aea30a5c7d3fa47984",
+      "verdict": "VERIFIED",
+      "evidence": "There are at most 2^A settled masks in any layer. For each mask, the bounded translation graph and all possible locks have polynomial size in A, and each update costs polynomial time. Deduplicating successors while retaining only the current and next layers gives 2^{O(A)}poly(n,A) time and 2^{O(A)}poly(A) working space. Claim 1 supplies exactness. This is an FPT algorithm with parameter A, not a polynomial-time algorithm for unrestricted A.",
+      "witness": "Dynamic programming over at most 2^A masks per sequence layer.",
+      "search_method": "Counted masks, translations, successors, update cost, and two-layer storage; separately checked the parameterized-complexity conclusion.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 3,
+      "claim": "For odd board width W, let q be the number of initial rows whose maximal initially empty intervals all have even length. Every surviving play prefix containing V vertical dominoes and deleting R rows satisfies R≤q+2V; the odd-width hypothesis is essential.",
+      "claim_sha256": "0837aa3d853e06eebe71c73000226f6c67d2863b5f782a3cf56b7957dd32e480",
+      "verdict": "VERIFIED",
+      "evidence": "Track rows as persistent tokens. An initial token deleted without ever receiving a vertical cell must have every original empty interval tiled by horizontal dominoes, so it is among the q eligible tokens. A newly introduced empty token has odd width and cannot become full using only two-cell horizontal contributions. Thus every other deleted token contains a vertical-domino cell. Charging it to one such cell is injective because cells remain in their row token until that token is deleted; V vertical dominoes supply only 2V cells. Hence R≤q+2V. For even W=2, repeatedly clearing an empty board with horizontal dominoes gives unbounded R with V=0 and fixed q.",
+      "witness": "The injective charge from non-q row deletions to the 2V vertical cells; width-two horizontal repetition witnesses necessity of odd width.",
+      "search_method": "Proved the row-token invariant symbolically and exhaustively tested stronger floating-placement over-approximations on small boards.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Let c_i=Σ_j floor(ℓ_i,j/2), where the ℓ_i,j are the maximal initially empty interval lengths in initial row i, let C=Σ_i c_i, and let f=floor(W/2). If a play prefix places X horizontal dominoes and deletes R rows, then X≤C+fR.",
+      "claim_sha256": "3bb2cd52c13ab2332858b36fa8cf40d99561e92b633d7317db93220f2b8e887f",
+      "verdict": "VERIFIED",
+      "evidence": "Every horizontal domino belongs to one row token. Before initial token i is deleted, its original occupied cells remain barriers, so its horizontal dominoes form disjoint adjacent pairs within its original empty intervals and number at most c_i. Every deletion introduces one empty width-W token, and any such token can contain at most f disjoint horizontal dominoes before deletion or the prefix end. Summing C over initial tokens and f over the R introduced tokens proves X≤C+fR. Vertical cells can only consume or split available positions, never increase this matching capacity.",
+      "witness": "A token-by-token injection of horizontal dominoes into interval matchings of total capacity C+fR.",
+      "search_method": "Derived the matching-capacity bound without movement assumptions and exhaustively checked it under arbitrary unsupported placements, a strict over-approximation of legal play.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "For every odd W, define U=C+q floor(W/2). Every surviving prefix with X horizontal and V vertical dominoes satisfies X≤U+(W−1)V. For odd W≥3, equivalently V≥ceil(max(0,X−U)/(W−1)); hence any prescribed prefix violating this computable inequality makes the instance a NO-instance.",
+      "claim_sha256": "fdfae1a295e9619adb97accbec463e21e1667e118ea27339dcced7adc1c9a2fc",
+      "verdict": "VERIFIED",
+      "evidence": "Substituting Claim 3 into Claim 4 gives X≤C+f(q+2V). For odd W, 2f=W−1, so this is exactly X≤U+(W−1)V. For W≥3, rearrangement over integers gives the stated ceiling lower bound, with max(0,·) handling X≤U. Initial C and q and each prescribed prefix's orientation counts are computable in polynomial time. Since survival of the whole sequence implies survival of every prefix, a violation certifies a NO-instance.",
+      "witness": "The exact substitution f=(W−1)/2 into X≤C+fR and R≤q+2V.",
+      "search_method": "Checked the algebra, integer rounding, W=1 exclusion from division, prefix quantifier, and exhaustive small-board states.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "The coefficients in the odd-width obstruction are asymptotically sharp: for every odd W≥3, an empty board of height at least four survives the infinite periodic orientation sequence consisting of W−1 horizontal dominoes followed by one vertical domino, with each period restoring the empty board.",
+      "claim_sha256": "1b7fcc73e078fed92751ca184d7f0c4b51334c519408d7a5bd94d4238af82165",
+      "verdict": "VERIFIED",
+      "evidence": "Write W=2f+1. Put f horizontal dominoes across columns 1 through W−1 in the bottom row and f more directly above them. The bottom two rows then lack only column W. A vertical domino in that column completes both rows; both delete and the empty board returns. All locks lie in the bottom two rows, while H≥4 leaves a two-row movement/spawn corridor. Repetition gives R=2V and X=(W−1)V up to the fixed initial U additive term, so any smaller coefficients fail for sufficiently many periods.",
+      "witness": "The explicit repeatable block of 2f=W−1 horizontal placements followed by one vertical placement.",
+      "search_method": "Verified the general construction geometrically and executed three exact periods for every odd width 3 through 21.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "For row-parallel unrotatable dominoes on an odd-width board, there is a computable linear-size upper bound on the number of pieces that can ever survive.",
+      "claim_sha256": "d7ae78cb56d31103aeaf299e7701ddb9e4b8e11fcd8e8554ce5f68210d59ebd2",
+      "verdict": "VERIFIED",
+      "evidence": "With horizontal pieces only, an initial row token receives at most c_i pieces and can delete only if all its original empty intervals are even, so at most q initial tokens delete. Every resulting new empty token has odd width and even occupancy after every horizontal placement, hence cannot become full and receives at most f pieces. Therefore the total is at most U=C+qf. Since C≤Hf and q≤H, U≤2Hf=H(W−1), linear in the explicitly represented WH-cell board; C and q are computable by one scan.",
+      "witness": "The explicit upper bound U=C+q floor(W/2)≤H(W−1).",
+      "search_method": "Proved finiteness by token capacity and parity, then exhaustively enumerated all horizontal placements for 1,518 small stable odd-width boards.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 8,
+      "claim": "On an even-width board, two initially empty top rows suffice for survival of arbitrarily many row-parallel unrotatable dominoes.",
+      "claim_sha256": "af40317e11204ffdea0925d134e338dcd1e4c09a6fcb7c55c1ce6ee8b004eceb",
+      "verdict": "VERIFIED",
+      "evidence": "Partition the even-width board into adjacent column pairs. Straight-dropping once into a pair lands immediately above that pair's greater column height and makes its two heights equal. If a row clears, the previously empty top row shifts down and a new empty top row appears, restoring two empty top rows; restart. Otherwise, after visiting all pairs, raise every lower pair to the maximum pair height T. Every lock remains below the top row, and once all pair tops reach T, row T is full and clears. If restarts occur forever, infinitely many pieces already survive; otherwise each finite phase reaches its guaranteed clear. Thus the strategy survives arbitrarily long.",
+      "witness": "The pair-height equalization strategy, with every early clear serving as a successful restart.",
+      "search_method": "Proved phase termination and spawn clearance, and exhaustively ran a phase on 7,770 stable boards of widths 2, 4, and 6.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 9,
+      "claim": "On an initially empty odd-width W×H board, a row-parallel unrotatable-domino play has no row clears and can survive at most H floor(W/2) pieces; this upper bound need not be attained.",
+      "claim_sha256": "5fefd9c3ba69c57515cc5f58c724023b4707275d2db8612a5fccb599932f41d0",
+      "verdict": "VERIFIED",
+      "evidence": "Before a first deletion, every row's occupancy begins at zero and changes by two per horizontal lock. A full odd-width row has odd occupancy, so no first deletion can occur. Consequently each of H rows contains at most floor(W/2) disjoint dominoes. Nonattainment is witnessed by the empty 3×2 board: after one safe bottom lock, either horizontal position for the second piece is blocked from descending by the occupied middle column and must lock in the top row, intersecting either possible adjacent spawn pair and losing. Thus its maximum is 1 although the capacity bound is 2.",
+      "witness": "The empty 3×2 board has exact safe maximum 1 versus capacity 2.",
+      "search_method": "Used the first-clear parity argument and exact left/right/down reachability checks for both possible width-three spawn pairs.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 10,
+      "claim": "The row-capacity bound is not sufficient, and clearing one row does not guarantee indefinite unrotatable-domino survival.",
+      "claim_sha256": "954bd75032cb1d80a404aa71e8c70a3a7bf58be6632f7972cd13fa5d661ad598",
+      "verdict": "VERIFIED",
+      "evidence": "For the 3×3 board top/middle/bottom = .../.#./..., C=U=2, but every horizontal position includes the obstructed middle column; the first piece therefore locks in the top row and loses by spawn intersection. Hence satisfying the capacity inequality does not imply survival. For the 3×2 board .../..#, placing a horizontal domino in the two bottom empty cells clears that row and leaves the empty board. Claim 9 then permits exactly one further safe horizontal placement, so the total maximum is 2 despite an achieved clear.",
+      "witness": "Exact counterexamples .../.#./... for insufficiency and .../..# for clear-once-but-not-forever.",
+      "search_method": "Recomputed C, q, and U and exhaustively searched legal horizontal movement for both possible width-three spawn pairs.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 11,
+      "claim": "On a stable two-column board, a straight-dropped horizontal domino clears its landing row and restores the identical board; a vertical domino straight-dropped in a column of minimum occupied height leaves, after line clears, height at most max(h,2), where h was the prior height.",
+      "claim_sha256": "17f6819faddd96ba614386fc382ec59bf99711f3e54a4fe91fa1df7093e96ff5",
+      "verdict": "VERIFIED",
+      "evidence": "For any feasible named drop, let the column heights be h_L,h_R. A horizontal domino lands at row max(h_L,h_R)+1, spans both columns, clears that new full row, and leaves every old cell unchanged. For a vertical drop choose minimum height a and let the other be b. Stability excludes a=b>0. If both are zero, the new height is 2. If b≥a+2, the new cells do not exceed b. If b=a+1, the lower new cell completes row b; its deletion shifts the upper cell down to b. Thus post-clear height is at most max(h,2). Board-boundary feasibility is not asserted by this transition lemma and is supplied explicitly in Claim 12.",
+      "witness": "The exhaustive cases a=b=0, b≥a+2, and b=a+1.",
+      "search_method": "Proved the height cases exactly and checked 1,092 feasible horizontal and 2,548 feasible vertical transitions on stable boards through height seven.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    },
+    {
+      "idx": 12,
+      "claim": "Every stable two-column board of height at least five whose top three rows are empty survives every prescribed finite—and indeed infinite—sequence of unrotatable horizontal and vertical dominoes.",
+      "claim_sha256": "3fe72bbb18703344efd9b63758f90f381dde41b114b7b888bfc1ff6c1957cf0c",
+      "verdict": "VERIFIED",
+      "evidence": "Let h_0 be initial height and B=max(h_0,2); three empty top rows and H≥5 give B≤H−3. Use the state-restoring straight drop for each horizontal piece and the minimum-height-column drop for each vertical piece. Claim 11 inductively keeps every settled state's height at most B. Each transient lock reaches at most row B+1≤H−2, leaving the top two spawn rows clear, and the target column is reachable by translating within that empty corridor. Thus every placement is legal and nonlosing, and the invariant is restored after every piece. The induction is independent of sequence length, so it covers arbitrary finite and infinite prescribed sequences.",
+      "witness": "The invariant settled height ≤B with transient height ≤B+1 and two clear spawn rows.",
+      "search_method": "Proved the invariant for both orientations and exhaustively closed the strategy from 360 eligible initial boards through height eight, visiting 1,758 states.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_unrotatable_domino_survival/audit/plain/attempt_4/audit_domino_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The source target asks for a full computational-complexity classification of unrestricted finite-sequence survival with unrotatable dominoes. The draft correctly proves NP membership, an exact exponential/FPT-by-area algorithm, necessary odd-width inequalities, and several restricted-board constructions and counterexamples. It explicitly proves neither a polynomial-time algorithm nor NP-hardness for unrestricted board area, and its final writeup says so. These are material, correct advances but do not resolve the entire target; the draft's PARTIAL resolution label is therefore accurate.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json as evidence inputs and used no web, retrieval database, treatment receipt, other arm, prior-run file, or other solution.",
+    "Confirmed /evidence/parent.json SHA-256 is 154a03db2a6826059e2729bca92092344686b7ffd7f6e3da19e2a59b2b832a5c.",
+    "Recomputed all 13 claim SHA-256 bindings from the parent claim text; every supplied binding matched.",
+    "Independently proved the NP verifier, both directions of layered reachability, state-counting bounds, row-token charging, interval capacities, parity obstructions, pair-leveling strategy, and two-column height invariant.",
+    "Created and ran /work/audit_domino_checker.py (SHA-256 52e72b0a5d5eea77abf4994fdc591b24a64e1989e2631491c290111d3cf18568). It checked 278,467 prefix states and 476,054 abstract-placement transitions, 18,012 horizontal odd-width states, both spawn choices for all three-column witnesses, odd periodic constructions through width 21, 7,770 even-width boards, and 1,758 two-column strategy states; all exact checks passed.",
+    "The checker deliberately allowed unsupported placements for Claims 3–5 and 7, producing a stronger over-approximation for those movement-independent inequalities; the general verdicts rest on the accompanying symbolic proofs, not finite testing alone."
+  ]
+}

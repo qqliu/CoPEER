@@ -1,0 +1,25 @@
+analysisWe need to locate a false assertion. Look at the problem: degree of each vertex in L exactly n^{3/4}. In random model they pick for each vertex in L exactly n^{3/4} neighbors uniformly at random with replacement. That's okay (multiple edges allowed but treated as single). However, they claim probability that a fixed vertex u in R is connected to v is n^{3/4} / n = n^{-1/4}. That's correct. Then they compute expected degree n * n^{-1/4} = n^{3/4}. Good.
+
+But later they claim Chernoff bound: P(deg(u) ≥ (1+δ)n^{3/4}) ≤ exp(-δ^2 n^{3/4} / (2+δ)). That's plausible for sum of independent Bernoulli with p=n^{-1/4}. However, note that the variables are not independent because they allow replacement: each vertex in L chooses n^{3/4} neighbors with replacement, meaning for each v in L, they have n^{3/4} independent draws (with replacement) from R. However they treat each v as a single trial: X_{v,u}=1 if v is connected to u (i.e., at least one of its draws hits u). Those X_{v,u} are not independent across v? Actually each vertex v's draws are independent of other vertices, so X_{v,u} across different v are independent (since each v's draws are independent). So okay.
+
+Potential false assertion: In Step 3 they compute probability that a fixed vertex v ∈ S has no neighbors in T: they claim = (1 - |T|/n)^{n^{3/4}} = (1 - n^{-1/4})^{n^{3/4}} ≤ exp(-n^{3/4}·n^{-1/4}) = exp(-n^{1/2}). That's fine.
+
+Then they claim probability that no vertex in S has a neighbor in T is at most exp(-n^{3/4}· n^{1/2}) = exp(-n^{5/4}). Wait they multiply exponent? Actually they raise to power |S| = n^{3/4}. So (exp(-n^{1/2}))^{n^{3/4}} = exp(-n^{1/2}· n^{3/4}) = exp(-n^{5/4}). That's correct.
+
+Now they count number of choices for S and T: binomial (n choose n^{3/4}) each. They bound each by (e n / k)^k where k=n^{3/4}. So each ≤ (e n^{1/4})^{n^{3/4}} = exp(n^{3/4} log(e n^{1/4})) = exp(n^{3/4}(1+ (1/4) log n)). They then claim ≤ exp(2 n^{3/4} log n). That's fine.
+
+Then probability that exists S,T with N(S) subset R\T ≤ (choose S)*(choose T)*exp(-n^{5/4}) ≤ exp(4 n^{3/4} log n - n^{5/4}) = o(1). Since exponent is -n^{5/4}+4 n^{3/4} log n. For large n, n^{5/4} dominates n^{3/4} log n, so exponent negative large. So fine.
+
+Potential false: The problem condition (ii) says degree of every vertex in R is bounded above by 3 n^{3/4}. But they only show with high probability that max degree ≤ 3 n^{3/4}. That's okay.
+
+But maybe the false assertion is earlier: they claim "each vertex in L is connected to exactly n^{3/4} vertices in R chosen uniformly at random with replacement." However, with replacement, a vertex may select the same neighbor multiple times, leading to degree less than n^{3/4} after merging multiple edges. The degree after merging could be less than n^{3/4}. They treat as exactly n^{3/4} distinct neighbors, but with replacement they might get repeats, so degree may be less. That violates condition (i) that each vertex in L has degree exactly n^{3/4}. So the assertion that the random model satisfies condition (i) is false. Which line? 0004 says "each vertex in L is connected to exactly n3/4 vertices in R chosen uniformly at random with replacement." That's the false assertion because with replacement you may have duplicates, so not exactly distinct. The claim that degree exactly n^{3/4} holds is false. So candidate line 0004.
+
+Alternatively line 0091 repeats: "Every vertex in L has degree exactly n3/4 (by construction)." That's also false due to replacement. So line 0091.
+
+Thus we can give candidates 0004, 0091. Provide claim: "Every vertex in L has degree exactly n^{3/4}." Counterexample: For n large, with replacement, probability of a duplicate neighbor for a given vertex is non-zero; e.g., n=16, each vertex picks 4 neighbors with replacement; could pick same neighbor twice, resulting degree <4. So false.
+
+Provide JSON.assistantfinal{
+  "candidates": [0004, 0091],
+  "claim": "Every vertex in L has degree exactly n^{3/4} (by construction).",
+  "counterexample": "When neighbors are chosen with replacement, a vertex may select the same neighbor multiple times, so its degree can be less than n^{3/4}; for example, with n=16 each vertex picks 4 neighbors with replacement and could pick the same neighbor twice, giving degree <4."
+}

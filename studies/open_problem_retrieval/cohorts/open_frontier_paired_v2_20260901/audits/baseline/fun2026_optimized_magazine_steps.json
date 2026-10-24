@@ -1,0 +1,79 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "BASELINE_AUDIT",
+  "arm": "neutral",
+  "iteration": 0,
+  "parent_sha256": "0387050faddab98d6aa52e4ebbf535d3a0459af28363792001109d386ba0ba9d",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The optimized algorithm’s complexity is Θ(n+M), where M=Σ_t d(p_t), d counts descents, and p_{t+1}=reverse(D(p_t)) followed by U(p_t).",
+      "claim_sha256": "21ca77a61a4a201b0aabca7d9aa64b8294c1d8c6b13f8fef4e31bd486aca0fdc",
+      "verdict": "REFUTED",
+      "evidence": "The transition formula is correct for ordinary mark-all-then-MoveToFront sorting, but not for the source’s literal optimized FIFO pseudocode. That pseudocode PushBacks newly discovered marks and later PopFronts them, so their order can differ from left-to-right shelf order. On the witness, T uses the second-round order (2,1) and sorts, while the optimized queue contains (1,2) and leaves (2,1,3,4,5,6). Thus the claimed orbit, and hence M as defined from that orbit, is not the optimized algorithm’s orbit. The ordinary T orbit takes 5 moves in 2 rounds; the literal optimized algorithm takes 6 moves in 3 rounds.",
+      "witness": "p=(4,1,5,2,6,3): after round 1 the state is (3,2,1,4,5,6), but the optimized next queue is (1,2); its round-2 state is (2,1,3,4,5,6), whereas T gives (1,2,3,4,5,6).",
+      "search_method": "Implemented independent exact versions of T, ordinary mark-then-MoveToFront, the source-literal optimized queue algorithm, and an array-backed linked-list version; cross-checked them and exhaustively tested every permutation through n=9.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_optimized_magazine_steps/audit-baseline/exact_audit_checker.cpp"
+    },
+    {
+      "idx": 1,
+      "claim": "There is an exact phase decomposition that isolates the unresolved cost.",
+      "claim_sha256": "6858373dfd4a652ea50332c604ca51909f9738dc94ab555b1ced2a3ebbe05c0d",
+      "verdict": "VERIFIED",
+      "evidence": "Let i be the largest unfixed value. All larger values form a permanent fixed suffix, so i lies strictly before position i and cannot be a descent bottom. In a round, moving a descent bottom left of i causes one left shift when removed and one right shift when prepended, for net zero; moving one right of i shifts i right exactly once. Hence its position increases by q_t. When the phase ends at position i, Σq_t=i−s_i. Since every moved element lies either left or right of i, the phase move cost is exactly (i−s_i)+Σℓ_t. This argument is independent of the order in which the marked set is processed. The checker additionally verified the identities on every orbit through n=9 under both T and the source-literal optimized process.",
+      "witness": "none",
+      "search_method": "Completed a direct position-invariant proof and exhaustively checked active-value position increments, phase sums, marked sets, and costs for all permutations of sizes at most 9 under both transition models.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_optimized_magazine_steps/audit-baseline/exact_audit_checker.cpp"
+    },
+    {
+      "idx": 2,
+      "claim": "The worst-case lower bound improves rigorously to Ω(n^{3/2}); indeed one explicit family incurs (4√2/3+o(1))n^{3/2} moves before its largest element is fixed.",
+      "claim_sha256": "4778f6909ca2a43b54e3222eda1ef01fce33dff898dc92cd1ccf57d6ef381e8c",
+      "verdict": "REFUTED",
+      "evidence": "The staircase calculation concerns the ordinary transition T, not the source’s optimized FIFO process. The claimed family reduction already fails at its third boundary: for P_6, T gives prefix F_3=(3,1,2), but the optimized algorithm gives (1,3,2). Therefore the asserted state identity F_m,n,m+1,… and the summation derived from it do not prove a lower bound or the stated coefficient for the requested optimized algorithm. Exact checks found the staircase descent formula valid for the abstract T system through m=10000, reinforcing that the flaw is the invalid transfer between algorithms, not a finite failure of that auxiliary recurrence.",
+      "witness": "P_6=(6,1,2,3,4,5): after three rounds T is (3,1,2,6,4,5), while the source-literal optimized algorithm is (1,3,2,6,4,5).",
+      "search_method": "Compared the claimed P_n/T prefix recurrence round-by-round against a literal execution of the optimized PushBack/PopFront pseudocode, and separately checked the abstract T staircase with exact integers.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_optimized_magazine_steps/audit-baseline/exact_audit_checker.cpp"
+    },
+    {
+      "idx": 3,
+      "claim": "For n≤9, the exact maximum numbers of moves are 0,1,3,7,13,21,33,47,63.",
+      "claim_sha256": "09b77c4a8d8ad282df9eb26baa3f971e9a04c9b24e5e0092db0224a0d82a9978",
+      "verdict": "REFUTED",
+      "evidence": "Complete enumeration shows that this sequence is exactly the maximum for ordinary T, but not for the source-literal optimized algorithm. Its exact maxima for n=1,…,9 are 0,1,3,6,11,18,27,38,53. The discrepancy begins at n=4, where the claimed maximum is 7 but exhaustive optimized execution gives 6.",
+      "witness": "n=4: all 24 permutations were enumerated; the source-literal optimized maximum is 6, attained by (4,1,2,3), rather than the claimed 7.",
+      "search_method": "Enumerated every permutation for n≤9 and iterated each to termination using two cross-checked exact implementations of the optimized pseudocode; separately enumerated T to identify the source of the claimed sequence.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_optimized_magazine_steps/audit-baseline/exact_audit_checker.cpp"
+    },
+    {
+      "idx": 4,
+      "claim": "A natural twice-per-unordered-pair charging bound is false.",
+      "claim_sha256": "1cb54922560e1958c2279d81ee0041ae17d2ae915b39d49e9ef38ffdb67738d7",
+      "verdict": "VERIFIED",
+      "evidence": "For the source-literal optimized process, the even-then-odd permutation of size 4096 makes exactly 49,545,006 moves, exceeding 2·binom(4096,2)=16,773,120. Thus no charging proof assigning at most two moves to every unordered pair can bound all executions. The draft’s quoted 50,546,772 count and its P_13 count of 161 belong to T; literal optimized P_13 makes 97 moves. Those numerical mismatches do not invalidate the weaker listed claim because the corrected size-4096 count remains a decisive counterexample.",
+      "witness": "p=(2,4,…,4096,1,3,…,4095): the source-literal optimized algorithm makes 49,545,006 moves, while 2·binom(4096,2)=16,773,120.",
+      "search_method": "Ran an exact array-backed doubly-linked-list simulation, cross-validated against a vector implementation on every permutation through n=9, and compared the integer move total with the exact pair threshold.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_optimized_magazine_steps/audit-baseline/exact_audit_checker.cpp"
+    }
+  ],
+  "confirmed_refutations": [
+    0,
+    2,
+    3
+  ],
+  "target_verdict": "OVERCLAIMED",
+  "claimed_resolution_verdict": "OVERSTATED",
+  "target_evidence": "The exact target requests an asymptotically tight worst-case complexity. Even on its own terms, the draft leaves an unmatched Ω(n^{3/2})–O(n^3) interval and therefore could only be partial. More importantly, its headline claim that this interval is certified is not established for the requested optimized algorithm: the draft analyzes the ordinary transition T, while the source’s PushBack/PopFront optimized pseudocode follows different states and has different finite maxima. The phase decomposition and the failure of a twice-per-pair charging approach survive as valid structural progress, but neither supplies an improved asymptotic bound. Consequently the final writeup overclaims target coverage, and claimed_resolution=PARTIAL is overstated because its advertised partial resolution is the invalid Ω(n^{3/2}) transfer.",
+  "overall": "REFUTED",
+  "checks_performed": [
+    "Read only the authorized source input and baseline draft; used no web, retrieval database, prior run, receipt, or verification report.",
+    "Derived the ordinary mark-all-then-MoveToFront transition symbolically and compared it with the source-literal optimized queue semantics.",
+    "Implemented independent exact T, ordinary-move, optimized-vector, and optimized-linked-list simulators without floating-point decisions.",
+    "Exhaustively enumerated all 409,113 permutations of sizes at most 9 under both T and the literal optimized algorithm.",
+    "Verified the phase-position and phase-cost identities on all enumerated orbits under both models.",
+    "Checked the abstract staircase descent formula through m=10000 and the P_n/T prefix identity through n=300.",
+    "Reproduced T’s P_13 and size-4096 counts, then recomputed both witnesses under the literal optimized algorithm.",
+    "Confirmed the corrected size-4096 optimized witness exceeds the exact twice-per-pair threshold."
+  ]
+}

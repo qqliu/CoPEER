@@ -1,0 +1,43 @@
+\section{Claims, Counterexamples, and Proofs of Error}
+\label{sec:evidence}
+\label{sec:methods}
+
+When a critic challenges a step in a proof with a counterexample, two distinct questions arise: is the counterexample mathematically valid as formalized, and does that formal statement represent the claim in the source? Together, a formal counterexample checked by Lean and a justified answer to the second question form a \emph{proof of error}.
+
+\subsection{Claims and their assumptions}
+Let $s$ denote a selected assertion within a surrounding argument, $X_s$ its domain of objects, $A_s(x)$ the assumptions in force at that point, and $C_s(x)$ the claimed conclusion. The assertion has the form
+\begin{equation}
+Q_s:\quad \forall x\in X_s,\quad A_s(x)\Rightarrow C_s(x).
+\label{eq:source-claim}
+\end{equation}
+Here $A_s(x)$ collects both the hypotheses inherited from the surrounding argument and any temporary assumptions of the current case. To check a single inference conditionally, one can include earlier assertions of the proof inside $A_s(x)$ and place the new step's conclusion in $C_s(x)$, without proving that those earlier assertions hold. Refuting an assertion under the proof's justified assumptions therefore requires separating those assumptions from intermediate claims that still await proof.
+
+For example, consider an attempted proof that every real-valued function on a domain closed under negation is the sum of an even function and an odd function (one of the 100 texts in our localization benchmark; see Figure~\ref{fig:benchmark-example}). The theorem is true, yet the argument asserts the intermediate identity $f(x)=f(-x)+(-f(x))$. On $\mathbb{R}$, the constant function $f\equiv 1$ satisfies the domain assumption and reduces this identity to $1=0$. That single function refutes the step, while the theorem itself holds via the decomposition $f(x)=[f(x)+f(-x)]/2+[f(x)-f(-x)]/2$, whose two summands are even and odd, as exchanging $x$ and $-x$ verifies.
+
+\subsection{Counterexamples and the scope of a refutation}
+A \emph{counterexample} to $Q_s$ is an object $u\in X_s$ satisfying $A_s(u)\wedge\neg C_s(u)$. Both parts are required: an object that violates $A_s(u)$ says nothing about the assertion. In the decomposition example above, $A_s$ requires only a real-valued function on a domain closed under negation. Evenness and oddness are properties required of the desired summands, not hypotheses on $f$, so $f\equiv 1$ is a valid counterexample to the intermediate identity.
+
+By contrast, a proposed witness can exhibit the claimed failure while violating one of the source's assumptions. In a Shellsort argument examined in Section~\ref{app:matched-admission-pairs}, the source assumes that a list's first entry is smaller than its last. Under that assumption, it claims that if the first gap-$m$ insertion swaps the first entry with the entry $m$ positions later, that later entry remains first in the final $m$-sorted list. For $m=2$, both $(3,4,2,5,1)$ and $(3,5,2,6,1,7,4)$ first swap $3$ and $2$ and later move $1$ to the front (giving $(1,5,2,6,3,7,4)$ for the second list). Both contradict the predicted first entry $2$, but the five-element list violates the endpoint assumption ($3>1$), whereas the seven-element replacement satisfies it ($3<4$) and is a valid counterexample.
+
+The \emph{scope} of an objection states what the counterexample refutes. Following \citet{lakatos1976proofs}, a \emph{local refutation} falsifies an intermediate assertion, whereas a \emph{global refutation} falsifies the main theorem or conjecture; a single example can do either or both. In the decomposition proof, $f\equiv 1$ is a local refutation of the intermediate identity, not a global refutation of the theorem. Counterexamples expose false assertions; a proof step that is true as stated but lacks justification calls for a different kind of objection.
+
+\subsection{Formal certificates and source correspondence}
+Each dossier expresses its counterexample and the challenged assertion in Lean, using hats to distinguish the formal encoding from the source mathematics. Here $\widehat X$ is the Lean type representing the domain $X_s$, and $\widehat A$ and $\widehat C$ are the formal predicates encoding the assumptions $A_s$ and conclusion $C_s$. For a counterexample $w$ expressed in Lean, a \emph{formal certificate} is a proof $\pi$ checked by Lean's kernel that
+\begin{equation}
+\widehat A(w)\ \wedge\ \neg\widehat C(w).
+\label{eq:formal-witness}
+\end{equation}
+Checking $\pi$ proves that $w$ satisfies $\widehat A$ and violates $\widehat C$ under the definitions and proof dependencies used, but it does not check whether $\widehat A$ and $\widehat C$ faithfully represent the original assertion $Q_s$.
+
+We call that relationship \emph{source correspondence}: whether the formal statement represents the claim in the source. Let $e:\widehat X\to X_s$ interpret Lean objects as source objects, so that $e(w)$ is the source-level object represented by $w$ (for instance, a Lean list representing an informal sequence of integers; $e$ need not be implemented in Lean). To conclude that $e(w)$ refutes the source assertion $Q_s$, two implications must hold at the witness $w$:
+\begin{equation}
+\widehat A(w)\Rightarrow A_s(e(w)),\qquad
+C_s(e(w))\Rightarrow\widehat C(w).
+\label{eq:transport}
+\end{equation}
+The first requires that satisfying the encoded assumptions suffices for the source assumptions at $e(w)$. The second requires that if the source conclusion held for $e(w)$, the encoded conclusion $\widehat C(w)$ would also hold; because the certificate proves $\neg\widehat C(w)$, it follows that the source conclusion is false. Together, the certificate~\eqref{eq:formal-witness} and the two implications~\eqref{eq:transport} give $A_s(e(w))\wedge\neg C_s(e(w))$, a counterexample to the original assertion (Proposition~\ref{prop:transport}). Only these two one-way implications at the witness $w$ are needed, not equivalence of the formal and informal predicates across the entire domain.
+
+In Co-PEER, separate model reviewers assess whether the encoding and its interpretation justify Equation~\eqref{eq:transport}. In the Shellsort example, the first list $(3,4,2,5,1)$ has a proof checked by Lean, yet the first implication $\widehat A(w)\Rightarrow A_s(e(w))$ fails when the formal premise $\widehat A$ omits the source's endpoint assumption. A positive review of source correspondence is an interpretive judgment, separate from Lean's kernel check, and is not itself a formal proof. When a review finds a missing assumption or a mismatched interpretation, the encoding and counterexample are revised to match what the source states. Revising the encoding to match the source is distinct from modifying the source claim itself to repair the mathematical error, which requires its own proof.
+
+\subsection{What a proof of error establishes}
+A \emph{proof of error} combines a formal certificate~\eqref{eq:formal-witness} with a justified account of source correspondence~\eqref{eq:transport} and an explicit statement of scope (whether the refutation is local, global, or both). It establishes that the named assertion in the source fails under its stated assumptions. It does not establish that a proposed correction works; a repaired claim requires its own proof. Nor does failure to find a counterexample establish that a claim is true. An exhaustive search verifies the claim only over the finite domain checked, and extending that conclusion requires a further argument that those cases cover the full claim. Section~\ref{sec:resource} describes how Co-PEER constructs these objects and how BugBank preserves them.

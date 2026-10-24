@@ -1,0 +1,203 @@
+# Record E10: Adjacency powers: which matrix certifies connectivity
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E10 (SE_math_994847__q)
+public source: https://math.stackexchange.com/questions/994847/adjacency-matrix-and-connectivity-proof
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Adjacency matrix and connectivity proof
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Let $G$ be graph on $n$ vertices, $A$ its adjacency matrix, and $I_{n}$ the $n\times n$ identity matrix. Prove that $G$ is connected iff the matrix $(I_{n} + A)^{n-1}$ has no 0s.
+0002 | 
+0003 | My proof:
+0004 | 
+0005 | *If the graph is connected the matrix $(I_{n} + A)^{n-1}$ has no 0s.*
+0006 | 
+0007 | The identity matrix  takes care of the non-zero values for the diagonal (otherwise the diagonals would be 0 since self-loops are disallowed in simple graphs).
+0008 | If the graph is connected there must exist a path between any two vertices $u,v \in G$. $A^{n-1}_{i,j}$ represents the number of paths of length $n-1$ between any two vertices. If any $A^{n-1}_{i,j}$ would be 0, that would mean that there would not be any path connecting those vertices. Thus, the graph would be disconnected. But we assumed that it was connected
+0009 | 
+0010 | *If the matrix $(I_{n} + A)^{n-1}$ has no 0s then G is connected*
+0011 | 
+0012 | If every $(I_{n} + A)^{n-1}$ is non-zero this means that there exists at least one path of length $n - 1$ between any two vertices. If this is the case, the graph must be connected.
+0013 | 
+0014 | Is this correct?
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+If any $A^{n-1}_{i,j}$ would be 0, that would mean that there would not be any path connecting those vertices. Thus, the graph would be disconnected.
+located at line label(s): 0008
+
+## Located defective declaration
+
+Declaration: `SE_math_994847_q.LocalClaimEntrywise G / SE_math_994847_q.LocalClaim G (universally SE_math_994847_q.UniversalLocalClaimEntrywise / SE_math_994847_q.UniversalLocalClaim)`
+
+```lean
+def LocalClaimEntrywise : Prop :=
+  ∀ i j : V, (G.adjMatrix ℕ ^ (Fintype.card V - 1)) i j = 0 → ¬ G.Reachable i j
+def LocalClaim : Prop := HasZeroEntry G → ¬ G.Connected
+```
+
+The source (stored source line 0008) argues that a zero entry of A^(n-1) means the two vertices are not connected by a path, so the graph is disconnected. Read over every finite simple graph (matrices over ℕ, entries counting walks) this entrywise statement is the located defect. Supply the corrected matrix criterion, prove the corrected entrywise statement for every finite simple graph, show the criterion is not constant, and prove the source's theorem (line 0001) with the corrected criterion: on a nonempty vertex set G is connected iff the criterion has no zero entry.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/-
+Record SE_math_994847__q (E10).
+
+Source: A is the adjacency matrix of a finite simple graph on n vertices.  Located claim:
+  "If any A^{n-1}_{i,j} would be 0, that would mean that there would not be any path
+   connecting those vertices.  Thus, the graph would be disconnected."
+`LocalClaimEntrywise G` is the entrywise reading, `LocalClaim G` the graph-level conclusion;
+both are read over every finite simple graph (`UniversalLocalClaim`,
+`UniversalLocalClaimEntrywise`).  Matrices are over ℕ (entries count walks).
+-/
+
+import Mathlib
+
+namespace SE_math_994847_q
+open Matrix
+
+section General
+
+variable {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
+
+/-- `A^(n-1)` has a zero entry, where `n` is the number of vertices. -/
+def HasZeroEntry : Prop :=
+  ∃ i j : V, (G.adjMatrix ℕ ^ (Fintype.card V - 1)) i j = 0
+
+/-- The source's local claim, entrywise reading: "If any `A^{n-1}_{i,j}` would be 0, that would
+mean that there would not be any path connecting those vertices." -/
+def LocalClaimEntrywise : Prop :=
+  ∀ i j : V, (G.adjMatrix ℕ ^ (Fintype.card V - 1)) i j = 0 → ¬ G.Reachable i j
+
+/-- The source's local claim, graph-level conclusion: "Thus, the graph would be disconnected." -/
+def LocalClaim : Prop := HasZeroEntry G → ¬ G.Connected
+
+end General
+
+/-- The graph-level claim over every finite simple graph. -/
+def UniversalLocalClaim : Prop :=
+  ∀ (V : Type) [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj], LocalClaim G
+
+/-- The entrywise claim over every finite simple graph. -/
+def UniversalLocalClaimEntrywise : Prop :=
+  ∀ (V : Type) [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj],
+    LocalClaimEntrywise G
+
+end SE_math_994847_q
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record SE_math_994847__q (E10): both readings of the located claim fail at the path
+0 - 1 - 2 on three vertices, whose adjacency matrix A has (A^2)_{0,1} = 0 although the
+graph is connected. -/
+namespace SE_math_994847_q
+open Matrix
+
+def A : Matrix (Fin 3) (Fin 3) ℕ := !![0,1,0; 1,0,1; 0,1,0]
+
+def sourceGraph : SimpleGraph (Fin 3) where
+ Adj i j := i ≠ j ∧ (i = 1 ∨ j = 1)
+ symm := fun i j h => ⟨h.1.symm, h.2.symm⟩
+ loopless := ⟨fun _ h => h.1 rfl⟩
+instance : DecidableRel sourceGraph.Adj := fun _ _ => inferInstanceAs (Decidable (_ ∧ _))
+
+theorem sourceGraph_connected : sourceGraph.Connected := by decide
+
+theorem sourceGraph_adjMatrix : sourceGraph.adjMatrix ℕ = A := by
+  funext i j
+  fin_cases i <;> fin_cases j <;> decide
+
+theorem square_entry_zero :
+    (sourceGraph.adjMatrix ℕ ^ (Fintype.card (Fin 3) - 1)) 0 1 = 0 := by
+  rw [Fintype.card_fin]
+  decide +kernel
+
+theorem sourceGraph_has_zero_entry : HasZeroEntry sourceGraph := ⟨0, 1, square_entry_zero⟩
+
+theorem local_claim_fails : ¬ LocalClaim sourceGraph :=
+  fun h => h sourceGraph_has_zero_entry sourceGraph_connected
+
+theorem entrywise_claim_fails : ¬ LocalClaimEntrywise sourceGraph :=
+  fun h => h 0 1 square_entry_zero (sourceGraph_connected.preconnected 0 1)
+
+theorem universal_local_claim_false : ¬ UniversalLocalClaim :=
+  fun h => local_claim_fails (h (Fin 3) sourceGraph)
+
+theorem universal_entrywise_claim_false : ¬ UniversalLocalClaimEntrywise :=
+  fun h => entrywise_claim_fails (h (Fin 3) sourceGraph)
+
+end SE_math_994847_q
+
+#print axioms SE_math_994847_q.square_entry_zero
+#print axioms SE_math_994847_q.universal_local_claim_false
+#print axioms SE_math_994847_q.universal_entrywise_claim_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E10: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace SE_math_994847_q
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected matrix criterion: a matrix over ℕ computed from the adjacency matrix `G.adjMatrix ℕ` and
+the vertex count `Fintype.card V`, whose zero entries certify unreachability (the source uses
+`G.adjMatrix ℕ ^ (Fintype.card V - 1)`). The hole must be a matrix expression in `G.adjMatrix ℕ` and
+`Fintype.card V` (powers, sums, `1`); it may not mention `Reachable`, `Connected`, `Walk`, `if`/`match`. -/
+def criterion {V : Type} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj] :
+    Matrix V V ℕ := «HOLE»
+
+/-- The corrected entrywise claim for every finite simple graph (shape fixed). -/
+def CorrectedEntrywise : Prop :=
+  ∀ (V : Type) [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj],
+    ∀ i j : V, criterion G i j = 0 → ¬ G.Reachable i j
+-- ===== END FIXED PART =====
+
+end SE_math_994847_q
+```
+
+Allowed edit: Replace the hole in `criterion` by a matrix expression in G.adjMatrix ℕ and Fintype.card V (powers, sums, 1; no Reachable/Connected/Walk, no if/match); nothing else in the fixed part may change. The conclusions (¬ Reachable, ¬ Connected), the quantification over all finite simple graphs with matrices over ℕ, and the Nonempty V convention of the target theorem are fixed; graphs may not be restricted (bipartite, specific n, off-diagonal only). Do not redefine HasZeroEntry, LocalClaimEntrywise, LocalClaim, UniversalLocalClaim or UniversalLocalClaimEntrywise; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): HasZeroEntry, LocalClaimEntrywise, LocalClaim, UniversalLocalClaim, UniversalLocalClaimEntrywise
+
+## OBLIGATIONS (exact names and statements, inside `namespace SE_math_994847_q`)
+
+```lean
+theorem repair_statement : ∀ (V : Type) [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj], ∀ i j : V, SE_math_994847_q.criterion G i j = 0 → ¬ G.Reachable i j
+```
+(universal: Universal: a zero entry of the corrected criterion certifies that the two vertices are not joined by a walk, for every finite simple graph.)
+
+```lean
+theorem repair_nonvacuous : SE_math_994847_q.criterion (⊥ : SimpleGraph (Fin 2)) 0 0 ≠ 0 ∧ SE_math_994847_q.criterion (⊥ : SimpleGraph (Fin 2)) 0 1 = 0
+```
+(nonvacuity: Non-vacuity: the criterion is not a constant matrix (on the edgeless graph with two vertices the diagonal entry is nonzero and the off-diagonal entry is zero).)
+
+```lean
+theorem final_theorem : ∀ (V : Type) [Fintype V] [DecidableEq V] [Nonempty V] (G : SimpleGraph V) [DecidableRel G.Adj], G.Connected ↔ ∀ i j : V, SE_math_994847_q.criterion G i j ≠ 0
+```
+(final: The source's theorem (stored source line 0001) with the corrected criterion: on a nonempty vertex set, `G` is connected iff the criterion has no zero entry. If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

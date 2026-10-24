@@ -1,0 +1,48 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "n_nonblank_text": 11,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": false
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/SE_cstheory_2312__a2318.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "We started with a graph whose edge weights had sum $T$, and added $f$ to the sum of the edge weights. Since $-.99T \\leq f \\leq -.49T$, we're O.K.",
+  "explanation": "The complete stored source construction has now been checked: for each of n-2 nondesignated vertices it adds two edges of weight -d, and it adds one edge of weight a. Its notation f=a-(n-2)d therefore makes the actual new total T+f-(n-2)d, not T+f. The original n=3,T=2,d=20,f=-1,a=19 witness has total -19 although the claimed value is 1, and f lies in the stipulated interval. For every n>=3 the discrepancy is (n-2)d; when d>(T+f)/(n-2), the new total is negative. This gives the documented unbounded family of accounting failures. The same witness survives the named restriction to simple weighted graphs: merging parallel edges gives weights 20,-19,-20, still totaling -19. Correcting the arithmetic identity to T+a-2(n-2)d repairs this local equality, but does not establish a valid approximation reduction or its positive-total premise.",
+  "flaw": "Line 0021 claims the reduced graph G* has edge-weight sum T + f (hence positive, satisfying the assumed algorithm's positive-sum precondition from line 0009). In fact the construction adds 2(n-2) edges of weight -d plus one edge of weight a, so the sum is T + a - 2(n-2)d = T + f - (n-2)d, which is negative for the required large d, so the reduction's output violates the precondition.",
+  "problem": "Max-cut with negative weight edges\n\nLet $G = (V, E, w)$ be a graph with weight function $w:E\\rightarrow \\mathbb{R}$. The max-cut problem is to find:\n$$\\arg\\max_{S \\subset V} \\sum_{(u,v) \\in E : u \\in S, v \\not \\in S}w(u,v)$$\nIf the weight function is non-negative (i.e. $w(e) \\geq 0$ for all $e \\in E$), then there are many extremely simple 2-approximations for max-cut. For example, we can:\n\n 1. Pick a random subset of vertices $S$.\n 2. Pick an ordering on the vertices, and greedily place each vertex $v$ in $S$ or $\\bar{S}$ to maximize the edges cut so far\n 3. Make local improvements: If there is any vertex in $S$ that can be moved to $\\bar{S}$ to increase the cut (or vice versa), make the move.\n\nThe standard analysis of all of these algorithms actually shows that the resulting cut is at least as large as $\\frac{1}{2}\\sum_{e \\in E}w(e)$, which is an upper bound on $1/2$ the weight of the max-cut if $w$ is non-negative -- but if some edges are allowed to have negative weight, is not!\n\nFor example, algorithm 1 (pick a random subset of vertices) can clearly fail on graphs with negative edge weights.\n\nMy question is:\n> Is there a simple combinatorial algorithm that gets an O(1) approximation to the max-cut problem on graphs that can have negative edge weights?\n\nTo avoid the possibly sticky issue of the max-cut taking value $0$, I will allow that $\\sum_{e \\in E}w(e) > 0$, and/or be satisfied with algorithms that result in small additive error in addition to a multiplicative factor approximation.",
+  "source_context": "0009 | Let's assume that we have an approximation algorithm which will give us a cut within a factor of 2 of OPT as long as the sum of all the edge weights are positive.\n0010 | \n0011 | As above, start with a graph $G$ with all non-negative weights on edges. We'll find a modified graph $G^* $ with some negative weights such that if we can approximate the max cut of $G^* $ within a factor of 2, we can approximate the max cut of $G$ very well.\n0012 | \n0013 | Choose two vertices $u$ and $v$, and hope that they're on opposite sides of the max cut. (You can repeat this for all possible $v$ to ensure that one try works.) Now, put a large negative weight $-d$ on all edges $(u,x)$ and $(v,x)$ for $x \\neq u,v$, and a large positive weight $a$ on edge $(u,v)$. Assume that the optimal cut has weight $OPT$.\n0014 | \n0015 | A cut with value $c$ in $G$, where vertices $u$ and $v$ are on the same side of the cut, now has value at $c - 2dm$ where $m$ is the number of vertices on the other side of the cut. A cut with $(u,v)$ on opposite sides with original value $c$ now has value $c + a - (n-2)d$. Thus, if we choose $d$ large enough, we can force all cuts with $u$ and $v$ on the same side to have negative value, so if there is any cut with positive value, then the optimal cut in $G^* $ will have $u$ and $v$ on opposite sides. Note that we are adding a fixed weight $(a - (n-2)d)$ to any cut with $u$ and $v$ on opposite sides. \n0016 | \n0017 | Let $f=(a - (n-2)d)$. Choose $a$ so that $f \\approx - 0.98 OPT$ (we'll justify this later). A cut with weight $c$ in $G$ having $u$ and $v$ on opposite sides now becomes a cut with weight $c - 0.98 OPT$. This means the optimal cut in $G^* $ has weight $0.02 OPT$. Our new algorithm finds a cut in $G^* $ with weight at least $0.01 OPT$. This translates into a cut in the original graph $G$ with weight at least $0.99OPT$ (since all cuts in $G^* $ with positive weight separate $u$ and $v$), which is better than the inapproximability result. \n0018 | \n0019 | There is no problem with choosing $d$ large enough to make any cut with $u$ and $v$ on the same side negative, since we can choose $d$ as large as we want. But how did we choose $a$ so that $f \\approx -.99OPT$ when we didn't know $OPT$? We can approximate $OPT$ really well ... if we let $T$ be the sum of the edge weights in $G$, we know $\\frac{1}{2}T \\leq OPT \\leq T$. So we have a fairly narrow range of values for $f$, and we can iterate over $f$ taking all values between $-.49T$ and $-.99T$ at intervals of $0.005T$. For one of these intervals, we are guaranteed that $f \\approx -0.98 OPT$, and so one of these iterations is guaranteed to return a good cut.\n0020 | \n0021 | Finally, we need to check that the new graph has edge weights whose sum is positive. We started with a graph whose edge weights had sum $T$, and added $f$ to the sum of the edge weights. Since $-.99T \\leq f \\leq -.49T$, we're O.K.",
+  "witness": "Let G be the path0-1-2 with both edge weights1, so T=2. Designate u=0,v=1 and take d=20,f=-1,a=f+(3-2)d=19. The required interval is-1.98<=-1<=-0.98. The construction adds penalties-20 on02 and12 and bonus19 on01, so the total becomes1+1-20-20+19=-19, whereas T+f=1. After merging parallel contributions, the simple graph weights are20,-19,-20 and still sum to-19. The selected theorem certifies this failure of the accounting and positivity claims."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_FOR_CORRECTED_VERSION",
+ "record_id": "SE_cstheory_2312__a2318",
+ "scope_metadata": {
+  "source_kind": "asserted accounting step in the edited portion of an answer",
+  "target_scope": "The modified graph total weight is T+f and hence remains positive."
+ },
+ "selected_declarations": [
+  {
+   "axioms": [],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "SE_cstheory_2312_a2318.refutation",
+   "native_candidate_axioms": [],
+   "type": "(0 < SE_cstheory_2312_a2318.T3 ∧\n    -99 * SE_cstheory_2312_a2318.T3 ≤ 100 * SE_cstheory_2312_a2318.f3 ∧\n      100 * SE_cstheory_2312_a2318.f3 ≤ -49 * SE_cstheory_2312_a2318.T3) ∧\n  SE_cstheory_2312_a2318.wsum SE_cstheory_2312_a2318.Gstar3 ≠ SE_cstheory_2312_a2318.T3 + SE_cstheory_2312_a2318.f3 ∧\n    ¬0 < SE_cstheory_2312_a2318.wsum SE_cstheory_2312_a2318.Gstar3 ∧\n      SE_cstheory_2312_a2318.tsum (SE_cstheory_2312_a2318.build true SE_cstheory_2312_a2318.Gstar3 []) ≠\n          SE_cstheory_2312_a2318.T3 + SE_cstheory_2312_a2318.f3 ∧\n        ¬0 < SE_cstheory_2312_a2318.tsum (SE_cstheory_2312_a2318.build true SE_cstheory_2312_a2318.Gstar3 []) ∧\n          SE_cstheory_2312_a2318.tsum (SE_cstheory_2312_a2318.build false SE_cstheory_2312_a2318.Gstar3 []) ≠\n              SE_cstheory_2312_a2318.T3 + SE_cstheory_2312_a2318.f3 ∧\n            ¬0 < SE_cstheory_2312_a2318.tsum (SE_cstheory_2312_a2318.build false SE_cstheory_2312_a2318.Gstar3 [])",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/SE_cstheory_2312__a2318.json",
+ "source_group": "stackexchange",
+ "supporting_evidence": []
+}

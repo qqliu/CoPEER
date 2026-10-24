@@ -1,0 +1,68 @@
+\section{Why the square-root algorithm fails, and why the correction works}
+\label{app:sqrt-proof}
+We prove Proposition~\ref{prop:sqrt}: the printed algorithm fails exactly at positive perfect squares, and changing one comparison corrects it for every nonnegative integer input. Appendix~\ref{app:auditing-exhibits} names the source and the formal certificates and explains why the original dossier is outside the human-approved core.
+
+Let $f(x)$ and $g(x)$ denote the answers returned by the original and corrected
+algorithms. Both compute the answer for $x$ from the answer for $x-1$, either
+keeping it or increasing it by one. Their common starting value is zero:
+\[
+f(0)=g(0)=0,\qquad
+f(x)=\begin{cases}f(x-1),&x\le(f(x-1)+1)^2,\\f(x-1)+1,&\text{otherwise},\end{cases}
+\]
+\[
+g(x)=\begin{cases}g(x-1),&x<(g(x-1)+1)^2,\\g(x-1)+1,&\text{otherwise},\end{cases}
+\qquad x\ge1.
+\]
+The comparison changes from $\le$ to $<$ in the source algorithm
+\citepalias{alhassy2018sqrtanswer}. An answer $y$ is correct when
+$R(x,y)$ holds, where $R(x,y)$ means $y^2\le x<(y+1)^2$.
+Equivalently, $y=\lfloor\sqrt{x}\rfloor$, the greatest integer whose square
+is at most $x$. Proposition~\ref{prop:sqrt} states that
+$g(x)=\lfloor\sqrt{x}\rfloor$ for every nonnegative integer $x$, and that
+$f(x)=g(x-1)$ for every $x\ge1$. Thus the original algorithm is one input
+behind the corrected algorithm. Its exact failure set is
+\begin{equation}
+\neg R(x,f(x))\quad\Longleftrightarrow\quad
+\exists k\in\N,\ k\ge1:\ x=k^2.
+\label{eq:sqrt}
+\end{equation}
+All inputs in this statement are nonnegative integers, the domain of the
+recurrences above.
+
+\begin{proof}[Proof of Proposition~\ref{prop:sqrt}]
+\textbf{Step 1: the corrected algorithm returns the integer square root.}
+We prove $g(x)=\lfloor\sqrt{x}\rfloor$ by induction on $x$.
+At zero, the claim follows from $g(0)=0$. For $x\ge1$, let $b=g(x-1)$.
+The induction hypothesis gives
+\[
+b^2\le x-1<(b+1)^2.
+\]
+If $x<(b+1)^2$, keeping $b$ gives $b^2\le x<(b+1)^2$, as required.
+Otherwise, the integer $(b+1)^2$ is greater than $x-1$ and at most $x$,
+so it equals $x$. Increasing the answer to $b+1$ then gives
+$(b+1)^2\le x<(b+2)^2$. This proves correctness at every input.
+
+\textbf{Step 2: the original algorithm returns the preceding correct answer.}
+We prove $f(x)=g(x-1)$ by induction for $x\ge1$. At $x=1$,
+$f(1)=0=g(0)$. For $x\ge2$, the induction hypothesis gives
+$f(x-1)=g(x-2)=b$. The updates for $f(x)$ and $g(x-1)$ make the same
+choice, because, for integers,
+\[
+x\le(b+1)^2\quad\Longleftrightarrow\quad x-1<(b+1)^2.
+\]
+Both therefore keep $b$ or both return $b+1$. Hence
+$f(x)=g(x-1)=\lfloor\sqrt{x-1}\rfloor$.
+
+\textbf{Step 3: the delay causes an error exactly at positive squares.}
+For $x\ge1$, let $b=f(x)=\lfloor\sqrt{x-1}\rfloor$. We have
+$b^2\le x$ and $x\le(b+1)^2$. The required strict upper bound fails
+exactly when $x=(b+1)^2$. Conversely, at any positive square $x=k^2$,
+the original algorithm returns $k-1$, so its upper-bound condition fails
+by equality. At zero, the answer is correct. This proves both the exact
+failure classification and the correction for every allowed input.
+\end{proof}
+
+The repository provides the formal proofs in
+\path{mathematics/extensions/sqrt_boundary/SqrtFailureBoundary.lean} and
+\path{mathematics/extensions/sqrt_repair/SE_cs_97637_a97647_repair.lean},
+with toolchains and replay instructions in \path{bugbank/lean/README.md}.

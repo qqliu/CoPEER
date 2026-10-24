@@ -1,0 +1,46 @@
+{
+  "record_id": "fun2026_wst_log_worstcase_updates",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "04a88c0fc3fa059a5ad42c29021b41f63a329ec1eddd688bb0f571d8217b9236",
+  "audit_sha256": "3056ee4409865f39134dc9209b653c3162295e67a0c8ac7a7d958d35c2fdab18",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "Under the recorded definition, an AVL search tree is a Weak Search Tree supporting every insertion and deletion, including rebalancing, in deterministic O(log(n+2)) worst-case time.",
+      "proof_sketch": "Maintain an ordinary AVL tree with the strict BST and AVL height invariants. For every node v, each key l in its left subtree and r in its right subtree satisfies l<key(v)<r, hence l<r, so every maintained state satisfies the WST invariant. Standard BST insertion and deletion preserve strict order before balancing. AVL single and double rotations preserve inorder order, restore the height inequalities, and require constant work at each affected ancestor. The minimum size M(h) of an AVL tree of height h obeys M(h)=1+M(h-1)+M(h-2), with M(-1)=0 and M(0)=1, and therefore M(h)>=2^floor(h/2). Thus the height and the complete worst-case cost of searching, structurally updating, and rebalancing are O(log(n+2))."
+    },
+    {
+      "claim": "For a standard right rotation at z in a WST, writing y=left(z) and A=left(y), the rotated tree is a WST if and only if every key in A is smaller than key(z); symmetrically, for a left rotation with y=right(z) and C=right(y), preservation holds if and only if key(z) is smaller than every key in C.",
+      "proof_sketch": "For the right rotation, write B=right(y) and C=right(z). The rotated subtree has the same key set and occupies the same position, so all ancestor constraints remain unchanged; constraints internal to A, B, and C also remain unchanged. At z after rotation, the required relation B<C follows from the old WST relation left(z)<C. At the new root y, the requirement is A<{key(z)} union B union C. The old relation at y gives A<B, and the old relation at z gives A<C. Hence the only new condition is A<key(z), proving necessity and sufficiency, including the vacuous case A empty. Reflection proves the left-rotation statement."
+    },
+    {
+      "claim": "The AVL construction and rotation criterion do not resolve the source-intended target: they provide neither deterministic O(log n) worst-case updates for WST states governed only by the weak invariant nor a matching obstruction in the source model.",
+      "proof_sketch": "The AVL construction initializes and forever maintains strict-BST states, routes searches using the node key, and invokes rotations justified by strict inorder order. It therefore says nothing about updating or rebalancing weak-only, non-BST WST states. The rotation criterion merely identifies when one standard local rotation is safe. For example, the three-node tree with root key 1, left child key 3, and that child's left child key 2 is a WST because every relevant right subtree is empty. A right rotation produces root 3 with children 2 and 1, violating 2<1. This refutes unguarded reuse of AVL rotations but neither excludes guarded repairs nor any different balancing method, so it is not a matching obstruction."
+    }
+  ],
+  "final_writeup": "The verified AVL statement is retained exactly, but its scope is narrowed to a bounded subclass. Maintain an ordinary AVL tree from the empty state, with distinct keys, the strict BST invariant, and the AVL height invariant. Strict BST order implies the WST condition at every node: every left-subtree key is below the node key and every right-subtree key is above it, so every left-subtree key is below every right-subtree key. Standard insertion, deletion, and AVL rotations preserve strict order; constant work is performed at each affected ancestor. The AVL minimum-size recurrence gives logarithmic height, hence deterministic O(log(n+2)) worst-case time including all rebalancing.\n\nThis construction does not cover the target's weak-only state space. It never represents a non-BST WST, uses each node key as a search router, and relies on rotation correctness derived from the stronger inorder invariant. The source already observes that every BST is a WST, so this subclass fact cannot be treated as resolving the stated open question.\n\nThe exact rotation calculation isolates the gap. Before a right rotation, let z have left child y, with subtrees A=left(y), B=right(y), and C=right(z). Every post-rotation WST comparison follows from the old invariant except the comparison of all keys in A with key(z). Thus the rotation is safe exactly when A<key(z). The mirror condition applies to a left rotation. In particular, a weak-only three-node WST with root 1, left child 3, and left grandchild 2 becomes a non-WST after the balancing right rotation: its new sibling subtrees contain 2 and 1 in the wrong order. This is only an obstruction to blindly applying a standard rotation, not a lower bound against all update methods.\n\nAccordingly, the prior FULL claim is withdrawn. The resolution is PARTIAL only in the sense that the verified AVL subclass result is preserved and the limitation of ordinary rotations is characterized. No algorithm has been supplied for deterministic O(log n) worst-case insertion and deletion on general weak-only WST states, and no matching obstruction has been proved in the source model. The open target therefore remains unresolved at the requested strength.",
+  "audit_feedback_acted_on": [
+    "The audit contained no REFUTED or UNRESOLVED claim items; all three VERIFIED claims are retained with their exact wording and supported scope.",
+    "Accepted the target-coverage judgment VALID_PARTIAL_PROGRESS: the AVL construction covers only strict-BST states, while the rotation theorem covers only one guarded local transformation.",
+    "Retained claimed_resolution PARTIAL in accordance with the audit's ACCURATE judgment.",
+    "Continued to state expressly that neither branch of the source-intended target is complete: there is no general weak-only worst-case update algorithm and no matching obstruction."
+  ],
+  "checks_performed": [
+    "Verified that the designated parent and audit files have the supplied SHA-256 hashes.",
+    "Read only the designated source, exact parent, and independent audit; used no web, retrieval database, retrieval result, treatment receipt, external memory, prior frontier output, other solution, or verification report.",
+    "Adversarially rechecked all three claims, including the AVL height and update argument, both directions of the rotation criterion, empty-subtree and ancestor cases, and the distinction between a strict-BST subclass result and either complete target branch.",
+    "Confirmed that the audit has no REFUTED or UNRESOLVED items, judges target coverage VALID_PARTIAL_PROGRESS, and judges claimed_resolution ACCURATE.",
+    "Confirmed that no material correction is required and therefore copied claimed_resolution, every claim and proof_sketch, and final_writeup exactly from the parent.",
+    "Checked the length limits: final_writeup has 344 whitespace-delimited words, and the three proof sketches have 108, 102, and 114 respectively.",
+    "No file was created or modified."
+  ],
+  "self_assessment": "CONFIDENT"
+}

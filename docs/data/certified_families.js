@@ -1,0 +1,63 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["certified_families"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "tab:certified-research-extensions",
+  "main_tex_lines": [
+   2270,
+   2288
+  ],
+  "caption": "Further certified families and refutations. Each row's scope, certificate file, provenance, and the human judgments on its dossier are given in the text; the prime-blowup and rainbow-Schur certificates are in Appendix [ref:app:structural-case-studies]."
+ },
+ "header": [
+  "Case",
+  "Refuted statement",
+  "What the selected Lean proof establishes",
+  "Toolchain"
+ ],
+ "rows": [
+  {
+   "case": "Projective cubes",
+   "refuted_statement": "Conjecture 4 of [cite:meng2026cubefree]",
+   "lean_establishes": "Cube-free sets above the conjectured density for $d=5,7,8$ in infinitely many cyclic groups; the exact density boundary of the layered construction",
+   "toolchain": "core Lean 4.30.0 and 4.34.0; boundary results Lean 4.30.0 with Mathlib"
+  },
+  {
+   "case": "Supertoken graphs",
+   "refuted_statement": "$\\dim F_2(K_n)=n-1$ [cite:baskoro2025supertoken]",
+   "lean_establishes": "Resolving sets of size at most $n-2$ for every $n\\ge8$",
+   "toolchain": "core Lean 4.30.0 and 4.34.0"
+  },
+  {
+   "case": "Binomial polynomials",
+   "refuted_statement": "second assertion of [cite:sun2025polynomials]",
+   "lean_establishes": "No coefficientwise $q$-log-convexity for every integer $m\\ge4$",
+   "toolchain": "core Lean 4.30.0 and 4.34.0"
+  },
+  {
+   "case": "Fake-Gaussian positivity",
+   "refuted_statement": "Conjecture 4 of [cite:gatzweilerkrattenthaler2025positivity]",
+   "lean_establishes": "An exact integer polynomial with a negative coefficient",
+   "toolchain": "Lean 4.30.0 and 4.34.0"
+  },
+  {
+   "case": "$q$-rious unimodality",
+   "refuted_statement": "unimodality assertion of [cite:warnaarzudilin2025qrious]",
+   "lean_establishes": "A non-unimodal coefficient sequence; the Landau hypothesis certified",
+   "toolchain": "Lean 4.30.0 and 4.34.0"
+  },
+  {
+   "case": "Permutation-grid rooks",
+   "refuted_statement": "necessity direction of Conjecture 3.10 of [cite:lewiswon2026permutationgrids]",
+   "lean_establishes": "A placement count congruent to 3 modulo 4",
+   "toolchain": "Lean 4.30.0 and 4.34.0"
+  },
+  {
+   "case": "Toda numerators",
+   "refuted_statement": "Conjecture 7.3 of [cite:labelle2026toda]",
+   "lean_establishes": "A numerator that is not unimodal under any common-exponent regrading",
+   "toolchain": "Lean 4.30.0 and 4.34.0"
+  }
+ ]
+};

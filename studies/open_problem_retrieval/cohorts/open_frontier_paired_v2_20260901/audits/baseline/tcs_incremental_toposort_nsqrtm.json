@@ -1,0 +1,65 @@
+{
+  "record_id": "tcs_incremental_toposort_nsqrtm",
+  "stage": "BASELINE_AUDIT",
+  "arm": "neutral",
+  "iteration": 0,
+  "parent_sha256": "071343b2750120e0dd56a04da8414b89bb455e7326ae8cb3c9ab6ef854c56d58",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The two source-stated bounds imply total update time Õ(min{n²,m^(4/3)}). This meets Õ(n√m) when m≤n^(6/5) and when m≥n²/log^{O(1)}n; over all m it is within an Õ(n^(1/4)) factor of the target.",
+      "claim_sha256": "79003b417cee6573b8c836f7fd4f5efe82f393a8dfcd3dfee6043f7ded223a27",
+      "verdict": "VERIFIED",
+      "evidence": "The authorized source states soft-O(n²) and soft-O(m^(4/3)) total-update bounds, so taking the better gives the claimed minimum. The sparse inequality m^(4/3)≤n√m is equivalent to m≤n^(6/5). If m≥n²/log^C n, then n²/(n√m)≤log^(C/2)n. Writing m=n^a, the two bounds cross at a=3/2; the approximation-ratio exponent increases as 5a/6−1 before that point and decreases as 1−a/2 afterward, attaining 1/4 at the crossing.",
+      "witness": "none",
+      "search_method": "Direct asymptotic algebra, supplemented by exact rational-exponent assertions.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-baseline/check_bound_arithmetic.py"
+    },
+    {
+      "idx": 1,
+      "claim": "Balanced-cut lemma: for every order-violating insertion u→v into a DAG, one can find equally sized sets B,F and a cut c such that F consists of the descendants of v at or left of c, B consists of the ancestors of u right of c, and either the insertion closes a cycle or the stable order (L\\F),B,F,(R\\B) is topological. Moreover, all |B||F| ordered pairs in B×F become newly reachable.",
+      "claim_sha256": "2e52fcb6c701c1529a68b9f87b7a3de228a874857693d6a75aba2f5b5b9ce11b",
+      "verdict": "REFUTED",
+      "evidence": "The exact statement places existence of equally sized B,F and c outside the cycle/topological-order disjunction, so it asserts such a cut even for cycle-forming insertions. Let the old order be v,x,u with edges v→x and x→u, and insert u→v. Under the draft's inclusive search convention, every vertex is both a descendant of v and an ancestor of u. The four possible cuts yield (|B|,|F|)=(3,0),(2,1),(1,2),(0,3), so no equal-cardinality cut exists. The insertion does close a cycle, but that does not satisfy the preceding existential requirements. The corrected lemma—either report a cycle, or for a non-cycle insertion return such a balanced cut—is valid: in the non-cycle case the descendant and ancestor sets are disjoint, their count difference changes one unit at a time, closure rules out every reversed old edge, and each B×F pair is fresh.",
+      "witness": "Old DAG with vertices ordered v,x,u and edges v→x and x→u; insert u→v. No positional cut has equal numbers of descendants of v on its left and ancestors of u on its right.",
+      "search_method": "Direct quantifier audit and exact exhaustive enumeration of every DAG compatible with a fixed topological order through n=6, for every backward insertion.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-baseline/check_balanced_cut.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The balanced-cut construction gives an explicit combinatorial algorithm with total time Õ(m+n√m+A), where A is the total number of adjacency entries scanned from selected forward vertices and selected backward vertices. Consequently it attains Õ(n√m) whenever A=Õ(n√m), including sequences in which every selected forward vertex has polylogarithmic out-degree and every selected backward vertex has polylogarithmic in-degree at its expansion time.",
+      "claim_sha256": "1e3b755a91cfb2c9e7b71b948548bc049c5686be8c3f70aea12a6364f7205a45",
+      "verdict": "VERIFIED",
+      "evidence": "Use the corrected cycle-or-cut formulation from claim 1. For each non-cycle violating update i, let |B_i|=|F_i|=q_i. Its q_i² B_i×F_i pairs were unreachable before that update and reachable afterward. Monotonicity makes these sets disjoint across updates, so Σq_i²≤n(n−1), and Cauchy–Schwarz gives Σq_i≤√(mΣq_i²)=O(n√m). Min/max heaps enumerate descendants and ancestors in topological order: each non-root heap insertion is caused by an adjacency entry already counted in A, while popping and reordering selected vertices costs Õ(Σq_i). A balanced sequence tree implements stable extraction and reinsertion in Õ(q_i) per update; storing inserted edges costs Õ(m). A cycle-forming update is reported separately after at most O(n) selected vertices plus its scans, which is absorbed. Thus the total is Õ(m+n√m+A). Under the stated directional-degree condition, every expansion scans only polylogarithmically many entries, so A=Õ(Σq_i+n)=Õ(n√m); with distinct simple edges, m≤n² and hence m≤n√m.",
+      "witness": "none",
+      "search_method": "Direct charging proof, data-structure operation accounting, and exhaustive finite validation of the corrected cut, reorder, and fresh-pair properties.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-baseline/check_balanced_cut.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Full adjacency-list rescanning cannot be charged automatically to the balanced-search vertex bound: there is a DAG sequence with n=2r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, yet rescanning the selected forward list costs r².",
+      "claim_sha256": "52567c84ad8041cb3bc36f8d47aa749b024b2b3014b8efa9e2e527fc45212061",
+      "verdict": "VERIFIED",
+      "evidence": "The construction has 2r+2 vertices, 3r initial edges, and r violating insertions, hence m=4r. Immediately before inserting u_i→v, the maintained order is u_1,…,u_(i−1),v,u_i,…,u_r,z,w_1,…,w_r, so v and u_i are adjacent and the balanced sets are exactly F={v}, B={u_i}; thus q=1. Vertex u_i already reaches every w_j through z, while v reaches only the w_j, and u_i has no ancestor other than itself. Consequently adding u_i→v creates exactly the single proper reachability pair (u_i,v). Vertex v retains r outgoing entries v→w_j, so scanning its full list on all r violating updates costs exactly r².",
+      "witness": "For every integer r≥1, use initial order v,u_1,…,u_r,z,w_1,…,w_r; insert v→w_j and z→w_j for every j, u_i→z for every i, then u_i→v for i=1,…,r.",
+      "search_method": "Symbolic analysis for arbitrary r and exact transitive-closure simulation for r=1,2,3,5,10,25,100.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-baseline/check_rescanning_obstruction.py"
+    }
+  ],
+  "confirmed_refutations": [
+    1
+  ],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target asks for an unconditional combinatorial soft-O(n√m) algorithm over arbitrary insertion sequences. The draft establishes only Õ(m+n√m+A) and provides no general bound A=Õ(n√m); indeed its verified construction shows ordinary full-list rescanning can make A quadratic. Therefore it does not fully resolve the target. Nevertheless, the corrected acyclic balanced-cut argument, its n√m bound on selected-vertex/order-maintenance work, the valid low-directional-degree special case, and the verified obstruction constitute material partial progress. The final writeup explicitly says the arbitrary-degree problem remains unresolved, so claimed_resolution PARTIAL is accurate despite the cycle-case quantifier error in claim 1.",
+  "overall": "REFUTED",
+  "checks_performed": [
+    "Read only the specified source-input JSON and draft JSON; did not use the web or any retrieval, treatment, prior-run, report, or other-solution source.",
+    "Checked the two-bound comparison using exact rational exponent arithmetic: thresholds 6/5 and 3/2 and worst ratio exponent 1/4.",
+    "Exhaustively checked all 33,866 DAGs compatible with a fixed order for 2≤n≤6 and every backward insertion. All 176,765 non-cycle insertions admitted valid corrected balanced cuts; all 214,503 balanced partitions tested produced topological reorders and fresh B×F pairs.",
+    "Reproduced the three-vertex cycle counterexample exactly; the exhaustive run also found 91,522 cycle-forming cases with no equal-cardinality cut.",
+    "Audited the heap, adjacency-scan, sequence-tree, cycle-update, and reachability-pair accounting for the Õ(m+n√m+A) bound.",
+    "Exactly simulated the rescanning family through r=100, confirming n=2r+2, m=4r, q=1, one new reachability pair per violating update, and r² scans."
+  ]
+}

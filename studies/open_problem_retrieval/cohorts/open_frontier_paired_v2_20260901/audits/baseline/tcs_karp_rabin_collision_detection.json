@@ -1,0 +1,64 @@
+{
+  "record_id": "tcs_karp_rabin_collision_detection",
+  "stage": "BASELINE_AUDIT",
+  "arm": "neutral",
+  "iteration": 0,
+  "parent_sha256": "933cdbb3d838eee9598f90a46b4086f97031d1b2ff3f10511d75d67399c8432d",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "For p not dividing the base b, collision detection is exactly repeated-state detection on mismatch-only normalized prefix sums. Moreover, every collision has a witness containing at most p mismatching aligned positions, although its length may exceed p.",
+      "claim_sha256": "82d2e2203ee224fe7092b841135a5633e6171bee4235c8c86e8a2084a0df8333",
+      "verdict": "VERIFIED",
+      "evidence": "Let delta_t=s[t]-s[t+d]. Since b is invertible modulo p, b^e(A_d(e)-A_d(r)) equals sum_{t=r}^{e-1} delta_t b^{e-1-t}, exactly F(r,e-r)-F(r+d,e-r). A_d changes only at actual mismatches. For any colliding interval, the states immediately before its first mismatch and after its last mismatch are therefore two equal retained states; conversely, equal retained states with distinct mismatch indices define an interval containing a mismatch and hence unequal colliding contents. If a collision contains more than p mismatches, its starting state together with the states after its first p mismatches gives p+1 elements of F_p, so a repeated pair supplies a contained collision with at most p mismatches. The original collision itself suffices when it has at most p mismatches.",
+      "witness": "none",
+      "search_method": "Direct modular-algebra proof with explicit treatment of leading/trailing equal runs, overlapping substrings, and unequal symbols congruent modulo p; followed by exhaustive exact-integer enumeration. The checker compared collision existence per displacement and tested the stronger local bounded-witness property.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-baseline/audit_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "In the word-RAM model with p=n^{O(1)}, there is an exact deterministic algorithm running in O(n log n+n+min{D,M,n min(n,p)}) time, where D is the number of distinct substring contents and M is the number of unequal unordered character-position pairs. Consequently the requested O(n log n) bound holds when p=O(log n), D=O(n log n), or M=O(n log n).",
+      "claim_sha256": "32108689663e756964a554cbe2b4dd6ad9aa4ab7255abedb4869d979657fa134",
+      "verdict": "VERIFIED",
+      "evidence": "For displacement d, exact LCE jumps enumerate its m_d mismatches in O(1+m_d) queries. Claim 0 permits stopping after p mismatches. The retained-record count is Q=(n-1)+sum_d min(m_d,p). Every unequal unordered position pair appears exactly once at its displacement, so sum_d m_d=M, while m_d<=n-d. Hence Q<=n+min(M,sum_d min(n-d,p))=O(n+min(M,n min(n,p))). Sorting word-sized (d,state) keys is linear in n+Q with a constant number of radix passes because p=n^{O(1)}. Independently, the uncompacted suffix trie has exactly one nonroot node per distinct substring content; expanding compact suffix-tree edges therefore visits exactly D loci. Incremental fingerprints and radix sorting of (length,fingerprint) detect a collision in O(D+n), with equal contents already deduplicated. D is computable from suffix-array LCP values before choosing the cheaper route. Deterministic suffix-array/LCP/RMQ preprocessing costs O(n log n). For p dividing b, claim 2 supplies the required O(n log n) branch. Substitution gives O(n log n) in each stated regime.",
+      "witness": "none",
+      "search_method": "Constructive algorithm and runtime accounting, including the identity sum_d m_d=M, the capped record bound, suffix-trie locus counting, and word-size/radix assumptions. Exact exhaustive checks compared both the capped-state and distinct-content decision procedures against direct substring enumeration and verified the record and collision-free M bounds.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-baseline/audit_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The target has a complete O(n log n) exact solution in the noninvertible case p divides b.",
+      "claim_sha256": "fbde28b5d4d7e41d2063b94848e677a9ac5db957f007dc48c8fa13dcc178a3f6",
+      "verdict": "VERIFIED",
+      "evidence": "When p divides b, every positive power of b vanishes modulo p, so a nonempty fingerprint is its last symbol modulo p. For endpoints e<f in the same residue class, absence of an unequal colliding pair at every permissible length is equivalent to equality of every backward prefix of length at most e+1, which is exactly R_e being a prefix of R_f. If this fails after a common suffix of length t<e+1, the two length-(t+1) substrings are unequal and have equal endpoint residues, giving a collision. If every consecutive pair in an endpoint residue class satisfies the prefix relation, transitivity makes every pair satisfy it; thus any failure is exposed by a consecutive pair. LCP preprocessing on the reversed string and deterministic grouping take O(n log n), followed by O(n) prefix tests.",
+      "witness": "none",
+      "search_method": "Exhaustive case analysis of endpoint pairs and prefix-relation transitivity, plus exact comparison of the consecutive-endpoint detector with brute-force substring enumeration for bases 2, 4, and 6 and their relevant prime divisors.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-baseline/audit_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Collisions cannot occur at length L when b^L<=p, but checking only power-of-two lengths, only lexicographically adjacent contents, or relying on monotonicity in the length is insufficient.",
+      "claim_sha256": "39292b2c4efd6b89cfe8d0173ff8e2ef93c1a6ff3a30a57d699e54c82ee15eaf",
+      "verdict": "VERIFIED",
+      "evidence": "Distinct canonical length-L base-b words represent distinct integers in [0,b^L-1]. When b^L<=p, their nonzero difference has absolute value below p and cannot vanish modulo p. For b=2, p=5, and S=000101, exact fingerprint arrays for lengths 1 through 6 are respectively [0,0,0,1,0,1], [0,0,1,2,1], [0,1,2,0], [1,2,0], [2,0], and [0]. The only unequal-content collision length is 3, between 000 and 101. Thus lengths 1, 2, and 4 are collision-free, collision existence is nonmonotone, and the colliding length-3 contents are the first and fourth among lexicographically ordered values 0,1,2,5, not adjacent.",
+      "witness": "b=2, p=5, S=000101; the sole unequal-content collision is 000 versus 101 at length 3.",
+      "search_method": "Integer-range proof for the threshold and exact enumeration of every substring fingerprint in the stated example; additional exhaustive checks covered all small canonical words satisfying b^L<=p.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-baseline/audit_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requests an O(n log n) or linear detector for the full given-string/given-prime problem. The draft does not establish that bound for the general invertible case when p grows faster than log n and both D and M are superlinear; its displayed adaptive bound can then be quadratic, and it provides no probabilistic method closing that gap. It therefore does not fully resolve the target. It does give rigorous, nonvacuous progress: an exact structural characterization, exact adaptive algorithms for several infinite regimes, and a complete O(n log n) solution when p divides b. The final writeup explicitly identifies the remaining regime and labels the resolution PARTIAL, so that claimed resolution is accurate and not overstated.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the authorized source input and baseline draft; used no web, retrieval database, prior run, receipt, report, or other solution.",
+    "Re-derived the exact target coverage independently of claimed_resolution and self_assessment.",
+    "Proved the normalized-state equivalence and pigeonhole witness bound symbolically.",
+    "Audited the LCE record count, M identity, suffix-trie D accounting, deterministic preprocessing, radix sorting, and all stated parameter regimes.",
+    "Ran the persisted exact-integer checker: 19,008 invertible texts, 129,908 local bounded-witness collision instances, 24,630 noninvertible texts, and 314 threshold words were checked; all assertions passed.",
+    "Reproduced the complete fingerprint arrays and all three limitation properties for S=000101, b=2, p=5.",
+    "No floating-point arithmetic was used for any decision."
+  ]
+}

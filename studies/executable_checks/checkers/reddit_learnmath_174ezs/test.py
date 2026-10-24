@@ -1,0 +1,46 @@
+"""A Cauchy sequence contained in a closed subset of an arbitrary metric space must converge in that subset."""
+
+import json
+from math import isqrt
+
+RECORD_ID = "reddit_learnmath_174ezs"
+WITNESS = (
+    "Let X be the rational numbers with metric d(x,y)=|x-y|, and let C=X. "
+    "For n>=0 define a_n=isqrt(2*2^(2n))/2^n, equivalently "
+    "a_n=floor(2^n*sqrt(2))/2^n. Then (a_n) is a sequence in C."
+)
+REFUTATION = (
+    "C=X is closed in X. The inequalities 0<=sqrt(2)-a_n<2^(-n) imply "
+    "that (a_n) is Cauchy. Its only possible real limit is sqrt(2), which "
+    "is not rational because 2 is not a perfect square. Hence the sequence "
+    "has no limit in X=C, contradicting the claim for an arbitrary metric space."
+)
+SEARCH_SPACE = (
+    "All 81 ordered pairs (d,b) with integers 2<=d<=10 and 2<=b<=10 were "
+    "checked in lexicographic order. Exact integer-square testing identified "
+    "every pair with nonsquare d as a certificate for the template "
+    "a_n=isqrt(d*b^(2n))/b^n; the lexicographically first certificate, "
+    "(d,b)=(2,2), was selected."
+)
+
+certificates = []
+tested = 0
+for d in range(2, 11):
+    for base in range(2, 11):
+        tested += 1
+        root = isqrt(d)
+        if root * root != d:
+            certificates.append((d, base))
+
+assert tested == 81
+assert certificates
+assert certificates[0] == (2, 2)
+
+result = {
+    "record_id": RECORD_ID,
+    "outcome": "WITNESS_FOUND",
+    "witness_description": WITNESS,
+    "refutation_explanation": REFUTATION,
+    "search_space": SEARCH_SPACE,
+}
+print(json.dumps(result, separators=(",", ":")))

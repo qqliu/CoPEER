@@ -1,0 +1,29 @@
+analysisWe need to find a false assertion in the text. Look through statements.
+
+Check recurrence: T(n) = 2 T(n-1) + n^2, T(1)=1. Let's compute few terms: T(1)=1. T(2)=2*1+4=6. T(3)=2*6+9=21. T(4)=2*21+16=58. T(5)=2*58+25=141. So sequence: 1,6,21,58,141,...
+
+Now they claim solution: T = 6*2^n + P2 where P2 = -n^2 -4n -6. Let's test: For n=1: 6*2 + (-1 -4 -6) =12 -11 =1 correct. n=2: 6*4 + ( -4 -8 -6) =24 -18 =6 correct. n=3: 6*8 + (-9 -12 -6) =48 -27 =21 correct. n=4: 6*16 + (-16 -16 -6) =96 -38 =58 correct. n=5: 6*32 + (-25 -20 -6) =192 -51 =141 correct. So formula matches.
+
+Now check earlier claim: "Taking the third difference, we get S(Δ^{(3)}(T)) = 2 Δ^{(3)}(T)." Let's verify. Original recurrence: S(T)(n) = T(n+1) = 2 T(n) + (n+1)^2. Apply Δ^3: Δ^3(T)(n) = T(n+3) - 3 T(n+2) + 3 T(n+1) - T(n). Since Δ and S commute, we have S(Δ^3(T))(n) = Δ^3(T)(n+1). Need to see if the recurrence after applying Δ^3 eliminates polynomial term. Since (n+1)^2 is degree 2, its third difference is zero, so indeed Δ^3 of RHS: Δ^3(2 T + (n+1)^2) = 2 Δ^3(T) + 0. So we get Δ^3(T)(n+1) = 2 Δ^3(T)(n). That's S(Δ^3(T)) = 2 Δ^3(T). So correct.
+
+Now earlier claim: "Δ^{(k)}(n^k) = k!" That's true: the kth forward difference of n^k is k! constant. Good.
+
+Now claim: "Δ(c^n) = (c-1) c^n, Σ(c^n) = (c^n -1)/(c-1)." For forward difference: Δ(c^n) = c^{n+1} - c^n = (c-1) c^n. Correct. Σ(c^n) = sum_{k=1}^{n-1} c^k = (c^{n} - c)/(c-1). But they define Σ(T)(n) = sum_{k=1}^{n-1} T(k). So Σ(c^n)(n) = sum_{k=1}^{n-1} c^k = (c^{n} - c)/(c-1). Their formula gives (c^n -1)/(c-1). That's off by 1 term: they sum from k=0? Indeed sum_{k=0}^{n-1} c^k = (c^n -1)/(c-1). So false. So line 0020 is false.
+
+Check other potential false: line 0012 "Δ(Σ(T)) = T". Since Σ(T)(n) = sum_{k=1}^{n-1} T(k). Then Δ(Σ(T))(n) = Σ(T)(n+1)- Σ(T)(n) = sum_{k=1}^{n} T(k) - sum_{k=1}^{n-1} T(k) = T(n). So correct.
+
+Line 0014 "Σ(Δ(T)) = T - T(1)." Compute Σ(Δ(T))(n) = sum_{k=1}^{n-1} (T(k+1)-T(k)) = T(n) - T(1). correct.
+
+Line 0031: "Δ^{(3)}(T) = C 2^n, C = Δ^{(3)}(T)(1)/2." Since recurrence for Δ^3 is S(x)=2x, solution is x_n = C*2^{n-1}? Let's solve: x_{n+1}=2 x_n. Then x_n = x_1 * 2^{n-1}. So they have C 2^n, with C = Δ^{(3)}(T)(1)/2. Indeed x_n = (Δ^3(T)(1))/2 * 2^n = Δ^3(T)(1) * 2^{n-1}. So matches. fine.
+
+Thus main false assertion line 0020.
+
+We need up to three candidates. Provide maybe also line 0030? but that's correct. Another false maybe line 0033: "using Σ(2^n) = 2^n -1". Σ(2^n)(n) = sum_{k=1}^{n-1} 2^k = 2^{n} -2. Actually sum_{k=1}^{n-1}2^k = 2^{n} -2. So they claim 2^n -1, false. That's also false. So line 0033 includes false claim. Provide both.
+
+Thus candidates: 0020, 0033, maybe 0031? but it's correct. Provide two.
+
+Now produce JSON.assistantfinal{
+  "candidates": [20, 33],
+  "claim": "The formula Σ(c^n) = (c^n - 1)/(c - 1) (line 20) is incorrect for the defined Σ operator, which sums from k=1 to n‑1.",
+  "counterexample": "For c = 2 and n = 4, Σ(2^n) = 2^1 + 2^2 + 2^3 = 2 + 4 + 8 = 14, while (2^4 - 1)/(2 - 1) = 15."
+}

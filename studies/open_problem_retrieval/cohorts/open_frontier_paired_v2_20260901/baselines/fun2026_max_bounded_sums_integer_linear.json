@@ -1,0 +1,40 @@
+{
+  "record_id": "fun2026_max_bounded_sums_integer_linear",
+  "stage": "ARM_NEUTRAL_BASELINE",
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "An alleged optimum has a linear-time verifiable certificate, even for arbitrary signed entries.",
+      "proof_sketch": "Let q=min(m,n), and let F_l be the maximum sum of an l by l square. Adopt L=0 when no positive length is feasible. Build the two-dimensional prefix-sum table in O(mn) time. A certificate for optimum L consists of: (i) for every l>L, coordinates of one l-square having sum greater than k; and (ii) no additional data for L. Verification checks all (m-L+1)(n-L+1) L-squares have sum at most k (vacuous for L=0), and checks the supplied witness for each l>L. Every sum is obtained from four prefix entries. Thus verification costs O(mn+q)=O(mn). The first condition proves L feasible, while the witnesses prove every larger length infeasible, so the characterization is exact."
+    },
+    {
+      "claim": "There is an exact output-sensitive search algorithm whose worst-case time is O(mn min(m,n)).",
+      "proof_sketch": "After prefix-sum preprocessing, inspect lengths q,q-1,...,1. For each l, scan its square placements until finding a sum greater than k; retain that placement as the infeasibility witness. Return the first l for which the entire scan finds no violation, or 0 if every length has a witness. Correctness follows directly from descending order. If m>=n=q, the optimum is L, and d=q-L, the number of tested placements is at most sum_{t=0}^d (m-n+t+1)(t+1), hence the total time is O(mn+(m-n+1)(d+1)^2+(d+1)^3). This is O(mnq) in the worst case and O(mn) whenever d=O(1). It also constructs the certificate in the preceding claim."
+    },
+    {
+      "claim": "Feasibility can alternate at every side length, and the natural no-revisit greedy extension is incorrect.",
+      "proof_sketch": "For any n, take an n by n matrix whose first row is 1,-1,1,-1,... and whose other rows are zero, with k=0. For even l, every length-l interval of the first row sums to zero, so every l-square has sum zero. For odd l, the l-square starting in the first row and first column has sum one, while no square has larger sum. Hence F_l=0 for even l and F_l=1 for odd l: feasibility alternates Theta(n) times, ruling out binary search or any interval-monotonicity argument. Separately, with k=1 and matrix [[2,1,1],[-3,1,1]], the two side-2 sums, scanned left to right, are 1 and 4. A greedy scan sees the first as safe, decreases to side 1 only at the second, and sees only entries at most 1 thereafter; without revisiting the first entry it returns 1. This is wrong because the earlier entry 2 makes side 1 infeasible as well."
+    },
+    {
+      "claim": "The O(mn) endpoint is achievable for two nontrivial signed separable classes: multiplicative rank one and additive separability.",
+      "proof_sketch": "Suppose first that A_ij=u_i v_j. For each l, let X_l be all length-l window sums of u and Y_l those of v. Every l-square sum is xy with x in X_l and y in Y_l. Its maximum is attained among the four products formed from min X_l, max X_l, min Y_l, and max Y_l. One-dimensional prefix sums compute these four extrema in O(m+n) time per l. Over q lengths this is O(q(m+n))<=2mn. Rank one can be recognized in O(mn): choose a nonzero pivot p=A_rc and check p A_ij=A_ic A_rj everywhere; the same formula then uses exact products divided by p. If A_ij=u_i+v_j, an l-square sum is l(X+Y), so F_l=l(max X_l+max Y_l), with the same time bound. Additive separability is recognized by checking A_ij=A_i1+A_1j-A_11."
+    },
+    {
+      "claim": "A thresholded max-plus-convolution scan embeds exactly into matrices supported on one row.",
+      "proof_sketch": "Given integer vectors x,y of length N, define c_t=max_{i+j=t}(x_i+y_j). Put W=max(1,max|x_i|,max|y_j|), C=2W+1, H=C+W+1, and B=4N. Define a prefix sequence p_0,...,p_B as follows: p_s=H for 0<=s<=2N-2, p_s=-H for 2N+2<=s<=B, and set the three intervening values arbitrarily. Overwrite p_i=-x_i and p_{B-j}=y_j+C. Form a B by B matrix whose first row is p_{s+1}-p_s and whose other rows are zero. For l=B-t, 0<=t<=2N-2, every relevant horizontal start satisfies s<=t. If s=i<N and j=t-i lies in [0,N-1], its window sum is C+x_i+y_j. Every other such window sum is negative by the choice of H, while a valid sum is at least one. Squares avoiding the first row have sum zero. Consequently F_{B-t}=C+c_t exactly. With threshold C+K, if some c_t<=K, the Max-Bounded-Sums answer is B minus the least such t; otherwise it is below B-(2N-2). Thus the signed problem already contains a precise convolutional primitive on rank-one inputs."
+    },
+    {
+      "claim": "If integer bit lengths are unbounded and bit operations are charged, an O(mn) bound independent of bit length is impossible.",
+      "proof_sketch": "For a 1 by 1 matrix, the answer is determined by comparing its entry with k. On the standard bit-cost model, comparison of B-bit integers has worst-case cost Omega(B): on an equality-pattern input, an adversary can change an unexamined lower bit so as to reverse the comparison. Hence no uniform O(mn)=O(1) bit-time bound exists even in this base case. The open algorithmic endpoint therefore only makes sense under a unit-cost word-RAM assumption or a stated bound on entry bit length. This observation does not rule out O(mn) word operations."
+    }
+  ],
+  "final_writeup": "Let q=min(m,n) and F_l denote the maximum sum among all l by l squares. I did not obtain either a general O(mn) word-RAM algorithm or a standard fine-grained lower bound excluding one, so the main endpoint remains unresolved.\n\nThe strongest general result is a linear verifier. A proposed answer L is correct exactly when every L-square has sum at most k and, for each l>L, one supplied l-square has sum greater than k. A two-dimensional prefix table verifies all of this in O(mn) time. This also yields a simple exact descending search taking O(mnq) worst-case time, with a sharper output-sensitive bound when L is close to q.\n\nSigned matrices present a genuine structural obstruction: feasibility need not be monotone and can alternate for every consecutive side length. The matrix with first row 1,-1,1,-1,... and all remaining entries zero has F_l=1 for odd l and F_l=0 for even l. Thus binary search, monotone pruning, and the paper's no-revisit reasoning cannot extend directly. A separate 2 by 3 example shows that merely decreasing the current length and continuing the scan can miss a violation at an earlier position.\n\nThere are nevertheless broad signed special cases attaining the endpoint. Multiplicatively rank-one matrices and additively separable matrices can both be recognized and solved in O(mn) exact arithmetic. Their square sums separate into products or sums of one-dimensional window sums, whose extrema over all lengths require q(m+n)<=2mn work.\n\nFinally, the one-row construction above shows that high-side-length maxima can encode max-plus-convolution coefficients exactly. It isolates a concrete convolutional core that a general solution must handle, although it does not itself preclude O(mn), since the constructed dense matrix has Theta(N^2) cells.\n\nUnder literal bit complexity, unbounded integers already make O(mn) impossible for a 1 by 1 input. The substantive unresolved version is therefore the usual bounded-word/unit-cost formulation.",
+  "checks_performed": [
+    "Read only the designated JSON input and used no web sources or other repository files.",
+    "Exhaustively checked 4,375 two-by-two integer-matrix/threshold cases for the certificate characterization.",
+    "Computed the stated counterexample maxima exactly and checked the alternating family for every dimension 1 through 12.",
+    "Exhaustively checked the multiplicative rank-one formula on 78,125 signed 3-by-4 instances and the additive formula on 2,187 signed 3-by-4 instances.",
+    "Checked 10,000 exact max-plus prefix embeddings and exhaustively checked 5,733 small vector/threshold cases for the claimed target-output reduction."
+  ],
+  "self_assessment": "CONFIDENT"
+}

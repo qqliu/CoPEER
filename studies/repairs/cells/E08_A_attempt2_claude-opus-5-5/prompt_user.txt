@@ -1,0 +1,159 @@
+# Record E08: Bipartite edges: the greatest number of edges on p vertices
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E08 (SE_math_1868681__q)
+public source: https://math.stackexchange.com/questions/1868681/the-greatest-number-of-edges-on-a-bipartite-graph
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | The Greatest Number of Edges on a Bipartite Graph
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Let $G$ be a bipartite graph on $p$ vertices. Find a formula in terms of $p$ that determines the greatest number of edges that $G$ could have. Prove that this formula is correct.
+0002 | 
+0003 | Let $V$ be the set of vertices for $G$. Then $\lvert V \rvert = p$.
+0004 | 
+0005 | Let $M$ be the set of vertices of group one for $G$.
+0006 | 
+0007 | Let $N$ be the set of vertices of group two for $G$.
+0008 | 
+0009 | The maximum number of edges that $G$ can have is:
+0010 | 
+0011 | $$\lvert M\rvert \lvert N\rvert$$
+0012 | 
+0013 | Implying that every vertex in group one is adjacent to every vertex in group two.
+0014 | 
+0015 | Imagine $\lvert M\rvert$ and $\lvert N \rvert$ as sides of a rectangle. Then such a rectangle would have a perimeter equal to $2p$, and an area of $\lvert M\rvert \lvert N\rvert$.
+0016 | 
+0017 | Using the perimeter to solve for $\lvert N \rvert = p - \lvert M\rvert$. Sub this value into the formula for Area and take the derivative to maximize the area of the rectangle:
+0018 | 
+0019 | $$\frac{dA}{d\lvert M\rvert} = p-2\lvert M \rvert$$
+0020 | $$\frac{p}{2} = \vert M \rvert$$
+0021 | 
+0022 | Note that $N \cup M = V$, and so $\lvert M \rvert + \lvert N \rvert = p$
+0023 | 
+0024 | Subbing in $\frac{p}{2}$ for $\lvert M \rvert$, it is revealed that $\lvert N \rvert = \lvert M \rvert$.
+0025 | 
+0026 | Therefore the formula for the greatest number of edges on a bipartite graph on $p$ edges is $\frac{p^2}{4}$. $\blacksquare$
+0027 | 
+0028 | Is this a valid proof? Any advice would be appreciated!
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+Therefore the formula for the greatest number of edges on a bipartite graph on $p$ edges is $\frac{p^2}{4}$.
+located at line label(s): 0026
+
+## Located defective declaration
+
+Declaration: `Census_SE_math_1868681__q.SourceClaim p / Census_SE_math_1868681__q.UniversalSourceClaim`
+
+```lean
+def SourceClaim (p : ℕ) : Prop :=
+  IsGreatest ((fun m : ℕ => (m : ℚ)) '' BipCounts p) ((p : ℚ) ^ 2 / 4)
+def UniversalSourceClaim : Prop := ∀ p : ℕ, SourceClaim p
+```
+
+The source concludes (stored source line 0026) that the greatest number of edges of a bipartite graph on p vertices is p^2/4. With 'bipartite' = 2-colourable (colour classes may be empty), vertices labelled by Fin p, the formula read in ℚ and 'greatest' an attained maximum (IsGreatest), this is the located defect. Supply the corrected value as a natural-number expression in p and prove that it is the greatest element of BipCounts p for every p; there is no separate target theorem beyond the corrected statement.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+
+## defs_only.lean
+
+```lean
+import Mathlib
+
+/- Record SE_math_1868681__q (E08).
+Source sentence: "the greatest number of edges on a bipartite graph on p [vertices] is p^2/4".
+Bipartite means 2-colourable (Mathlib `IsBipartite`); colour classes may be empty; the
+printed formula p^2/4 is read in ℚ (no floor), and "greatest" means an attained maximum
+(`IsGreatest`).  The located statement is `SourceClaim p`, read for every p as
+`UniversalSourceClaim`. -/
+set_option maxRecDepth 10000
+set_option maxHeartbeats 4000000
+
+namespace Census_SE_math_1868681__q
+
+/-- A simple graph on `Fin n` from a list of edges. -/
+def graph (n : ℕ) (es : List (ℕ × ℕ)) : SimpleGraph (Fin n) where
+ Adj i j := i ≠ j ∧ ((i.val,j.val) ∈ es ∨ (j.val,i.val) ∈ es)
+ symm := fun i j h => ⟨h.1.symm, h.2.symm⟩
+ loopless := ⟨fun _ h => h.1 rfl⟩
+instance (n : ℕ) (es : List (ℕ × ℕ)) : DecidableRel (graph n es).Adj := fun _ _ => inferInstanceAs (Decidable (_ ∧ _))
+
+open SimpleGraph
+
+/-- Number of edges of a simple graph, free of decidability instances. -/
+noncomputable def edges {V : Type*} (G : SimpleGraph V) : ℕ := G.edgeSet.ncard
+
+/-- The edge counts of the bipartite (2-colourable, Mathlib `IsBipartite`) simple graphs on
+`p` labelled vertices.  Colour classes may be empty. -/
+def BipCounts (p : ℕ) : Set ℕ :=
+  {m | ∃ G : SimpleGraph (Fin p), G.IsBipartite ∧ edges G = m}
+
+/-- The source sentence at `p`: "the greatest number of edges on a bipartite graph on p
+[vertices] is p^2/4", as a precise statement in the rationals (no floor). -/
+def SourceClaim (p : ℕ) : Prop :=
+  IsGreatest ((fun m : ℕ => (m : ℚ)) '' BipCounts p) ((p : ℚ) ^ 2 / 4)
+
+/-- The source sentence for every `p`. -/
+def UniversalSourceClaim : Prop := ∀ p : ℕ, SourceClaim p
+
+end Census_SE_math_1868681__q
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E08: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace Census_SE_math_1868681__q
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected greatest number of edges of a bipartite simple graph on `p` labelled vertices, as a
+natural-number expression in `p` (the source prints `p^2/4`, read in ℚ). The hole must be a closed
+expression in `p`: no reference to `BipCounts`, `edges`, `IsGreatest`, `sSup`, `Set`, `Finset`, `SimpleGraph`;
+no `if`/`match`. -/
+def max_edges (p : ℕ) : ℕ := «HOLE»
+
+/-- The corrected sentence for every `p`: `max_edges p` is the greatest element of `BipCounts p`, an
+attained maximum (shape fixed). -/
+def CorrectedClaim : Prop := ∀ p : ℕ, IsGreatest (BipCounts p) (max_edges p)
+-- ===== END FIXED PART =====
+
+end Census_SE_math_1868681__q
+```
+
+Allowed edit: Replace the hole in `max_edges` by a closed natural-number expression in p (no reference to BipCounts, edges, IsGreatest, sSup, Set, Finset, SimpleGraph; no if/match); nothing else in the fixed part may change. BipCounts p, IsGreatest (an attained maximum, not merely an upper bound) and the quantification over every p are fixed; p may not be restricted (even p, p ≥ 2, non-empty classes). Do not redefine graph, edges, BipCounts, SourceClaim or UniversalSourceClaim; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): graph, edges, BipCounts, SourceClaim, UniversalSourceClaim
+
+## OBLIGATIONS (exact names and statements, inside `namespace Census_SE_math_1868681__q`)
+
+```lean
+theorem repair_statement : ∀ p : ℕ, IsGreatest (Census_SE_math_1868681__q.BipCounts p) (Census_SE_math_1868681__q.max_edges p)
+```
+(universal: Universal: for every `p`, `max_edges p` is attained by a bipartite graph on `Fin p` and bounds every bipartite edge count on `Fin p`.)
+
+```lean
+theorem repair_nonvacuous : ∃ p : ℕ, (Census_SE_math_1868681__q.max_edges p : ℚ) ≠ (p : ℚ) ^ 2 / 4
+```
+(nonvacuity: Non-vacuity: the corrected value differs from the printed `p^2/4` (in ℚ) for some `p`.)
+
+```lean
+theorem final_theorem : ∀ p : ℕ, IsGreatest (Census_SE_math_1868681__q.BipCounts p) (Census_SE_math_1868681__q.max_edges p)
+```
+(final: The endpoint of this record is the corrected universal statement itself; restate it here, e.g. `:= repair_statement`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Write work/SUBMISSION.lean as specified in the instructions, compile it with `lake env lean work/SUBMISSION.lean`, fix errors within the budget, and finish with the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

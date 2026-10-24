@@ -1,0 +1,141 @@
+# Record E12: Prime residues: a factorisation in the residue-class argument
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E12 (reddit_askmath_1bq1jtc)
+public source: https://www.reddit.com/r/askmath/comments/1bq1jtc/is_this_proof_correct_i_understand_intuitively/
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | is this proof correct? i understand intuitively but want to be sure it is mathematically rigorous.
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | prove that every prime number except 2 and 3 has the form (6q + 1) or (6q + 5) for some integer q.
+0002 | 
+0003 | my work so far: 
+0004 | suppose n is a particular but arbitrarily chosen integer. by the quotient remainder theorem, n can be expressed as n = d*q + r where d, q, r are integers and r is greater than or equal to 0 and less than d. choose d = 6. then n = d*q + r where r is greater than or equal to 0 and less than 6 so n = (6q) v (6q + 1) v (6q + 2) v (6q + 3) v (6q + 4) v (6q + 5). 6q = 2(3q) so is even. 6q + 2 = 2(3q +2) so is even. 6q + 3 = 3(2q + 1) so is divisible by 3. 6q + 4 = 2(3q + 2) so is even. Thus none of those four cases can describe all prime numbers since they have divisors other than 1. Since n must describe all integers by QRT, (6q + 1) and (6q + 5) must describe the prime numbers. but since they  are not divisible by 2 or 3, they cannot describe 2 or 3.
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+6q + 2 = 2(3q +2)
+located at line label(s): 0004
+
+## Located defective declaration
+
+Declaration: `RedditAskmath1bq1jtcCensus.Claim (per q) / RedditAskmath1bq1jtcCensus.UniversalClaim (for every q)`
+
+```lean
+def Claim (q : Int) : Prop := 6*q+2 = 2*(3*q+2)
+def UniversalClaim : Prop := ∀ q : Int, Claim q
+```
+
+The source writes a prime p as 6q + r and, in the case r = 2, asserts the factorisation `6q + 2 = 2(3q + 2) so is even` for the arbitrary integer quotient q (stored source line 0004). Read universally over q this equality is the located defective statement. Supply the corrected inner linear form (only the two literals may change), prove the corrected line for every q, and prove the source's own theorem SourceGoal.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/-
+Record reddit_askmath_1bq1jtc (E12).  Core Lean only: no imports.
+
+Source line (verbatim): "6q + 2 = 2(3q +2) so is even."
+Context: the source writes a natural prime p as p = 6q + r and classifies the residues r
+that a prime other than 2 and 3 can have; the quoted line is the case r = 2.
+The located statement is `Claim` (at the arbitrary integer quotient q); read universally
+as the source uses it, it is `UniversalClaim`.
+The theorem the source is proving is `SourceGoal` (statement only).
+-/
+namespace RedditAskmath1bq1jtcCensus
+
+/-- The quoted equality at `q`, exactly as the source writes it. -/
+def Claim (q : Int) : Prop := 6*q+2 = 2*(3*q+2)
+
+/-- The located line as the source uses it: for the arbitrary quotient `q`. -/
+def UniversalClaim : Prop := ∀ q : Int, Claim q
+
+/-- Primality on `Nat`, stated from scratch (no Mathlib). -/
+def IsPrime (p : Nat) : Prop := 2 ≤ p ∧ ∀ d : Nat, d ∣ p → d = 1 ∨ d = p
+
+/-- The source's theorem (statement only): every prime other than 2 and 3 is `6q + 1` or `6q + 5`. -/
+def SourceGoal : Prop :=
+  ∀ p : Nat, IsPrime p → p ≠ 2 → p ≠ 3 → (∃ q : Nat, p = 6*q+1) ∨ (∃ q : Nat, p = 6*q+5)
+
+end RedditAskmath1bq1jtcCensus
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record reddit_askmath_1bq1jtc (E12): the located line fails at the integer q = 0. -/
+namespace RedditAskmath1bq1jtcCensus
+
+/-- At `q = 0` the quoted equality reads `2 = 4`. -/
+theorem claim_fails_at_zero : ¬ Claim 0 := by
+  unfold Claim
+  decide
+
+/-- Hence the located line, read universally over the quotient `q`, is false. -/
+theorem universal_claim_false : ¬ UniversalClaim := fun h => claim_fails_at_zero (h 0)
+
+end RedditAskmath1bq1jtcCensus
+
+#print axioms RedditAskmath1bq1jtcCensus.claim_fails_at_zero
+#print axioms RedditAskmath1bq1jtcCensus.universal_claim_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E12: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace RedditAskmath1bq1jtcCensus
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The inner linear form of the corrected factorisation `6*q+2 = 2*(factor q)`.
+The hole must be a linear expression `a*q + b` (or `a*q - b`) with integer literals `a`, `b`:
+only the two literals of the source's `3*q+2` may change. -/
+def factor (q : Int) : Int := «HOLE»
+
+/-- The corrected located line, read for every integer quotient `q` (shape fixed). -/
+def CorrectedClaim : Prop := ∀ q : Int, 6*q+2 = 2*(factor q)
+-- ===== END FIXED PART =====
+
+end RedditAskmath1bq1jtcCensus
+```
+
+Allowed edit: Replace the hole in `factor` by a linear expression `a*q + b` (or `a*q - b`) with integer literals a, b; nothing else in the fixed part may change. The left-hand side 6*q+2, the outer factor 2 and the quantification over every integer q are fixed. Do not redefine Claim, UniversalClaim, IsPrime or SourceGoal; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): Claim, UniversalClaim, IsPrime, SourceGoal
+
+## OBLIGATIONS (exact names and statements, inside `namespace RedditAskmath1bq1jtcCensus`)
+
+```lean
+theorem repair_statement : ∀ q : Int, 6*q+2 = 2*(RedditAskmath1bq1jtcCensus.factor q)
+```
+(universal: Universal: the corrected line holds for every integer `q`.)
+
+```lean
+theorem repair_nonvacuous : ∃ q : Int, 6*q+2 = 2*(RedditAskmath1bq1jtcCensus.factor q) ∧ RedditAskmath1bq1jtcCensus.factor q ≠ 3*q+2
+```
+(nonvacuity: Non-vacuity: the corrected line has an instance, and the corrected factor is not the source's `3*q+2` there.)
+
+```lean
+theorem final_theorem : RedditAskmath1bq1jtcCensus.SourceGoal
+```
+(final: The target theorem of the source, unchanged (`SourceGoal` from defs_only: `∀ p : Nat, IsPrime p → p ≠ 2 → p ≠ 3 → (∃ q, p = 6*q+1) ∨ (∃ q, p = 6*q+5)`). If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

@@ -1,0 +1,64 @@
+{
+  "record_id": "tcs_incremental_toposort_nsqrtm",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "87f520d7275ce5a1f22c145396cba2316fe28f1fb2dba35e564e6c84ae3d3ed8",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The two source-stated bounds imply total update time Õ(min{n²,m^(4/3)}). This meets Õ(n√m) when m≤n^(6/5) and when m≥n²/log^{O(1)}n; over all m it is within an Õ(n^(1/4)) factor of the target.",
+      "claim_sha256": "79003b417cee6573b8c836f7fd4f5efe82f393a8dfcd3dfee6043f7ded223a27",
+      "verdict": "VERIFIED",
+      "evidence": "The authorized source states the soft-O(n²) dense and soft-O(m^(4/3)) sparse bounds. Their crossover is m^(4/3)=n², hence m=n^(3/2). The sparse bound is at most n√m exactly when m^(5/6)≤n, i.e. m≤n^(6/5). The dense-to-target ratio is n/√m, which is polylogarithmic when m≥n²/polylog(n). For m≤n^(3/2), m^(4/3)/(n√m)=m^(5/6)/n≤n^(1/4); for m≥n^(3/2), n²/(n√m)=n/√m≤n^(1/4). These exact case inequalities establish the stated worst factor, with logarithms absorbed by soft-O notation.",
+      "witness": "none",
+      "search_method": "Exact symbolic exponent comparison, split at the crossover m=n^(3/2); no floating-point arithmetic was used.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 1,
+      "claim": "Balanced-cut lemma: for every order-violating insertion u→v into a DAG, either the insertion closes a cycle, or one can find equally sized sets B,F and a cut c such that F consists of the descendants of v at or left of c, B consists of the ancestors of u right of c, and the stable order (L\\F),B,F,(R\\B) is topological. In the latter case, all |B||F| ordered pairs in B×F become newly reachable.",
+      "claim_sha256": "1a373761ae60fc74a6b3d22660333f85a2d6067791f2f307eda805a6ac373c39",
+      "verdict": "VERIFIED",
+      "evidence": "Work in the pre-insertion topological order and take descendants and ancestors inclusively. If v reaches u, adding u→v closes a cycle. Otherwise, the descendants D of v and ancestors C of u within [v,u] are disjoint. For a cut swept across that interval, Δ=|D on the left|−|C on the right| starts at −|C|, ends at |D|, and increases by exactly one at every crossed D∪C vertex, so it attains zero. At such a cut, F=D∩L and B=C∩R have equal positive size. Within each new block the old order remains topological. The only possible backward inter-block edge types are excluded respectively by the old order, descendant closure, ancestor closure, or—in the F→B case—by the resulting old path v→…→u. The inserted edge runs from B to F. Finally every b∈B reaches every f∈F through b→…→u→v→…→f, while no such path existed before because b followed f in the old topological order.",
+      "witness": "none",
+      "search_method": "Direct cut-sweep proof followed by a complete classification of later-block-to-earlier-block edge types and a reachability-freshness argument.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 2,
+      "claim": "The balanced-cut construction gives an explicit combinatorial algorithm with total time Õ(m+n√m+A), where A is the total number of adjacency entries scanned from selected forward vertices and selected backward vertices. Consequently it attains Õ(n√m) whenever A=Õ(n√m), including sequences in which every selected forward vertex has polylogarithmic out-degree and every selected backward vertex has polylogarithmic in-degree at its expansion time.",
+      "claim_sha256": "1e3b755a91cfb2c9e7b71b948548bc049c5686be8c3f70aea12a6364f7205a45",
+      "verdict": "VERIFIED",
+      "evidence": "A concrete compatible search realizes the lemma: a min-heap enumerates descendants of v from left to right and a max-heap enumerates ancestors of u from right to left; expand one candidate from each side while the forward candidate precedes the backward candidate, detecting a cycle whenever the two reached sets intersect. In a non-cycle update, after q rounds the selected vertices are the first q descendants and last q ancestors. The last compatible pair and first incompatible candidates bracket a cut having exactly those selected vertices on the required sides, so the lemma's B and F are obtained without expanding the remaining reachable vertices. A path-frontier argument shows that a pre-existing v-to-u path forces the two reached sets to intersect before an acyclic stop. Every non-root heap entry and duplicate/stale entry is caused by a scanned adjacency entry, selected-vertex heap work and sequence-tree reordering cost Õ(q), and ordinary update/root work totals Õ(m). Since update i creates q_i² fresh ordered pairs, monotonicity gives Σq_i²≤n(n−1), and Cauchy–Schwarz gives Σq_i≤n√m. The first cycle-forming update contributes at most Õ(n) selected work plus its scans. Thus the total is Õ(m+n√m+A). Under the directional polylog-degree condition, A=Õ(Σq_i+n)=Õ(n√m); for the standard distinct-edge model m≤n², also m≤n√m.",
+      "witness": "none",
+      "search_method": "Constructive compatible-search proof, including heap-enumeration invariants, cycle-path frontier analysis, fresh-pair amortization, and operation-by-operation accounting.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 3,
+      "claim": "Full adjacency-list rescanning cannot be charged automatically to the balanced-search vertex bound: there is a DAG sequence with n=2r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, yet rescanning the selected forward list costs r².",
+      "claim_sha256": "52567c84ad8041cb3bc36f8d47aa749b024b2b3014b8efa9e2e527fc45212061",
+      "verdict": "VERIFIED",
+      "evidence": "For every integer r≥1, the stated graph has 2r+2 vertices and 3r initial edges, followed by r violating edges. Inductively, immediately before u_i→v the order is u_1,…,u_(i−1),v,u_i,…,u_r,z,w_1,…,w_r. Vertex u_i has no proper ancestor, so B={u_i}; cutting immediately after v gives F={v}, hence q=1 and the stable reorder establishes the next inductive order. No vertex reaches u_i. Before insertion, u_i already reaches z and every w_j, while v reaches only the w_j among other vertices. Consequently the only newly reachable proper pair is (u_i,v). Nevertheless, expanding selected forward vertex v scans its same r outgoing entries v→w_j on each of the r updates, totaling exactly r² scans. The edge count is 3r+r=4r.",
+      "witness": "For arbitrary r≥1: vertices v,u_1,…,u_r,z,w_1,…,w_r; initial edges v→w_j and z→w_j for every j, and u_i→z for every i; then insert u_i→v in increasing i.",
+      "search_method": "Symbolic induction on the r violating updates, with exact edge/vertex counts and an exact comparison of reachability before and after each insertion.",
+      "checker_path": "none"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requests an unconditional combinatorial incremental topological-sort algorithm with soft-O(n√m) total update time for arbitrary insertion sequences. The draft proves a useful balanced-cut lemma and an explicit conditional algorithm, and it correctly identifies density regimes already covered by the two source-stated bounds. However, its general running time still contains the uncontrolled scan term A. Claim 3 supplies a family where ordinary full-list scanning costs r² while n√m=(2r+2)√(4r)=Θ(r^(3/2)), so the fresh-pair/selected-vertex argument cannot remove A. The intermediate-density arbitrary-degree case is therefore not solved. This is material partial progress, and the draft's claimed_resolution of PARTIAL plus its final statement that the unrestricted target remains unresolved are accurate rather than overstated.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the authorized source input and iteration-5 plain draft; used no web, retrieval database, receipt, prior run, verification report, or other solution.",
+    "Read the exact target independently and compared it with both the claims and the final writeup.",
+    "Re-derived all exponent thresholds and approximation factors by exact symbolic arithmetic without floating-point decisions.",
+    "Proved the balanced-cut lemma by a cut invariant and complete cross-block edge analysis, including the cycle-forming branch.",
+    "Reconstructed and audited the compatible min/max search, its cycle detection, its adjacency-scan accounting, and the fresh-pair Cauchy–Schwarz amortization.",
+    "Verified the rescanning family for arbitrary r by symbolic induction; because this is an infinite parametric proof rather than a finite computational assertion or finite counterexample, no checker program was applicable or created.",
+    "Made no repository modifications."
+  ]
+}

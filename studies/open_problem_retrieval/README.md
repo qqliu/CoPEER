@@ -1,0 +1,11 @@
+# Retrieval in open-problem search
+
+This bundle retains the five cohorts reported in the paper: 31 original targets, five additional hard targets, 22 continuations, six exploratory targets and six targeted stress-test targets. The 22 continuation endpoints replace their corresponding original endpoints in the primary 36-target view. The 58 protocol-stage observations and both six-target panels remain separate.
+
+Run `python studies/open_problem_retrieval/replay.py` (Python 3.9+, standard library). It reproduces cohort outcomes and component token totals from the saved per-target records: 12/11 accepted final endpoints among 36 targets, 0/0 in the exploratory panel and 1/1 in the targeted panel. These outcomes mean a run-local model audit accepted full resolution of that run's stated target; they are not a new external mathematical review.
+
+`results/` holds the three authoritative publication bundles. `cohorts/` supplies the corresponding terminal authorities, validation reports, protocols and terminal-linked drafts, audits, prompts, retrieved evidence and frozen targets where recorded. The original renderer/runner/retrieval sources are in `source/`; their anonymized research-tree paths are documentary, while `replay.py` is path-neutral. Token totals count the recorded completed revision/audit calls through each endpoint under that cohort's stated accounting basis. They exclude shared starting work and other separately scoped costs; no pooled campaign total is implied.
+
+Derived exports normalize machine paths and remove execution identity/log-detail fields. Original hashes embedded in records refer to the original saved bytes; the repository manifest identifies the anonymous distributed copies. This package provides deterministic saved-result reproduction without model-service access.
+
+The release also includes the terminal-linked whole-proof retrieval receipts, exploratory source PDFs and selection context, targeted-study preregistration inputs and runtime amendment, and both directly imported runtime-seal helpers. `../reviewed_projection_bindings.json` binds each original source hash to its distributed copy. Published source PDFs retain their original scientific attribution and bytes. Existing validation stamps inside projected records retain their original meaning; they are not hashes of the anonymized export.

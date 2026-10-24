@@ -1,0 +1,133 @@
+{
+  "record_id": "SE_math_4219732__q",
+  "original_record_id": "SE_math_4219732__q",
+  "release_status": "RETAINED",
+  "witness_action": "REPLACED_INVALID",
+  "witness_action_provenance": "explicit_auditor",
+  "current_fields": {
+    "claim_quote": "$$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}= \\frac{n^{2b+1}}{(2b+1)^{2b+1}} \\frac{(2b+1)^{2b+1}}{2^f\\cdot cn} = \\frac{n}{1}\\cdot\\frac{1}{4^{f}\\cdot n}=\\frac{1}{4f}$$ Note that $n^{2b+1}=n^{2b}\\cdot n = 2n = n$",
+    "explanation": "The full source explicitly permits discarding constant factors, so a lone finite numerical inequality is insufficient. The corrected evidence addresses the same quoted simplification n^(2b+1) to n with b=1 held fixed. For every constant C and threshold N there is n>=N with n^3>C*n. The Mathlib IsBigO refutation retains b=1,c=1,f=2 and treats n as the asymptotic variable; it does not claim that the legitimate factor 2 is significant.",
+    "flaw": "With b=1 fixed, the submitted side remark treats n^(2b+1)=n^3 as equivalent to n after discarding constant factors. This would require n^3=O(n), which is false. The legitimate simplification 2n=Theta(n) is not an error.",
+    "problem": "Rewriting an equation in the terms of Algorithmic complexity.",
+    "source_context": "0001 | In [this](https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf) paper (page 7 Eq. 3) the author derives the following: $$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}=\\Omega\\left( \\frac{n}{4^{bf}}\\right)$$\n0002 | I have tried to do the same below, but first some preliminaries. This is an analysis for algorithms and therefore constants can be erased. In this example, $b$ is a constant while $f$ is some $f$-bit fingerprint. I assume that $f$ is not treated as a constant here. $n$ is the number of elements and $c$ is just some constant. My take is the following, and note that the binomial coefficients is converted into its lower bound:\n0003 | $$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}= \\frac{n^{2b+1}}{(2b+1)^{2b+1}} \\frac{(2b+1)^{2b+1}}{2^f\\cdot cn} = \\frac{n}{1}\\cdot\\frac{1}{4^{f}\\cdot n}=\\frac{1}{4f}$$ Note that $n^{2b+1}=n^{2b}\\cdot n = 2n = n$ because its algorithms and their analysis.. My result above is not the same as the one at the top of this question. How does the author derive that? How is $n$ kept in his result?",
+    "witness": "Keep b=1,c=1,f=2 and let n range over the natural numbers. The same quoted source simplification n^(2b+1) to n would require n^3=O(n). For every real constant C and natural threshold N, choose m>C and n=max(N,m)+2; then n>=N and n^3>C*n. Hence no eventual constant-factor bound exists, refuting the simplification under the source stated asymptotic convention."
+  },
+  "historical_source_fields": {
+    "claim_quote": "$$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}= \\frac{n^{2b+1}}{(2b+1)^{2b+1}} \\frac{(2b+1)^{2b+1}}{2^f\\cdot cn} = \\frac{n}{1}\\cdot\\frac{1}{4^{f}\\cdot n}=\\frac{1}{4f}$$ Note that $n^{2b+1}=n^{2b}\\cdot n = 2n = n$",
+    "explanation": "The proof asserts the chain binom(n,2b+1)*(2/(c*n*2^f))^(2b) = n^(2b+1)/(2b+1)^(2b+1) * (2b+1)^(2b+1)/(2^f*c*n) = (n/1)*1/(4^f*n) = 1/(4f), justified by \"n^(2b+1) = n^(2b)*n = 2n = n\". This is a finite, parameter-wise refutable statement: each link is an identity in the integers n, b, f and the positive rational c, so a single admissible assignment where two sides differ refutes it.\n\nThe script evaluates all five links in exact Fraction arithmetic over n in 3..160, b in 1..4 (with 2b+1 <= n), f in 1..12 and c over a 13-point positive-rational grid (96720 assignments, no floats in any decision, no randomness, no early exit). Both readings of the left-hand side are tested: the genuine binomial coefficient and the author's own replacement of it by the lower bound (n/(2b+1))^(2b+1), so the refutation does not depend on which is meant.\n\nFindings. (i) The whole chain holds at zero assignments, exactly or within a factor 10. (ii) Link 1 (both readings) holds exactly nowhere: the left side carries the factor (2/(c*n*2^f)) to the power 2b, whereas the right side carries (2^f*c*n) to the first power only, and the 2^(2b) numerator vanishes; algebraically the two sides are n^(2b)/(2^f*c) versus binom(n,2b+1)*2^(2b)/(c^(2b)*n^(2b)*2^(2bf)), which are different rational functions. (iii) Link 2 reduces to n^(2b)/(2^f*c) = 1/4^f, i.e. c = n^(2b)*2^f, so it can be satisfied only by letting the \"constant\" c depend on n and b; in the grid it is hit at exactly one point, (n,b,c,f) = (4,1,32,1). (iv) The c-free ratio-quotient argument (part C of the script) shows the required c grows like n^(2b), so no fixed c and no fixed constant factor K can hold links 1, 1', 2 or 3 simultaneously at two different values of n (or, for link 3, of f). (v) The side remark is false everywhere and for structural reasons: n^(2b)*n = 2n forces n^(2b) = 2, impossible for integers n >= 2, b >= 1 (where n^(2b) >= 4) and false at n = 1; and 2n = n forces n = 0, excluded by n >= 2b+1 >= 3. Exhaustive search finds 0 assignments with n^(2b) = 2 and 0 with 2n = n.\n\nHonest caveats reported by the script rather than suppressed: the FINAL link 1/4^f = 1/(4f) is genuinely TRUE at f = 1 (4 = 4*1) and false for every f >= 2, so the target claim's blanket \"each of these equalities is false\" is marginally too strong at that one link for that one value of f; and link 2 has the single coincidental grid hit noted above. Neither rescues the chain: at f = 1 links 1, 1' and 2 still fail (see the n = 3, b = 1, c = 1/8, f = 1 witness, where 64/9 != 36 != 1/4), and the coincidental link-2 hit requires a non-constant c.",
+    "flaw": "The submitted derivation chain claims that binom(n,2b+1)*(2/(c*n*2^f))^(2b) equals (after converting the binomial to its lower bound (n/(2b+1))^(2b+1)) the expression n^(2b+1)/(2b+1)^(2b+1) * (2b+1)^(2b+1)/(2^f*c*n), and ultimately equals 1/(4f), using the step n^(2b+1) = n^(2b)*n = 2n = n. Each of these equalities (even read up to constant factors, as the author intends) is false.",
+    "problem": "Rewriting an equation in the terms of Algorithmic complexity.",
+    "source_context": "0001 | In [this](https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf) paper (page 7 Eq. 3) the author derives the following: $$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}=\\Omega\\left( \\frac{n}{4^{bf}}\\right)$$\n0002 | I have tried to do the same below, but first some preliminaries. This is an analysis for algorithms and therefore constants can be erased. In this example, $b$ is a constant while $f$ is some $f$-bit fingerprint. I assume that $f$ is not treated as a constant here. $n$ is the number of elements and $c$ is just some constant. My take is the following, and note that the binomial coefficients is converted into its lower bound:\n0003 | $$\\binom{n}{2b+1}\\left( \\frac{2}{cn\\cdot 2^f}\\right)^{2b}= \\frac{n^{2b+1}}{(2b+1)^{2b+1}} \\frac{(2b+1)^{2b+1}}{2^f\\cdot cn} = \\frac{n}{1}\\cdot\\frac{1}{4^{f}\\cdot n}=\\frac{1}{4f}$$ Note that $n^{2b+1}=n^{2b}\\cdot n = 2n = n$ because its algorithms and their analysis.. My result above is not the same as the one at the top of this question. How does the author derive that? How is $n$ kept in his result?",
+    "witness": "Take n = 5, b = 1, c = 1, f = 2 (admissible: n >= 2b+1 = 3, b,f >= 1, c > 0). The four quantities the proof chains together with equals signs are, in exact rational arithmetic:\n  binom(5,3)*(2/(c*n*2^f))^(2b) = 10*(2/20)^2 = 1/10                        (true LHS)\n  (5/3)^3*(2/20)^2 = 5/108                                                  (LHS after the author's own substitution of the binomial lower bound)\n  5^3/3^3 * 3^3/(2^2*1*5) = 25/4                                            (first RHS)\n  (5/1)*1/(4^2*5) = 1/16                                                    (second RHS)\n  1/(4*2) = 1/8                                                             (final RHS)\nClaim says 1/10 = 25/4 = 1/16 = 1/8; in fact these are pairwise distinct, with left/right ratios 2/125, 100 and 1/2. The side remark also fails here: n^(2b+1) = 125, 2n = 10, n = 5, so 125 != 10 != 5.\nSmallest witness in enumeration order: n = 3, b = 1, c = 1/8, f = 1, where LHS = 64/9 but the first RHS = 36 (ratio 16/81) and the second RHS = 1/4 (ratio 144).\nExhaustively, across all 96720 enumerated assignments the whole chain holds at ZERO points, exactly or even within a factor 10. Moreover the refutation is quantified over every positive real constant c and every constant factor K: for two assignments sharing (b,f), c enters both sides of a link with the same exponent and cancels from the quotient of the two discrepancy ratios, so that quotient is c-free. At (n,b,f) = (9,4,1) vs (160,4,1) the c-free quotient is 1152921504606846976000000000000000/1744146729569927314733951421 ~ 6.6e5 for link 1, 2684354560000000/4782969 ~ 5.6e8 for the lower-bound variant, and 429496729600000000/43046721 ~ 1.0e10 for link 2 (exactly (n/9)^(2b), hence unbounded in n); for the last link, f = 1 vs f = 12 gives 1048576/3 ~ 3.5e5. Since the link can hold within factor K at both points only if K^2 >= that quotient, no c and no constant K repairs any of them."
+  },
+  "audit": {
+    "compilation_evidence": "qedbench_certificate_availability_triage/validation/human_review_20260915/compilation/stackexchange_final/SE_math_4219732__q.json",
+    "confirmation_status": "CONFIRMED",
+    "corrected_fields": {
+      "explanation": "The full source explicitly permits discarding constant factors, so a lone finite numerical inequality is insufficient. The corrected evidence addresses the same quoted simplification n^(2b+1) to n with b=1 held fixed. For every constant C and threshold N there is n>=N with n^3>C*n. The Mathlib IsBigO refutation retains b=1,c=1,f=2 and treats n as the asymptotic variable; it does not claim that the legitimate factor 2 is significant.",
+      "flaw": "With b=1 fixed, the submitted side remark treats n^(2b+1)=n^3 as equivalent to n after discarding constant factors. This would require n^3=O(n), which is false. The legitimate simplification 2n=Theta(n) is not an error.",
+      "witness": "Keep b=1,c=1,f=2 and let n range over the natural numbers. The same quoted source simplification n^(2b+1) to n would require n^3=O(n). For every real constant C and natural threshold N, choose m>C and n=max(N,m)+2; then n>=N and n^3>C*n. Hence no eventual constant-factor bound exists, refuting the simplification under the source stated asymptotic convention."
+    },
+    "counterexample_check": "For every constant C and threshold N there is n>=N with n^3>C*n. The Mathlib IsBigO refutation retains b=1,c=1,f=2 and treats n as the asymptotic variable; it does not claim that the legitimate factor 2 is significant.",
+    "current_witness": "Keep b=1,c=1,f=2 and let n range over the natural numbers. The same quoted source simplification n^(2b+1) to n would require n^3=O(n). For every real constant C and natural threshold N, choose m>C and n=max(N,m)+2; then n>=N and n^3>C*n. Hence no eventual constant-factor bound exists, refuting the simplification under the source stated asymptotic convention.",
+    "error_categories": [
+      "source_context_and_hypotheses",
+      "witness_domain_and_quantifiers",
+      "formal_object_and_conclusion_alignment",
+      "standard_library_reuse",
+      "source_interpretation_or_asymptotic_scope"
+    ],
+    "error_category_evidence": {
+      "formal_object_and_conclusion_alignment": "The selected declaration uses the source mathematical objects and states the checked counterexample or a sufficient source conclusion failure, with the original parameters and required hypotheses.",
+      "source_context_and_hypotheses": "The full source explicitly permits discarding constant factors, so a lone finite numerical inequality is insufficient. The corrected evidence addresses the same quoted simplification n^(2b+1) to n with b=1 held fixed.",
+      "witness_domain_and_quantifiers": "For every constant C and threshold N there is n>=N with n^3>C*n. The Mathlib IsBigO refutation retains b=1,c=1,f=2 and treats n as the asymptotic variable; it does not claim that the legitimate factor 2 is significant."
+    },
+    "final_theorems": [
+      "SE_math_4219732_q.source_asymptotic_refutation"
+    ],
+    "lean_fidelity": "PASS",
+    "lean_path": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean/SE_math_4219732__q.lean",
+    "lean_semantics_check": "The selected declaration uses the source mathematical objects and states the checked counterexample or a sufficient source conclusion failure, with the original parameters and required hypotheses.",
+    "lean_sha256": "7c769806b5367dee6c07dfbfccc038bb5d8b4b587f6048fa85b57df173e532d6",
+    "mathlib_reuse_check": "Replace finite fraction surrogate with Mathlib IsBigO refutation of exact source power simplification.",
+    "narrative_review_note": "Current explanation is checked against the full source. Original primary witness values are unchanged; unsupported secondary or scope claims are explicitly excluded.",
+    "original_witness": "Take n = 5, b = 1, c = 1, f = 2 (admissible: n >= 2b+1 = 3, b,f >= 1, c > 0). The four quantities the proof chains together with equals signs are, in exact rational arithmetic:\n  binom(5,3)*(2/(c*n*2^f))^(2b) = 10*(2/20)^2 = 1/10                        (true LHS)\n  (5/3)^3*(2/20)^2 = 5/108                                                  (LHS after the author's own substitution of the binomial lower bound)\n  5^3/3^3 * 3^3/(2^2*1*5) = 25/4                                            (first RHS)\n  (5/1)*1/(4^2*5) = 1/16                                                    (second RHS)\n  1/(4*2) = 1/8                                                             (final RHS)\nClaim says 1/10 = 25/4 = 1/16 = 1/8; in fact these are pairwise distinct, with left/right ratios 2/125, 100 and 1/2. The side remark also fails here: n^(2b+1) = 125, 2n = 10, n = 5, so 125 != 10 != 5.\nSmallest witness in enumeration order: n = 3, b = 1, c = 1/8, f = 1, where LHS = 64/9 but the first RHS = 36 (ratio 16/81) and the second RHS = 1/4 (ratio 144).\nExhaustively, across all 96720 enumerated assignments the whole chain holds at ZERO points, exactly or even within a factor 10. Moreover the refutation is quantified over every positive real constant c and every constant factor K: for two assignments sharing (b,f), c enters both sides of a link with the same exponent and cancels from the quotient of the two discrepancy ratios, so that quotient is c-free. At (n,b,f) = (9,4,1) vs (160,4,1) the c-free quotient is 1152921504606846976000000000000000/1744146729569927314733951421 ~ 6.6e5 for link 1, 2684354560000000/4782969 ~ 5.6e8 for the lower-bound variant, and 429496729600000000/43046721 ~ 1.0e10 for link 2 (exactly (n/9)^(2b), hence unbounded in n); for the last link, f = 1 vs f = 12 gives 1048576/3 ~ 3.5e5. Since the link can hold within factor K at both points only if K^2 >= that quotient, no c and no constant K repairs any of them.",
+    "original_witness_failure": "The source explicitly discards constant factors. A discrepancy at the single finite value n=5 does not refute an eventual asymptotic assertion.",
+    "record_id": "SE_math_4219732__q",
+    "release_decision": "RETAIN",
+    "remaining_limitations": [],
+    "replacement_justification": "The same b=1,c=1,f=2 parameters and quoted exponent simplification are retained; n is treated as the source asymptotic variable rather than frozen at 5.",
+    "same_source_claim_and_hypotheses": "PASS",
+    "source_check": "The full source explicitly permits discarding constant factors, so a lone finite numerical inequality is insufficient. The corrected evidence addresses the same quoted simplification n^(2b+1) to n with b=1 held fixed.",
+    "source_context_file": "qedbench_certificate_availability_triage/validation/human_review_20260915/source_context/stackexchange.jsonl",
+    "source_context_record_sha256": "f56303e0223ed7d758e1644c91240a3140a937d0632d82cf52f3248330d51583",
+    "source_fidelity": "PASS",
+    "source_packet": "qedbench_certificate_availability_triage/validation/dossiers/SE_math_4219732__q.tex",
+    "source_packet_sha256": "cb90a54d8b3f0dbf6810c0380731db240d316bd54156939d7129251561e93bdc",
+    "source_scope": "Local challenged assertion; not a claim that the source final theorem is false.",
+    "witness_action": "REPLACED_INVALID",
+    "witness_validity": "PASS"
+  },
+  "audit_provenance": {
+    "path": "ARCHIVED_WORKTREE/qedbench_certificate_availability_triage/validation/human_review_20260915/audits/stackexchange_final.json",
+    "sha256": "759ef58d89bbb57a644361623509d57d5c9242d8c2878fa7fc57f2ef6e04da21"
+  },
+  "correction": {
+    "explanation": "The full source explicitly permits discarding constant factors, so a lone finite numerical inequality is insufficient. The corrected evidence addresses the same quoted simplification n^(2b+1) to n with b=1 held fixed. For every constant C and threshold N there is n>=N with n^3>C*n. The Mathlib IsBigO refutation retains b=1,c=1,f=2 and treats n as the asymptotic variable; it does not claim that the legitimate factor 2 is significant.",
+    "flaw": "With b=1 fixed, the submitted side remark treats n^(2b+1)=n^3 as equivalent to n after discarding constant factors. This would require n^3=O(n), which is false. The legitimate simplification 2n=Theta(n) is not an error.",
+    "record_id": "SE_math_4219732__q",
+    "witness": "Keep b=1,c=1,f=2 and let n range over the natural numbers. The same quoted source simplification n^(2b+1) to n would require n^3=O(n). For every real constant C and natural threshold N, choose m>C and n=max(N,m)+2; then n>=N and n^3>C*n. Hence no eventual constant-factor bound exists, refuting the simplification under the source stated asymptotic convention."
+  },
+  "correction_provenance": {
+    "path": "ARCHIVED_WORKTREE/qedbench_certificate_availability_triage/validation/human_review_20260915/corrections/stackexchange_final.json",
+    "sha256": "b507d5fb7a6c359a5a43865b4d0a923a7e84f2ebf8a8f77b261c147c6fff4dbe"
+  },
+  "evidence_tier": "KERNEL_ONLY",
+  "exact_checker": null,
+  "lean_path": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean/SE_math_4219732__q.lean",
+  "lean_sha256": "7c769806b5367dee6c07dfbfccc038bb5d8b4b587f6048fa85b57df173e532d6",
+  "local_dependencies": [],
+  "source_packet": {
+    "path": "qedbench_certificate_availability_triage/validation/dossiers/SE_math_4219732__q.tex",
+    "sha256": "cb90a54d8b3f0dbf6810c0380731db240d316bd54156939d7129251561e93bdc"
+  },
+  "build_record": {
+    "axiom_log": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean_build/final_selected/logs/SE_math_4219732__q_e4e897bf3a.axioms.log",
+    "compile_log": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean_build/final_selected/logs/SE_math_4219732__q_e4e897bf3a.compile.log",
+    "current_path": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean/SE_math_4219732__q.lean",
+    "current_sha256_at_run_end": "7c769806b5367dee6c07dfbfccc038bb5d8b4b587f6048fa85b57df173e532d6",
+    "historical_hash_matches": false,
+    "historical_path": "partB_feasibility/se_q_certificates/SE_math_4219732__q.lean",
+    "historical_sha256": "8f83789beaec56d4a7bbbd193ad184504e007f7543043e68ced05d9d3c036b86",
+    "record_id": "SE_math_4219732__q",
+    "selected_path": "qedbench_certificate_availability_triage/validation/human_review_20260915/lean/SE_math_4219732__q.lean",
+    "selected_theorem_trust_tier": "KERNEL_ONLY",
+    "selected_theorems": [
+      {
+        "audit": {
+          "axioms": [
+            "propext",
+            "Classical.choice",
+            "Quot.sound"
+          ],
+          "disallowed_axioms": [],
+          "event": "declaration",
+          "kind": "theorem",
+          "name": "SE_math_4219732_q.source_asymptotic_refutation",
+          "native_candidate_axioms": [],
+          "type": "¬(fun n => ↑n ^ 3) =O[Filter.atTop] fun n => ↑n",
+          "unsafe": false,
+          "uses_native_reduction": false
+        },
+        "name": "SE_math_4219732_q.source_asymptotic_refutation"
+      }
+    ],
+    "selected_theorems_present": true,
+    "sha256": "7c769806b5367dee6c07dfbfccc038bb5d8b4b587f6048fa85b57df173e532d6",
+    "source_sha256": "7c769806b5367dee6c07dfbfccc038bb5d8b4b587f6048fa85b57df173e532d6",
+    "status": "PASS",
+    "trust_tier": "KERNEL_ONLY"
+  },
+  "blockers": [],
+  "export_scope": "Scientific-field projection; human-review and assignment metadata omitted. No new review or compilation."
+}

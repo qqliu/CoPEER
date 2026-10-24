@@ -1,0 +1,116 @@
+{
+  "record_id": "tcs_karp_rabin_collision_detection",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 3,
+  "parent_sha256": "a2b91dff2cd34816dc11bb9407f7dbda3af3a55f4d95fd9365feec5a16885375",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "For p not dividing the base b, collision detection is exactly repeated-state detection on mismatch-only normalized prefix sums. Moreover, every collision has a witness containing at most p mismatching aligned positions, although its length may exceed p.",
+      "claim_sha256": "82d2e2203ee224fe7092b841135a5633e6171bee4235c8c86e8a2084a0df8333",
+      "verdict": "VERIFIED",
+      "evidence": "For r<e, b^e(A_d(e)-A_d(r)) equals sum_{t=r}^{e-1}(s[t]-s[t+d])b^{e-1-t}=F(r,e-r)-F(r+d,e-r). Since b is invertible modulo p, equality of fingerprints is equivalent to equality of states. Between aligned mismatches A_d is constant, so retaining B_0=0 and states immediately after mismatches preserves both directions: a genuine collision maps to B_a=B_c with a<c, and such a repeat yields an interval containing c-a actual mismatches. If at least p mismatches exist, two of the first p+1 states coincide; otherwise any witness has fewer than p mismatches.",
+      "witness": "For B_a=B_c, take r=0 if a=0 and r=q_a+1 otherwise, and take e=q_c+1. Then S[r..e) and S[r+d..e+d) are unequal, have equal fingerprints, and contain exactly c-a mismatching aligned positions.",
+      "search_method": "Direct finite-field derivation plus exhaustive enumeration over bases 2 through 4, primes through 11, strings of length at most 6, and every displacement.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "In the word-RAM model with p=n^{O(1)}, there is an exact deterministic algorithm running in O(n log n+n+min{D,M,n min(n,p)}) time, where D is the number of distinct substring contents and M is the number of unequal unordered character-position pairs. Consequently the requested O(n log n) bound holds when p=O(log n), D=O(n log n), or M=O(n log n).",
+      "claim_sha256": "32108689663e756964a554cbe2b4dd6ad9aa4ab7255abedb4869d979657fa134",
+      "verdict": "VERIFIED",
+      "evidence": "After O(n log n) deterministic suffix/LCE preprocessing, displacement d generates at most 1+min(m_d,p) states. Since sum_d m_d=M and m_d<=n-d, their total is O(n+min{M,n min(n,p)}). Complete word-sized (d,state,boundary) keys can be radix-sorted in linear time in the record count plus O(n). Independently, the trimmed suffix tree has one character-depth locus per distinct content, so traversing its edge labels creates exactly D (length,fingerprint,representative) records in O(D), also radix-sortable. Computing D and M first permits choosing the cheaper route. When p divides b, claim 3 supplies O(n log n), which is within the displayed bound. Each stated sufficient regime follows directly.",
+      "witness": "Equal (d,state) records reconstruct a collision using their two boundaries; equal (length,fingerprint) records from two distinct suffix-tree loci reconstruct one using stored representative starts.",
+      "search_method": "Static correctness and complexity audit of both algorithms, including record counts, witness reconstruction, preprocessing, and radix-key sizes; the normalized component was also exhaustively stress-tested.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "Let C_L be the number of distinct length-L substring contents. After deterministic suffix-tree preprocessing, all values C_L can be computed in O(n) additional time; if C_L>p for any L, an unequal colliding pair can be constructed in O(n) additional word-RAM time. Thus every such instance has an exact O(n log n) solution, including instances outside the parent’s aggregate D- and M-bounded regimes.",
+      "claim_sha256": "a2c0eb79e76e6bd4f551708fb79a2364d1f87ff9b9bc82b4c09484c1c3fd5bb2",
+      "verdict": "VERIFIED",
+      "evidence": "A trimmed suffix-tree edge spanning string depths a<c contributes exactly one distinct substring at each integer depth in [a+1,c]. Difference-array range additions over O(n) edges therefore compute every C_L in O(n). If C_L>p, strict pigeonhole gives two distinct contents with one residue. Eligible suffixes remain ordered by content in the suffix array; consecutive-eligible LCP tests assign exact length-L content classes. Prefix arithmetic and radix sorting of (fingerprint,class,start) records then find two class IDs in one fingerprint bucket in O(n). As a concrete outside-regime family, for prime p take n=p^2+1, base/alphabet size n, and a string containing every symbol once: C_1=n>p while D=n(n+1)/2 and M=n(n-1)/2.",
+      "witness": "A sorted fingerprint bucket containing records (h,c_1,i) and (h,c_2,j) with c_1!=c_2 returns S[i..i+L) and S[j..j+L), which are provably unequal and have fingerprint h.",
+      "search_method": "Direct suffix-tree locus counting, suffix-array class reconstruction, pigeonhole analysis, and an independent explicit family outside the aggregate bounds.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "The target has a complete O(n log n) exact solution in the noninvertible case p divides b.",
+      "claim_sha256": "fbde28b5d4d7e41d2063b94848e677a9ac5db957f007dc48c8fa13dcc178a3f6",
+      "verdict": "VERIFIED",
+      "evidence": "When b=0 modulo p, a nonempty most-significant-first fingerprint is its last-character residue. For endpoints e<f in one residue class, all feasible paired substrings are equal exactly when R_e=s[e]...s[0] is a prefix of R_f. Otherwise their reversed LCP length t<e+1 gives an unequal colliding pair of length t+1. Checking consecutive endpoints is sufficient: if every consecutive prefix relation holds, transitivity gives it for every pair in the class. Reversed-string LCP preprocessing costs O(n log n), followed by O(n) comparisons. Reversing roles handles the opposite coefficient convention.",
+      "witness": "At the first consecutive pair e<f whose reversed-prefix LCP has length t<e+1, the length-(t+1) substrings ending at e and f differ but share their endpoint residue and hence their fingerprint.",
+      "search_method": "Direct endpoint characterization and exhaustive comparison with brute-force collision detection for 138,180 strings over small alphabets where p divides b.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Collisions cannot occur at length L when b^L<=p, but checking only power-of-two lengths, only lexicographically adjacent contents, or relying on monotonicity in the length is insufficient.",
+      "claim_sha256": "39292b2c4efd6b89cfe8d0173ff8e2ef93c1a6ff3a30a57d699e54c82ee15eaf",
+      "verdict": "VERIFIED",
+      "evidence": "Distinct canonical length-L base-b words have distinct integer values in an interval of width b^L-1<p, so their nonzero difference cannot be divisible by p. For b=2, p=5, S=000101, exhaustive exact evaluation gives unequal-content collision flags [false,false,true,false,false,false] for lengths 1 through 6. At length 3 the ordered contents have integer values 0,1,2,5, so only the nonadjacent values 0 and 5 collide. Lengths 1,2,4 are collision-free, and collision existence is nonmonotone.",
+      "witness": "The length-3 substrings 000 and 101 have integer values 0 and 5 and equal residue 0 modulo 5; no other length has an unequal collision in this string.",
+      "search_method": "Integer-range proof and exact enumeration of the stated example and all canonical words for small threshold cases.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "Under the most-significant-character-first convention, for the binary string S_m=0^m1^m and any odd prime p, an unequal equal-length fingerprint collision exists if and only if the multiplicative order ord_p(2) is at most m.",
+      "claim_sha256": "65db6aa6a9f9c491b259f1583f689db78ed81c8d8d8f3a098b8cd1e8ff97d250",
+      "verdict": "VERIFIED",
+      "evidence": "Every occurring fixed-length content is 0^{L-j}1^j and hashes to 2^j-1. At any one length, allowed j values form an integer interval of width at most m. For j>k, equality of hashes is equivalent, because p is odd, to 2^{j-k}=1 modulo p, hence to ord_p(2) dividing j-k. Thus order greater than m excludes collisions. If r=ord_p(2)<=m, the two occurring length-m contents 0^m and 0^{m-r}1^r hash to 0 and 2^r-1=0.",
+      "witness": "For r=ord_p(2)<=m, use the length-m windows beginning at positions 0 and r in 0^m1^m.",
+      "search_method": "Bidirectional multiplicative-order proof and exact tests for m<=12 and every odd prime through 257.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "For every m>=1 there is an odd prime p=O(m^2 log(m+2)) satisfying ord_p(2)>m; hence the collision-free family S_m=0^m1^m uses permitted polynomial-size primes in the invertible, superlogarithmic regime.",
+      "claim_sha256": "3a6b4f6506d0c3a311808c5d94a82b181fb8643b0de93cd21e36e28e55772e9c",
+      "verdict": "VERIFIED",
+      "evidence": "For odd prime q, ord_q(2)<=m iff q divides P_m=product_{k=1}^m(2^k-1). Since P_m<2^{m(m+1)/2}, it has fewer than m^2 distinct odd prime divisors. One of the first m^2+1 odd primes therefore does not divide P_m. The standard kth-prime estimate places it at O(m^2 log(m+2)), and nondivisibility gives order greater than m. Since the order divides p-1, p>m+1; for n=2m this is p=Omega(n), while the upper bound is polynomial and p is odd, hence invertible modulo base 2.",
+      "witness": "Choose the first odd prime among the first m^2+1 odd primes that does not divide P_m; the divisor count guarantees that this choice exists.",
+      "search_method": "Direct divisor-count and multiplicative-order argument, with finite exact checks of the bad-prime equivalence and selected primes for m=1 through 12.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "For S_m=0^m1^m, C_L=L+1 for 1<=L<=m and C_L=2m-L+1 for m<L<=2m. Consequently D=m^2+2m and M=m^2; with a prime from the preceding claim, every C_L<p and M<=(2m-1)(p-1), while p=Omega(n) and D,M=Theta(n^2).",
+      "claim_sha256": "a6ebe2d4c0a73895ac65eecb023fc252aca3f7f586464cf7f0a36f1685a57fd0",
+      "verdict": "VERIFIED",
+      "evidence": "For L<=m, trailing-one counts j=0,...,L give L+1 contents. For L>m, j=L-m,...,m gives 2m-L+1. Summing yields m^2+2m. The only unequal character-position pairs choose one of m zeros and one of m ones, hence M=m^2. From ord_p(2)>m and ord_p(2)|(p-1), p>=m+2, so max_L C_L=m+1<p. Also (2m-1)(p-1)>=(2m-1)(m+1)>=m^2. With n=2m, the remaining asymptotic statements follow.",
+      "witness": "The exact profile sums to (m^2+3m)/2+m(m+1)/2=m^2+2m, while the zero-one cross product gives exactly m^2 unequal unordered position pairs.",
+      "search_method": "Closed-form counting and exact enumeration for m=1 through 12.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    },
+    {
+      "idx": 8,
+      "claim": "On the collision-free instances from the preceding claims, the explicit normalized-state route produces exactly Q=m^2+2m-1=Theta(n^2) distinct records, and the distinct-content route produces D=m^2+2m=Theta(n^2) records. This is a quadratic obstruction to those routes, not a lower bound against every possible algorithm for the open target.",
+      "claim_sha256": "cbdf790688b61f5d586bbf9a1af9e8f065fb3930cfdfc4f8051b7e8a7cebf141",
+      "verdict": "VERIFIED",
+      "evidence": "There are 2m-1 displacements. The normalized route emits one initial state plus one per mismatch, and sum_d m_d=M=m^2. Collision-freedom makes every (d,state) key distinct within its displacement, while m_d<=m<p prevents the p-mismatch cutoff. Hence Q=(2m-1)+m^2. The suffix-tree route emits one record for each of D=m^2+2m distinct contents. Both counts are Theta(n^2) for n=2m. The draft expressly restricts the conclusion to these enumeration strategies and disclaims a general lower bound.",
+      "witness": "For each d, m_d=d when d<=m and m_d=2m-d when d>m; summing these mismatch counts gives m^2 and adding one initial record per displacement gives m^2+2m-1.",
+      "search_method": "Exact route-count derivation and finite state enumeration on collision-free two-run instances for m<=12.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_karp_rabin_collision_detection/audit/bugbank/attempt_3/tcs_kr_attempt3_audit_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The source asks for an O(n log n) or linear-time detector for every allowed string and polynomial-size prime, permitting a declared small false-rejection probability. The draft proves exact algorithms for the noninvertible case and several substantial invertible-base regimes, plus valid certificates and structural reductions. It explicitly leaves unresolved the general invertible case with superlogarithmic p and quadratic-scale D and M when neither certificate fires. Its two-run family only proves that the two proposed enumeration routes can be quadratic and correctly disclaims a lower bound against other algorithms. Thus the work is material but does not completely resolve the source target, exactly matching its PARTIAL claimed resolution.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json as evidence inputs; used no web or other solution material.",
+    "Confirmed /evidence/parent.json has SHA-256 a2b91dff2cd34816dc11bb9407f7dbda3af3a55f4d95fd9365feec5a16885375.",
+    "Recomputed all nine claim-string SHA-256 bindings and matched the supplied values.",
+    "Derived the normalized-state equivalence and mismatch witness bound directly.",
+    "Audited the LCE enumeration, record bounds, radix sorting, suffix-tree enumeration, and witness reconstruction in the stated word-RAM model.",
+    "Audited the suffix-tree range-add profile and the C_L>p construction.",
+    "Audited the noninvertible endpoint-prefix criterion and its consecutive-pair reduction.",
+    "Ran /work/tcs_kr_attempt3_audit_checker.py: 123,708 normalized displacement cases and 138,180 noninvertible strings passed, as did the 000101 example and two-run order/count tests through m=12.",
+    "Checked the prime-existence proof using exact divisor counting and the standard kth-prime bound."
+  ]
+}

@@ -1,0 +1,173 @@
+# Record E09: Handshaking induction: the base case of the induction on edges
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E09 (SE_math_782216__q)
+public source: https://math.stackexchange.com/questions/782216/is-my-induction-proof-of-the-handshake-lemma-correct-graph-theory
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Is my induction proof of the handshake lemma correct? (Graph Theory)
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | I am an high-school senior who loves maths, I decided to taught myself some basic Graph Theory and I tried to prove the handshake lemma using induction.
+0002 | 
+0003 | While unable to find any proofs similar to the one I wrote on the Internet, I wonder if mine is incorrect or just presented differently. Any advice, remarks or critic would be warmly welcomed!
+0004 | 
+0005 | Let P be the following proposition "In any graph, the sum of the degrees of all vertices is equal to twice the number of edges:"
+0006 | 
+0007 | $$\textrm{P(n)}:\sum_{V\;\in\;G} deg(|V|) = 2n\;\;\;where\;\;|E| = n\\$$
+0008 | 
+0009 | Base case:  $P(0): 2n = 0 |_{n=0}.$ Since there aren't any edge the number of vertices must be equal to $1$ or $0$.
+0010 | 
+0011 | $$\sum_{V\;\in\;G} deg(|V|) = deg(|V|) = 0\;\text{the number degree equal to }0.\\\text{thus, }P(0)\text{ is true}$$
+0012 | 
+0013 | Induction step: Assuming that $P(n)$ is true for a given natural number.Let show that $P(n)\Rightarrow P(n+1).$
+0014 | 
+0015 | 
+0016 | $$P(n):\sum_{V\;\in\;G} deg(|V|) = 2n\\
+0017 | \sum_{V\;\in\;G} deg(|V|) + 2= 2n + 2\\
+0018 | \sum_{V\;\in\;G} deg(|V|) + 2 = 2(n+1)\\
+0019 | which\;yield\;by\;adding\;two\;vertices\;of\;degree\;1\\P(n)\Rightarrow P(n+1)$$
+0020 | 
+0021 | $$\forall n \in \mathbb{N}, \sum_{V\;\in\;G} deg(|V|) = 2|E|\\
+0022 | \textrm{For any given graph G, the sum of the degree of all vertices is equal}\\\textrm{to twice the number of edges.}$$
+0023 | 
+0024 | Thanks all, I really want to understand what is wrong (if anything!)
+0025 | 
+0026 | $$PS:\;Sorry\;for\;any\;grammar\;faults\;or\;horrible\;\LaTeX\;formatting$$
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+Since there aren't any edge the number of vertices must be equal to $1$ or $0$.
+located at line label(s): 0009
+
+## Located defective declaration
+
+Declaration: `SE_math_782216_q_Census.BaseClaim G / SE_math_782216_q_Census.UniversalBaseClaim`
+
+```lean
+def BaseClaim {V : Type*} [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet] : Prop :=
+  G.edgeFinset.card = 0 → Fintype.card V ≤ 1
+def UniversalBaseClaim : Prop :=
+  ∀ (V : Type) [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet], BaseClaim G
+```
+
+In the base case of its induction on the number of edges the source asserts (stored source line 0009) that a graph without edges has one vertex or none. As a universal statement over finite simple graphs this is the located defect. Supply the one hypothesis on G, drawn from the source's context, under which the sentence becomes true, prove the corrected sentence for every finite simple graph, show the hypothesis is neither empty nor trivially true on edgeless graphs, and prove the handshake lemma SourceGoal the source is after.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/-
+Record SE_math_782216__q (E09, Stack Exchange, question arm).
+Source: "Is my induction proof of the handshake lemma correct? (Graph Theory)".
+Quoted claim (base case of the induction on the number of edges):
+  "Since there aren't any edge the number of vertices must be equal to 1 or 0."
+The located statement is `BaseClaim` at a finite simple graph, read universally as
+`UniversalBaseClaim`.  The theorem the source is proving is the handshake lemma,
+`SourceGoal` (statement only).
+-/
+import Mathlib
+
+namespace SE_math_782216_q_Census
+open SimpleGraph Finset
+
+/-- The source's base-case sentence at a finite simple graph `G`:
+"since there aren't any edges the number of vertices must be 1 or 0". -/
+def BaseClaim {V : Type*} [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet] : Prop :=
+  G.edgeFinset.card = 0 → Fintype.card V ≤ 1
+
+/-- The quoted claim, read as the universal statement the source needs. -/
+def UniversalBaseClaim : Prop :=
+  ∀ (V : Type) [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet], BaseClaim G
+
+/-- The handshake lemma, the theorem the source is proving (statement only). -/
+def SourceGoal : Prop :=
+  ∀ (V : Type) [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj],
+    ∑ v, G.degree v = 2 * G.edgeFinset.card
+
+end SE_math_782216_q_Census
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record SE_math_782216__q (E09): the base-case sentence fails at the edgeless graph on two
+vertices (0 edges, 2 vertices). -/
+namespace SE_math_782216_q_Census
+
+theorem bot_two_no_edges : (⊥ : SimpleGraph (Fin 2)).edgeFinset.card = 0 := by simp
+
+theorem two_vertices : ¬ Fintype.card (Fin 2) ≤ 1 := by decide
+
+theorem base_claim_fails_on_bot_two : ¬ BaseClaim (⊥ : SimpleGraph (Fin 2)) :=
+  fun h => two_vertices (h bot_two_no_edges)
+
+theorem universal_base_claim_false : ¬ UniversalBaseClaim :=
+  fun h => base_claim_fails_on_bot_two (h (Fin 2) ⊥)
+
+end SE_math_782216_q_Census
+
+#print axioms SE_math_782216_q_Census.base_claim_fails_on_bot_two
+#print axioms SE_math_782216_q_Census.universal_base_claim_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E09: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace SE_math_782216_q_Census
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The hypothesis to add to the source's base-case sentence: a condition on the graph `G` drawn from
+the source's context (connectivity). The hole must be a proposition about `G` in Mathlib vocabulary; it
+may not mention the number of vertices (`Fintype.card`, `Subsingleton`, ...), edge counts or `BaseClaim`. -/
+def guard {V : Type} [Fintype V] (G : SimpleGraph V) : Prop := «HOLE»
+
+/-- The corrected base-case sentence: under the added hypothesis, a finite simple graph without edges has
+at most one vertex (shape fixed). -/
+def CorrectedBaseClaim : Prop :=
+  ∀ (V : Type) [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet], guard G → BaseClaim G
+-- ===== END FIXED PART =====
+
+end SE_math_782216_q_Census
+```
+
+Allowed edit: Replace the hole in `guard` by one proposition about G in Mathlib vocabulary (a connectivity condition from the source's context); it may not mention the number of vertices (Fintype.card, Subsingleton, ...), edge counts or BaseClaim; nothing else in the fixed part may change. The premise G.edgeFinset.card = 0 and the quantification over all finite simple graphs are fixed. Do not redefine BaseClaim, UniversalBaseClaim or SourceGoal; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): BaseClaim, UniversalBaseClaim, SourceGoal
+
+## OBLIGATIONS (exact names and statements, inside `namespace SE_math_782216_q_Census`)
+
+```lean
+theorem repair_statement : ∀ (V : Type) [Fintype V] (G : SimpleGraph V) [Fintype G.edgeSet], SE_math_782216_q_Census.guard G → SE_math_782216_q_Census.BaseClaim G
+```
+(universal: Universal: the corrected base-case sentence holds for every finite simple graph.)
+
+```lean
+theorem repair_nonvacuous : (∃ (V : Type) (_ : Fintype V) (G : SimpleGraph V) (_ : Fintype G.edgeSet), G.edgeFinset.card = 0 ∧ SE_math_782216_q_Census.guard G) ∧ (∃ (V : Type) (_ : Fintype V) (G : SimpleGraph V) (_ : Fintype G.edgeSet), G.edgeFinset.card = 0 ∧ ¬ SE_math_782216_q_Census.guard G)
+```
+(nonvacuity: Non-vacuity: the added hypothesis is satisfied by some edgeless finite graph and violated by some other edgeless finite graph (it is neither empty nor trivially true where the base case applies).)
+
+```lean
+theorem final_theorem : SE_math_782216_q_Census.SourceGoal
+```
+(final: The handshake lemma the source is proving, unchanged (`SourceGoal` from defs_only: `∀ (V : Type) [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj], ∑ v, G.degree v = 2 * G.edgeFinset.card`). If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Write work/SUBMISSION.lean as specified in the instructions, compile it with `lake env lean work/SUBMISSION.lean`, fix errors within the budget, and finish with the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

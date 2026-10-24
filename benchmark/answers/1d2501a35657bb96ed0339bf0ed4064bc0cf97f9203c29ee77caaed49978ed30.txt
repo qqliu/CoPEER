@@ -1,0 +1,332 @@
+Here's a thinking process:
+
+1.  **Understand User Input:**
+   - User provides a LaTeX/TeX file that appears to be a mathematical paper.
+   - The file has a title P1 and numbered text lines 0001 onwards (though the numbering starts at 0001 but actually seems to be line numbers in the source, many are blank or package inclusions; the actual content starts around line 203 or so, with sections, theorems, etc.).
+   - User states: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument."
+   - User asks: "Identify a line that contains the false assertion. If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin."
+   - "Give up to three candidate lines, most likely first. A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line."
+   - Output format: JSON object with "candidates": [<line>, <line>, <line>], "claim": "<the false assertion, one sentence>", "counterexample": "<one sentence>"
+
+2.  **Analyze the Text for False Assertions:**
+   I need to carefully read the mathematical content to find a false assertion. The paper is about large deviations for stochastic Ginzburg-Landau equation driven by α-stable noises.
+
+   Let me go through key parts:
+
+   - Title/Problem: P1 | Title: Large deviation principle of occupation measure for stochastic real Ginzburg-Landau equation driven by α-stable noises
+   - Abstract (lines 236-238): "We establish a large deviation principle for the occupation measure of the stochastic real Ginzburg-Landau equation driven by α-stable noises. The proof is based on a hyper-exponential recurrence criterion. Our result indicates a phenomenon that strong dissipation beats heavy tailed noises to produce a large deviation, it seems to us that this phenomenon has not been reported in the known literatures."
+   - Main Theorem (Theorem \ref{thm main}, lines 429-442): Assumes α ∈ (3/2, 2) and 1/2 + 1/(2α) < β < 3/2 - 1/α. Then the family P_ν(L_T ∈ ·) as T → +∞ satisfies the LDP with respect to τ-topology, speed T, rate function J, uniformly for any initial measure ν in M_1(H).
+   - The hyper-exponential recurrence criterion (Theorem \ref{thm Wu}, lines 535-559): Conditions for LDP.
+   - Theorem \ref{thm hyper-exp} (lines 747-751): "For any λ>0, there exists M=M_{λ,δ} such that sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞."
+   - The proof of Theorem \ref{thm hyper-exp} (lines 752-778): Uses Markov property, Chebyshev, Lemma \ref{l: X}.
+
+   Let me check the conditions and assumptions carefully.
+
+   Key assumptions from the paper:
+   - α ∈ (3/2, 2) (from Theorem \ref{Thm Xu 13}, line 407)
+   - 1/2 + 1/(2α) < β < 3/2 - 1/α (from Theorem \ref{thm main}, line 429, and also from the setup in lines 370, 407)
+   - β > 1/2 + 1/(2α) (line 370)
+   - The SDE: dX_t + A X_t dt = N(X_t) dt + dL_t, where N(u) = u - u^3, L_t is α-stable process with i.i.d. symmetric α-stable components, and there exist C_1, C_2 > 0 such that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β > 1/2 + 1/(2α).
+
+   Now, I need to find a false assertion. Let's examine the logical flow and mathematical claims.
+
+   Look at Lemma \ref{l: ZEst} (line 593-598): "For any T>0, 0 ≤ θ < β - 1/(2α) and any 0 < p < α, we have E[sup_{0≤t≤T} ||A^θ Z_t||^p_H] ≤ C T^{p/α}, where C depends on α, θ, β, p."
+
+   This is a maximal inequality for the OU process with α-stable noise. I need to check if the condition θ < β - 1/(2α) is correctly stated and if the inequality holds under the given assumptions.
+
+   Look at the condition on β: from line 370: "we assume that there exist some C_1, C_2>0 so that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β > 1/2 + 1/(2α)."
+
+   From Theorem \ref{Thm Xu 13}, line 407: "Assume that α ∈ (3/2,2) and 1/2 + 1/(2α) < β < 3/2 - 1/α"
+
+   So β is in (1/2 + 1/(2α), 3/2 - 1/α).
+
+   Now, check the condition in Lemma \ref{l: ZEst}: θ < β - 1/(2α). Since β > 1/2 + 1/(2α), we have β - 1/(2α) > 1/2. So θ can be up to something > 1/2.
+
+   Is the inequality E[sup_{0≤t≤T} ||A^θ Z_t||^p_H] ≤ C T^{p/α} valid under these conditions? This looks like a known result for α-stable driven SPDEs. I'm not immediately seeing a false assertion here, but need to check carefully.
+
+   Look at Lemma \ref{l:Y} (lines 610-615): "For all T>0, sup_{t∈[T/2,T]} ||Y_t||_H ≤ C(T)(1 + sup_{0≤t≤T} ||Z_t||_V), where C(T) does not depend on initial value Y_0=x."
+
+   This is used to estimate Y_t = X_t - Z_t. The proof uses energy estimates. I need to check if there's any hidden assumption or false step.
+
+   Look at the proof of Lemma \ref{l:Y} (lines 617-678). It derives an inequality for h(t) = ||Y_t||_H^2, gets a differential inequality, compares to a Riccati-type ODE, and gets the estimate. The steps seem mathematically plausible, but I need to find a concrete false assertion.
+
+   Let me look at Theorem \ref{thm hyper-exp} (line 747-751): "For any λ>0, there exists M=M_{λ,δ} such that sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞."
+
+   The proof (lines 752-778) uses a discrete-time embedded chain at integer times, assumes τ_M is the hitting time of ||X_k||_{H_δ} ≤ M, and uses Lemma \ref{l: X} which says: "For all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p}."
+
+   Wait, Lemma \ref{l: X} (lines 716-722): "For all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} where C_{T,δ,p} does not depend on initial value X_0=x."
+
+   This is a moment estimate for the solution X_T in weighted space H_δ. The condition p ∈ (0, α/4) is key. Since α ∈ (3/2, 2), α/4 ∈ (3/8, 1/2). So p can be in (0, something less than 1/2).
+
+   Now, the proof of Theorem \ref{thm hyper-exp} uses p ∈ (0, α/4) and the bound PP_ν(B_n) ≤ (C_{δ,p}/M^p)^n. Then it sums the geometric series and gets finiteness if M > (C_{δ,p} e^λ)^{1/p}.
+
+   This seems okay as long as C_{δ,p} is finite. But is there a catch? The embedding H_δ ⊂ H, and the estimate E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} needs to be verified. Let's check how Lemma \ref{l: X} is proved: it uses Lemma \ref{l:ZEst} and Lemma \ref{l:Y2}.
+
+   Lemma \ref{l:Y2} (lines 682-712): "For all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||Y_T||_{H_δ}^p] ≤ C_{T,δ,p}."
+
+   The proof of Lemma \ref{l:Y2} (lines 689-712) uses integral estimates, Hölder, and finally Lemma \ref{l:ZEst} to control the Z part. The condition p ∈ (0,α/4) appears when raising to power p and using integrability of α-stable processes.
+
+   Now, is there a false assertion? Let's think about the conditions and whether they are consistent or if some inequality is incorrectly stated, leading to a false claim.
+
+   Read the main theorem's assumption: α ∈ (3/2, 2) and 1/2 + 1/(2α) < β < 3/2 - 1/α.
+
+   Check if the interval for β is non-empty. For α ∈ (3/2, 2):
+   - Lower bound: 1/2 + 1/(2α). When α=3/2, 1/2 + 1/(3) = 5/6 ≈ 0.833. When α=2, 1/2 + 1/4 = 3/4 = 0.75. So lower bound ∈ (0.75, 5/6].
+   - Upper bound: 3/2 - 1/α. When α=3/2, 3/2 - 2/3 = 9/6 - 4/6 = 5/6 ≈ 0.833. When α=2, 3/2 - 1/2 = 1. So upper bound ∈ (5/6, 1].
+   - For the interval to be non-empty, we need lower bound < upper bound. At α=3/2, both are 5/6, so interval is empty (just a point). For α > 3/2, let's check: lower bound = 1/2 + 1/(2α), upper = 3/2 - 1/α. Difference: (3/2 - 1/α) - (1/2 + 1/(2α)) = 1 - 3/(2α). For α > 3/2, 3/(2α) < 1, so difference > 0. For α just above 3/2, say α=1.6, 3/(3.2)=0.9375, difference=0.0625>0. So interval is non-empty for α ∈ (3/2, 2), but at α=3/2 it's degenerate. The assumption says α ∈ (3/2,2), open interval, so it's fine.
+
+   Now, look at the condition in Lemma \ref{l: ZEst}: θ < β - 1/(2α). Since β > 1/2 + 1/(2α), β - 1/(2α) > 1/2. So θ can be chosen in [0, β - 1/(2α)). This seems consistent.
+
+   What about the condition β < 3/2 - 1/α? Where is this used? Possibly in other estimates, like for the nonlinearity or for the recurrence. I need to see if there's a mismatch.
+
+   Let me search for any assertion that might be false. Often in such papers, there's a subtle condition missing or an inequality that doesn't hold under the given assumptions.
+
+   Look at line 370: "Moreover, we assume that there exist some C_1, C_2>0 so that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β>1/2+1/(2α)."
+
+   And line 407: "Assume that α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α"
+
+   So β is strictly between those two values.
+
+   Now, consider the hyper-exponential recurrence condition (condition 2 in Theorem \ref{thm Wu}, lines 541-544):
+   sup_{ν∈A} E^ν[e^{λτ_K}] < ∞, and sup_{x∈K} E^x[e^{λτ_K^{(1)}}] < ∞.
+
+   Theorem \ref{thm hyper-exp} (line 747-751) claims: For any λ>0, there exists M=M_{λ,δ} such that sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞.
+
+   The proof uses discrete-time embedding and Lemma \ref{l: X}. Lemma \ref{l: X} gives E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for p ∈ (0, α/4).
+
+   But τ_M is defined using H_δ norm: τ_M = inf{k≥1: ||X_k||_{H_δ} ≤ M}. The proof considers embedded jump chain at integer times? Actually, the SDE is continuous-time, but they embed at integer times n. The proof says: "For any n∈N, let B_n := {||X_j||_{H_δ} > M; j=1,…,n} = {τ_M > n}." This assumes we observe at integer times. But the process X_t is continuous-time. However, if the process has stationary independent increments or something, or if we can use the Markov property at integer times, it might be okay. But is there a hidden assumption about the jump chain? The proof seems to treat X_n as the state at time n, but the SDE is continuous. Maybe they consider a discrete-time approximation or the skeleton at integer times. The paper might be considering the embedded chain at discrete times, but the SDE is continuous-time. This could be a gap, but not necessarily a false assertion as written, if the context clarifies.
+
+   Wait, the problem says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So there is a specific line that asserts something false given the assumptions stated in the paper.
+
+   Let me read carefully the statements and see if any mathematical claim is incorrect under its own assumptions.
+
+   Look at Lemma \ref{l: ZEst} statement (line 593-598): "For any T>0, 0 ≤ θ < β - 1/(2α) and any 0 < p < α, we have E[sup_{0≤t≤T} ||A^θ Z_t||^p_H] ≤ C T^{p/α}, where C depends on α, θ, β, p."
+
+   Is this true? For α-stable noise, maximal inequalities often have conditions like θ < β - 1/(2α) or similar. But I need to verify if the exponent p < α is correct, or if it should be p ≤ α, or something else. Also, the constant C depending on β might blow up as θ approaches the boundary, but that's fine.
+
+   However, I recall that for fractional Brownian motion or stable processes, maximal inequalities often require θ < β - d/(2α) or something in d dimensions. Here the torus is 1D (T = R/Z), so d=1. The condition θ < β - 1/(2α) seems plausible.
+
+   But let's check the definition of Z_t: dZ_t + A Z_t dt = dL_t, L_t = ∑ β_k l_k(t) e_k, with l_k i.i.d. symmetric α-stable, and C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β}, β > 1/2 + 1/(2α).
+
+   The operator A has eigenvalues γ_k = 4π^2 k^2. So A^θ has eigenvalues γ_k^θ = (4π^2 k^2)^θ.
+
+   The process Z_t in Fourier: z_k(t) = ∫_0^t e^{-γ_k(t-s)} β_k dl_k(s).
+
+   Then ||A^θ Z_t||_H^2 = ∑ γ_k^{2θ} |z_k(t)|^2.
+
+   For α-stable processes, moments of stochastic integrals are tricky. The inequality E[sup_{0≤t≤T} ||A^θ Z_t||^p_H] ≤ C T^{p/α} is plausible for p < α, but I'm not 100% sure.
+
+   Maybe the false assertion is in the statement of Theorem \ref{thm main} or the conditions. Let's check the rate function J defined in (519-522): J(μ) = inf{H(Q) | Q ∈ M_1^s(Ω) and Q_0 = μ}. This is standard Donsker-Varadhan level-2 entropy. Seems fine.
+
+   Look at the hyper-exponential recurrence criterion Theorem \ref{thm Wu} (lines 535-559). It assumes {P_t} is strong Feller and topologically irreducible on E. Then if condition 2 holds, the family P_ν(L_t ∈ ·) satisfies LDP on M_1(E) w.r.t τ-topology with speed T and rate function J, uniformly for initial measures ν in A.
+
+   The main theorem (Theorem \ref{thm main}) assumes α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α, and claims the LDP for L_T with respect to τ-topology, speed T, rate function J, uniformly for any initial measure ν in M_1(H).
+
+   The proof strategy is to apply Theorem \ref{thm Wu} with E = H (or M_1(H)?), and verify condition 2 via Theorem \ref{thm hyper-exp}.
+
+   Now, is there a mismatch in the spaces? Theorem \ref{thm Wu} is for E-valued processes, and the LDP is on M_1(E). Here E would be H, the Hilbert space. The occupation measure L_t takes values in M_1(H). The τ-topology is defined on M_1(H). This seems consistent.
+
+   Let me think about potential false assertions. Sometimes in these papers, there's a condition like "β > 1/2 + 1/(2α)" but actually it needs β > something else, or the inequality in Lemma \ref{l: ZEst} requires θ ≤ something, but the statement says θ < β - 1/(2α). Given β > 1/2 + 1/(2α), β - 1/(2α) > 1/2, so θ can be up to just below that. That seems okay.
+
+   What about the condition in Lemma \ref{l:Y2}: p ∈ (0, α/4). Since α ∈ (3/2, 2), α/4 ∈ (3/8, 1/2). So p is less than 1/2. That's fine.
+
+   Maybe the false assertion is in the statement of Theorem \ref{thm hyper-exp} or its proof. Let's read the proof again (lines 752-778):
+
+   "For any n∈N, let B_n := {||X_j||_{H_δ} > M; j=1,…,n} = {τ_M > n}. By the Markov property of {X_n}_{n∈N}, Chebyshev's inequality and Lemma \ref{l: X}, we obtain that for any ν∈M_1(H), p ∈ (0,α/4), PP_ν(B_n) = PP_ν(B_{n-1}) · PP_ν(B_n|B_{n-1}) ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p] / M^p ≤ PP_ν(B_{n-1}) · C_{δ,p} / M^p."
+
+   Wait, there's a potential issue: The Markov property for the continuous-time process at integer times? The process X_t is a Markov process in continuous time. The embedded chain X_n (at integer times) is also Markov, but the transition probabilities are for time 1. Lemma \ref{l: X} gives E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for any T>0. So for T=1, E_{X_{n-1}}[||X_n||_{H_δ}^p] ≤ C_{1,δ,p} =: C_{δ,p}. That seems fine.
+
+   Then PP_ν(τ_M > n) ≤ (C_{δ,p}/M^p)^n. Then E_ν[e^{λτ_M}] = ∫_0^∞ λ e^{λt} P_ν(τ_M > t) dt ≤ ∑_{n=0}^∞ λ e^{λ(n+1)} P_ν(τ_M > n) ≤ ∑ λ e^{λ(n+1)} (C_{δ,p}/M^p)^n. This sum converges if M > (C_{δ,p} e^λ)^{1/p}. So sup_ν E_ν[e^{λτ_M}] < ∞.
+
+   This proof seems valid as long as the embedded chain at integer times has the Markov property and Lemma \ref{l: X} applies for T=1. But is X_n defined as the solution at time n? The SDE is continuous-time, so X_n is just the state at time n. The Markov property holds for the continuous-time process, so the transition from X_{n-1} to X_n is given by the semigroup P_1. Lemma \ref{l: X} says E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for any T>0, uniformly in initial condition. So for T=1, it's fine.
+
+   However, there might be a subtle issue: Lemma \ref{l: X} is stated as "For all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} where C_{T,δ,p} does not depend on initial value X_0=x." But does this hold for all T>0, including T=1? The proof of Lemma \ref{l: X} uses Lemma \ref{l:ZEst} and Lemma \ref{l:Y2}, which have their own conditions. Let's check Lemma \ref{l:Y2} conditions: "For all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||Y_T||_{H_δ}^p] ≤ C_{T,δ,p}." The proof uses estimates that might depend on T, but the constant C_{T,δ,p} may depend on T. That's allowed; the statement says C_{T,δ,p} does not depend on initial value, but can depend on T. So for T=1, it's fine.
+
+   So the proof of Theorem \ref{thm hyper-exp} seems logically consistent under the stated assumptions.
+
+   Maybe the false assertion is elsewhere. Let's look at the main theorem's assumptions again: α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α.
+
+   Consider the condition β < 3/2 - 1/α. Where is this used? Possibly in the estimates for the nonlinearity or for the invariant measure, or in the hyper-exponential recurrence. If it's not actually used or if it's contradicted by other conditions, that might be the false assertion. But the problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So there is some assumption or claimed theorem that, given the assumptions stated, is false, and there's a concrete counterexample.
+
+   Maybe I should look for an assertion that is mathematically incorrect, like a rate function property, or a compactness claim, or an inequality that fails.
+
+   Let's examine the rate function J defined in (519-522): J(μ) = inf{H(Q) | Q ∈ M_1^s(Ω) and Q_0 = μ}. This is the Donsker-Varadhan rate function. It's known that J(μ) ≥ 0, and J(μ) = 0 iff μ is the invariant measure. The theorem claims compactness of {μ : J(μ) ≤ a} in (M_1(H), τ). Is that true under the given assumptions? Might be, but I'm not sure.
+
+   Another angle: The paper claims "Our result indicates a phenomenon that strong dissipation beats heavy tailed noises to produce a large deviation, it seems to us that this phenomenon has not been reported in the known literatures." This is more of a philosophical statement, not a mathematical assertion that can be true/false in the context.
+
+   Let's read the problem statement again: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument."
+
+   I need to find a specific line that contains a false assertion. The output should be line labels, e.g., "17" or "P1". The line numbers in the text are given as 0001, 0002, ... but many are package lines. The actual content starts around 203. The user says: "A candidate is one line label: an integer for a numbered text line (for example 17), or a string such as "P1" for a title or problem line."
+
+   So I need to output line numbers as they appear in the text, e.g., 0040, 0407, etc. Or maybe just the number. The example says "for example 17", so probably just the integer index as labeled in the text. The text has lines numbered 0001, 0002, ... up to 0971 or so. I should refer to the line numbers as they are in the provided text.
+
+   Let me search for any statement that is clearly false given the assumptions. Perhaps the condition β < 3/2 - 1/α is actually β < 3/2 - 1/α, but for α ∈ (3/2, 2), 3/2 - 1/α ranges from 5/6 to 1. And β > 1/2 + 1/(2α) ranges from 3/4 to 5/6. So the interval for β is non-empty but tight. Is there any mathematical result that requires β to be in a different range? Maybe the assertion that the LDP holds under these assumptions is false, and there's a counterexample.
+
+   I recall that for SPDEs with α-stable noise, large deviation principles often require some non-degeneracy or smoothness conditions. The condition β > 1/2 + 1/(2α) ensures some integrability or regularity. The upper bound β < 3/2 - 1/α might be needed for the nonlinearity u - u^3 to be well-behaved or for the hyper-exponential recurrence. But is it possible that the upper bound is actually β < 3/2 + 1/α or something, and the paper has a typo? The problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So if I can find an assumption that leads to a contradiction or is impossible, that might be it.
+
+   Let's check the condition β > 1/2 + 1/(2α) and β < 3/2 - 1/α. For α close to 3/2, say α=1.6, 1/2+1/(3.2)=0.5+0.3125=0.8125; 3/2-1/1.6=1.5-0.625=0.875. So β ∈ (0.8125, 0.875). For α=1.51, 1/2+1/(3.02)≈0.5+0.331=0.831; 1.5-1/1.51≈1.5-0.662=0.838. So interval is very narrow. For α→3/2+, lower bound → 1/2+1/3=5/6≈0.8333, upper bound → 3/2-2/3=5/6≈0.8333. So the interval shrinks to a point as α→3/2+. For α→2-, lower bound → 1/2+1/4=3/4=0.75, upper bound → 3/2-1/2=1. So interval widens.
+
+   Is there any assertion that uses β in a way that contradicts this interval? For instance, in Lemma \ref{l: ZEst}, the condition is θ < β - 1/(2α). Since β > 1/2 + 1/(2α), β - 1/(2α) > 1/2. So θ can be chosen in [0, β - 1/(2α)). That's fine.
+
+   What about the condition for the nonlinearity? The paper uses estimates like ||x^3||_H ≤ C||A^{1/4}x||_H^2 ||x||_H ≤ C||x||_V ||x||_H^2. This is a standard Gagliardo-Nirenberg type inequality on the torus. It should hold.
+
+   Maybe the false assertion is in the statement of Theorem \ref{thm main} itself: "Then the family P_ν(L_T ∈ ·) as T→+∞ satisfies the large deviation principle with respect to the τ-topology, with speed T and rate function J defined by \eqref{rate func} below, uniformly for any initial measure ν in M_1(H)." But is the speed T correct? Often LDPs for occupation measures have speed T, yes. The lower and upper bounds are given with 1/T log... That seems standard.
+
+   Let me think about the hyper-exponential recurrence condition and whether the proof actually verifies it under the given assumptions. The proof of Theorem \ref{thm hyper-exp} uses Lemma \ref{l: X}, which requires p ∈ (0, α/4). But the recurrence condition needs to hold for any λ>0, and the proof chooses M > (C_{δ,p} e^λ)^{1/p}. This works for any fixed p ∈ (0, α/4). However, the condition δ ∈ (0,1/2) is also there. Is there any conflict between δ and the other parameters?
+
+   Look at the definition of H_δ: "For σ>0, let H_σ := D(A^σ), ||x||_{H_σ} := ||A^σ x||_H." And "V := D(A^{1/2})". So H_δ for δ ∈ (0,1/2) is a weighted space between H and V.
+
+   Now, Lemma \ref{l: X} states E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for p ∈ (0, α/4). The proof uses Lemma \ref{l:Y2}, which in turn uses estimates that might require δ < something. Let's check Lemma \ref{l:Y2} proof (lines 689-712). It estimates ||Y_T||_{H_δ} and uses integrals of (T-s)^{-δ}. The condition δ ∈ (0,1/2) ensures integrability at s=T. That's fine.
+
+   But is there a hidden dependence on α? The condition p ∈ (0, α/4) comes from the α-stable process integrability. For the sum of estimates to work, we need p < α/4. Since α < 2, α/4 < 1/2. So p is less than 1/2.
+
+   Now, the recurrence condition in Theorem \ref{thm hyper-exp} is sup_ν E^ν[e^{λτ_M}] < ∞. The proof uses a discrete-time embedding and the bound PP_ν(τ_M > n) ≤ (C_{δ,p}/M^p)^n. This requires that the probability of staying outside M for n steps decays geometrically. This is a standard technique for recurrence. However, is it valid for the continuous-time process observed at integer times? The Markov property gives PP_ν(τ_M > n) = E_ν[PP_{X_0}(τ_M > n)]. The proof assumes that given X_{n-1}, the probability that ||X_n||_{H_δ} > M is bounded by E[||X_n||_{H_δ}^p]/M^p. This is Chebyshev's inequality, which requires that the moment exists. Lemma \ref{l: X} gives E_{X_{n-1}}[||X_n||_{H_δ}^p] ≤ C_{1,δ,p} =: C_{δ,p}. So that's fine.
+
+   But wait: Lemma \ref{l: X} says E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} where C_{T,δ,p} does not depend on initial value. However, is this uniform in the sense that the constant is the same for all x? Yes, it says "does not depend on the initial value X_0=x." So it's uniform.
+
+   Then the proof seems valid. So maybe the false assertion is not in the proof but in some statement.
+
+   Let me read the problem again carefully: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point."
+
+   Perhaps there is an assertion that is simply mathematically wrong given the definitions and assumptions. For example, the condition β > 1/2 + 1/(2α) might be incorrectly stated, or the range for α might be wrong.
+
+   Let's check the reference [Xu13] or the theorem numbers. Theorem \ref{Thm Xu 13} (line 407): "Assume that α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α, the following statements hold: ..." It says X is strong Feller and irreducible, and has unique invariant measure π. Is it possible that for some α, β in this range, the process is NOT strong Feller or irreducible? The paper claims it is, but maybe under the given assumptions it's actually false, and there's a counterexample.
+
+   But I need to find a concrete false assertion within the text, not just a potential gap. The problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So if I take the assumptions as given, there is a specific line that asserts something that contradicts those assumptions or is false within that framework.
+
+   Maybe I should look for an inequality that is stated but doesn't hold, or a claim about compactness that fails, or a rate function property.
+
+   Let's examine the definition of the τ-topology (line 425): "On M_1(H), let σ(M_1(H), bB(H)) be the τ-topology of convergence against measurable and bounded functions which is much stronger than the usual weak convergence topology σ(M_1(H), C_b(H)), see [Section 6.2]{DZ}."
+
+   Then the main theorem's properties (a1): "for any a≥0, {μ ∈ M_1(H); J(μ) ≤ a} is compact in (M_1(H), τ)." Is this true? In many LDP contexts, the level-2 rate function's sublevel sets are compact in some topology, but here it's τ-topology. Might be true under the assumptions.
+
+   Look at the hyper-exponential recurrence criterion Theorem \ref{thm Wu} (lines 535-559). It assumes {P_t} is strong Feller and topologically irreducible on E. Then if condition 2 holds, the family P_ν(L_t ∈ ·) satisfies LDP on M_1(E) w.r.t τ-topology with speed T and rate function J, uniformly for initial measures ν in A.
+
+   The main theorem assumes the same conditions and claims the LDP. The proof reduces to verifying condition 2 via Theorem \ref{thm hyper-exp}.
+
+   Maybe the false assertion is in Theorem \ref{thm hyper-exp} itself: "For any λ>0, there exists M=M_{λ,δ} such that sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞." But is τ_M defined with H_δ? Yes, line 732-735: "For any δ∈(0,1/2), M>0, define the hitting time of {X_n}_{n≥1}: τ_M = inf{k≥1: ||X_k||_{H_δ} ≤ M}." And K := {x∈H_δ: ||x||_{H_δ} ≤ M}.
+
+   Now, the proof uses Lemma \ref{l: X} which gives E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for p ∈ (0, α/4). But τ_M is about the hitting time of the ball of radius M in H_δ. The proof embeds at integer times and uses a geometric decay. This is a common method for Harris recurrence or geometric ergodicity. However, there's a subtle point: The process X_t is a Markov process in continuous time, and τ_M is defined as inf{k≥1: ||X_k||_{H_δ} ≤ M}. But X_k here likely means the state at time k, i.e., X_k = X_k (the solution at time k). The Markov property at integer times is fine. But the estimate E_{X_{n-1}}[||X_n||_{H_δ}^p] ≤ C_{δ,p} uses Lemma \ref{l: X} with T=1. Lemma \ref{l: X} is stated for all T>0, so T=1 is included.
+
+   However, is Lemma \ref{l: X} actually true under the given assumptions? Let's check its proof sketch: it uses Lemma \ref{l:ZEst} and Lemma \ref{l:Y2}. Lemma \ref{l:Y2} requires p ∈ (0, α/4). The condition α/4 < 1/2 since α<2. So p can be, say, 0.4 if α>1.6. That's fine.
+
+   But maybe the false assertion is that p ∈ (0, α/4) is sufficient, but actually the proof requires p < something else, or the constant C_{T,δ,p} blows up as p approaches α/4, but the statement says "for any p ∈ (0, α/4)", which is an open interval, so it's fine.
+
+   I'm struggling to find the false assertion. Maybe I need to think about the mathematical content differently. Perhaps there's a well-known mistake in such papers, like the condition for the LDP to hold requires β > something else, or the speed is not T but something else, or the rate function is not J but something else.
+
+   Let me search my memory for large deviation principles for occupation measures of SPDEs with α-stable noise. I recall that for α-stable processes, the tail behavior is polynomial, and large deviations often have different speeds or rate functions. The paper claims a speed T LDP, which is typical for moderate deviations or for systems with exponential ergodicity. But with heavy-tailed noises (α-stable with α<2), the noise has polynomial tails, so one might expect a different speed, like T^α or something, or a rate function that is not finite for all measures. The abstract says: "Our result indicates a phenomenon that strong dissipation beats heavy tailed noises to produce a large deviation." This suggests that despite heavy-tailed noises, the large deviation principle with speed T holds due to strong dissipation. This is the novel phenomenon. So the paper is claiming that under the given assumptions, the LDP with speed T holds. If this were false, there would be a counterexample.
+
+   Maybe the false assertion is in the assumption itself: "β > 1/2 + 1/(2α)" and "β < 3/2 - 1/α". Perhaps for the LDP to hold, the condition should be β > something else, or the interval is actually empty or contradictory in some way. But I already checked that for α ∈ (3/2, 2), the interval is non-empty.
+
+   Wait: Let's recompute the interval carefully.
+   α ∈ (3/2, 2).
+   Lower bound L(α) = 1/2 + 1/(2α).
+   Upper bound U(α) = 3/2 - 1/α.
+   We need L(α) < U(α) for the interval to be non-empty.
+   L(α) < U(α) ⇔ 1/2 + 1/(2α) < 3/2 - 1/α ⇔ 1/(2α) + 1/α < 1 ⇔ 3/(2α) < 1 ⇔ α > 3/2.
+   Since α ∈ (3/2, 2), α > 3/2 is strictly true, so L(α) < U(α) holds. Good.
+
+   Now, is there any other constraint? The paper also assumes in line 370: "we assume that there exist some C_1, C_2>0 so that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β>1/2+1/(2α)." And in Theorem \ref{Thm Xu 13}, they assume α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α. So the assumptions are consistent.
+
+   Maybe the false assertion is in the statement of the main theorem's lower/upper bounds. Let's read (a2) and (a3) in Theorem \ref{thm main} (lines 433-441):
+   (a2) for any open set G in (M_1(H), τ), liminf_{T→∞} (1/T) log inf_{ν∈M_1(H)} P_ν(L_T ∈ G) ≥ -inf_G J.
+   (a3) for any closed set F in (M_1(H), τ), limsup_{T→∞} (1/T) log sup_{ν∈M_1(H)} P_ν(L_T ∈ F) ≤ -inf_F J.
+
+   These are standard. But the uniformity "for any initial measure ν in M_1(H)" is claimed. In the hyper-exponential recurrence criterion (Theorem \ref{thm Wu}), the LDP holds uniformly for initial measures ν in the subset A. The main theorem claims uniformity for any initial measure ν in M_1(H). Is that justified? The proof uses Theorem \ref{thm hyper-exp} which gives sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞. That might imply uniformity. But I'm not sure.
+
+   Perhaps the false assertion is that the LDP holds with speed T. For occupation measures of Markov processes, the speed is often T, but sometimes it's T if the process is geometrically ergodic. With α-stable noises, the ergodicity might be polynomial, not exponential. The paper claims "strong dissipation beats heavy tailed noises to produce a large deviation", implying exponential convergence/ergodicity. If the assumptions actually only guarantee polynomial ergodicity, then the LDP with speed T might be false. The condition β > 1/2 + 1/(2α) might be related to exponential moments, and β < 3/2 - 1/α might ensure some bound. But is it possible that under these assumptions, the process is only polynomially ergodic, and the LDP speed should be different?
+
+   Let's check the hyper-exponential recurrence condition: sup_ν E^ν[e^{λτ_M}] < ∞. This is exactly exponential ergodicity (geometric convergence of the occupation measure). If this holds, then the LDP with speed T is plausible. The proof of Theorem \ref{thm hyper-exp} attempts to prove this using the estimates. If the proof has a flaw, then the assertion might be false.
+
+   But the problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So there must be a specific line where an assertion is made that, given all the assumptions stated in the paper up to that point, is false, and there is a concrete counterexample (presumably constructible from the assumptions).
+
+   Maybe I should look for an assertion that is logically inconsistent with the assumptions, like a condition that contradicts another, or an inequality that cannot hold.
+
+   Let's read the very beginning of the mathematical content. Line 254: "Consider the stochastic real Ginzburg-Landau equation driven by α-stable noises on torus T:=R/Z as follows: dX - ∂_ξ^2 X dt - (X - X^3) dt = dL_t, (e:MaiSPDE) where X:[0,+∞)×T×Ω→R and L_t is an α-stable noise. Eq. \eqref{e:MaiSPDE} admits a unique mild solution X in the c\`adl\`ag space almost surely. When α ∈ (3/2,2), the Markov process X is strong Feller and irreducible, and it has a unique invariant measure π. See \cite{Xu13, WXX} or Section 2 below for details. By the uniqueness \cite{DPZ96}, π is ergodic in the sense that lim_{T→∞} (1/T)∫_0^T Ψ(X_t) dt = ∫ Ψ dπ P-a.s. for all initial state X_0 and all continuous and bounded functions Ψ."
+
+   This is standard.
+
+   Line 268-272: Definition of occupation measure L_t(A) = (1/t)∫_0^t δ_{X_s}(A) ds.
+
+   Line 273: "In our previous paper \cite{WXX}, we prove that the system converges to its invariant measure μ with exponential rate under a topology stronger than total variation, and the occupation measure L_t obeys the moderate deviation principle by constructing some Lyapunov test functions."
+
+   Line 280: "Based on the hyper-exponential recurrence criterion developed by Wu \cite{Wu01}, we prove that the occupation measure L_t obeys an LDP under τ-topology. As a consequence, we also obtain the exact rate of exponential ergodicity obtained in \cite{Xu13}."
+
+   Now, line 311: "Section {The model and the results}"
+
+   Line 356-371: Model setup. "We shall study 1D stochastic Ginzburg-Landau equation on T as the following dX_t + A X_t dt = N(X_t) dt + dL_t, X_0=x, where (i) the nonlinear term N is defined by N(u)= u-u^3, u∈H. (ii) L_t = ∑_{k∈Z_*} β_k l_k(t) e_k is an α-stable process on H with {l_k(t)}_{k∈Z_*} being i.i.d. 1-dimensional symmetric α-stable process sequence with α>1, see \cite{sato}. Moreover, we assume that there exist some C_1, C_2>0 so that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β>1/2+1/(2α)."
+
+   Note: Here it says "α>1", but later the main theorem assumes α ∈ (3/2,2). So α>1 is a broader assumption, and the specific range is (3/2,2). That's fine.
+
+   Line 373-394: Some inequalities.
+
+   Line 407: Theorem \ref{Thm Xu 13} as quoted.
+
+   Now, maybe the false assertion is in the statement of Theorem \ref{Thm Xu 13} or in the assumptions. Let's read it again (line 407-420): "Assume that α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α, the following statements hold: (1) For every x∈H and ω∈Ω a.s., Eq. \eqref{e:XEqn} admits a unique mild solution X=(X^x_t)_{t≥0,x∈H} ∈ D([0,∞);H) ∩ D((0,∞);V). (2) X is a Markov process, which is strong Feller and irreducible in H, and X admits a unique invariant measure π."
+
+   Is it possible that for some α, β in this range, the solution does not admit a mild solution in that space, or the process is not strong Feller? The paper claims it does, but maybe under the given assumptions it's actually false. However, I need a concrete counterexample. Without deep knowledge of SPDE theory, it's hard.
+
+   Maybe the false assertion is simpler. Let's look at the definition of the τ-topology and the rate function. Line 425: "On M_1(H), let σ(M_1(H), bB(H)) be the τ-topology of convergence against measurable and bounded functions which is much stronger than the usual weak convergence topology σ(M_1(H), C_b(H)), see [Section 6.2]{DZ}."
+
+   Then the main theorem's (a1): "for any a≥0, {μ∈M_1(H); J(μ)≤a} is compact in (M_1(H), τ)."
+
+   Is it true that the sublevel sets of the Donsker-Varadhan rate function are compact in the τ-topology? In many cases, they are compact in the weak topology, but τ-topology is stronger. The paper might be claiming compactness in τ, which could be false. But I need a concrete counterexample.
+
+   Perhaps I should consider the possibility that the false assertion is in the statement of the hyper-exponential recurrence criterion Theorem \ref{thm Wu} or its conditions. Let's read condition 2 (lines 541-544): "If for any λ>0, there exists some compact set K⊂⊂E, such that sup_{ν∈A} E^ν[e^{λτ_K}] < ∞, and sup_{x∈K} E^x[e^{λτ_K^{(1)}}] < ∞."
+
+   And Theorem \ref{thm hyper-exp} (line 747-751): "For any λ>0, there exists M=M_{λ,δ} such that sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞."
+
+   The proof of Theorem \ref{thm hyper-exp} (lines 752-778) uses the embedded chain and Lemma \ref{l: X}. But there's a potential issue: Lemma \ref{l: X} gives E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p} for p ∈ (0, α/4). However, τ_M is defined using the norm ||·||_{H_δ}. The proof bounds P_ν(B_n) ≤ (C_{δ,p}/M^p)^n. But B_n = {||X_j||_{H_δ} > M; j=1,…,n}. The event {||X_j||_{H_δ} > M} is not directly bounded by the p-th moment unless we use Markov's inequality, which gives P(||X_j||_{H_δ} > M) ≤ E[||X_j||_{H_δ}^p]/M^p. That's valid.
+
+   But the proof says: "PP_ν(B_n) = PP_ν(B_{n-1}) · PP_ν(B_n|B_{n-1}) ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p ≤ PP_ν(B_{n-1}) · C_{δ,p}/M^p." This assumes that conditional on B_{n-1}, the probability that ||X_n||_{H_δ} > M is bounded by the ratio of moments. This is Chebyshev's inequality, which is valid for any random variable. So PP_ν(B_n|B_{n-1}) ≤ E[||X_n||_{H_δ}^p | B_{n-1}] / M^p. But the proof seems to take the unconditional expectation E_{X_{n-1}}[||X_n||_{H_δ}^p] and divide by M^p, which is an upper bound for the conditional expectation given B_{n-1}? Actually, by the law of total expectation, E_{X_{n-1}}[||X_n||_{H_δ}^p] = E[||X_n||_{H_δ}^p | B_{n-1}] P(B_{n-1}) + E[||X_n||_{H_δ}^p | B_{n-1}^c] P(B_{n-1}^c). So E[||X_n||_{H_δ}^p | B_{n-1}] ≤ E_{X_{n-1}}[||X_n||_{H_δ}^p]. Yes, because the conditional expectation given a subset is less than or equal to the unconditional expectation? Not necessarily. If B_{n-1} is a subset of the sample space, the conditional expectation given B_{n-1} is the average over B_{n-1}, which could be larger or smaller than the overall average. However, Chebyshev's inequality gives P(||X_n||_{H_δ} > M | B_{n-1}) ≤ E[||X_n||_{H_δ}^p | B_{n-1}] / M^p. And E[||X_n||_{H_δ}^p | B_{n-1}] could be larger than the unconditional moment. So the bound PP_ν(B_n|B_{n-1}) ≤ C_{δ,p}/M^p might not hold if the conditional moment is larger. But the proof writes: "PP_ν(B_n|B_{n-1}) ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p". Wait, they have PP_ν(B_n) ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p. Actually, they wrote: "PP_ν(B_n) = PP_ν(B_{n-1}) · PP_ν(B_n|B_{n-1}) ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p". This step is a bit sloppy. Usually, one would use P(B_n | B_{n-1}) ≤ E[||X_n||_{H_δ}^p | B_{n-1}] / M^p, and then note that E[||X_n||_{H_δ}^p | B_{n-1}] ≤ something. But if they just replace it with the unconditional moment, it's not generally valid unless the moment is uniform and the event B_{n-1} doesn't increase the moment too much. However, in many Markov chain proofs, they use the fact that given the past, the next step's moment is bounded by some constant, and then use a coupling or Markov property to get a geometric bound. The proof as written might have a logical gap, but is it a false assertion? The statement "PP_ν(B_n) ≤ (C_{δ,p}/M^p)^n" might still be true under the assumptions, but the justification as written could be flawed. The problem says "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." So I shouldn't point at a thin justification if the assertion itself is true. But if the assertion is false, I should.
+
+   Let me read the exact text of the proof (lines 757-763):
+   "By the Markov property of {X_n}_{n∈N}, Chebyshev's inequality and Lemma \ref{l: X}, we obtain that for any ν∈M_1(H), p ∈ (0,α/4),
+   PP_ν(B_n) = PP_ν(B_{n-1}) · PP_ν(B_n|B_{n-1})
+   ≤ PP_ν(B_{n-1}) · E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p
+   ≤ PP_ν(B_{n-1}) · C_{δ,p}/M^p,
+   where C_{δ,p} is the constant in Lemma \ref{l: X} (taking T=1)."
+
+   The step "PP_ν(B_n|B_{n-1}) ≤ E_{X_{n-1}}[||X_n||_{H_δ}^p]/M^p" is actually P(||X_n||_{H_δ} > M | B_{n-1}) ≤ E[||X_n||_{H_δ}^p | B_{n-1}] / M^p. And E[||X_n||_{H_δ}^p | B_{n-1}] is not necessarily ≤ E_{X_{n-1}}[||X_n||_{H_δ}^p]. In fact, conditioning on an event can increase the expectation. So this inequality is not justified and might be false. However, sometimes in these proofs, they use the fact that B_{n-1} = {||X_{n-1}||_{H_δ} > M}, and they have some control. But as written, it's a gap. But the problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So maybe there is a specific counterexample where this step fails, making the whole recurrence condition false.
+
+   But I need to identify a line that contains the false assertion. The assertion could be the statement of Theorem \ref{thm hyper-exp} or the inequality in the proof. The problem says: "Identify a line that contains the false assertion. If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin."
+
+   So I should point at a line that has an assertion that is false as written, given the assumptions. The line could be a theorem statement or an intermediate claim.
+
+   Let's look for an assertion that is clearly false. Maybe the condition β < 3/2 - 1/α is actually β < 3/2 - 1/α, but for the LDP to hold, it should be β > something else, or the interval is reversed. But I need to be sure.
+
+   Another thought: The paper defines the occupation measure L_t(A) = (1/t)∫_0^t δ_{X_s}(A) ds. Then the LDP is for L_T as T→∞. The rate function J is defined via the level-2 Donsker-Varadhan entropy. The main theorem claims the LDP with speed T. In many cases for occupation measures of Markov processes, the speed is T, but the rate function might be different. However, there's a known result: for strong Feller irreducible Markov processes, if there is a Lyapunov function with exponential moments, then the LDP holds with speed T. The hyper-exponential recurrence condition is exactly that.
+
+   Maybe the false assertion is in the assumption that the process is strong Feller and irreducible under the given conditions. Let's check the conditions for strong Feller and irreducibility. Theorem \ref{Thm Xu 13} assumes α ∈ (3/2,2) and 1/2+1/(2α) < β < 3/2 - 1/α. It claims the process is strong Feller and irreducible. Is it possible that for some α, β in this range, the process is NOT strong Feller? Strong Feller property often requires some ellipticity or non-degeneracy of the noise. The noise is α-stable with coefficients β_k that decay like γ_k^{-β}. The condition β > 1/2 + 1/(2α) might ensure some regularity. I'm not sure.
+
+   Perhaps I should consider that the false assertion is simply the claim "Our result indicates a phenomenon that strong dissipation beats heavy tailed noises to produce a large deviation, it seems to us that this phenomenon has not been reported in the known literatures." But that's not a mathematical assertion that can be true/false in the context of the assumptions; it's a meta-statement.
+
+   Let's read the problem again: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument."
+
+   I need to find a mathematical statement that is incorrect given the assumptions stated in the paper. Perhaps there's a missing condition or a typo that makes an inequality direction wrong.
+
+   Let me examine the inequalities in the paper. Line 390-391: "||x||^4_{L^4} ≤ ||x||_V^2 · ||x||_H^2 ≤ ||x||_V^4, ∀ x∈V." This is a standard interpolation inequality on the torus. Should be true.
+
+   Line 392-394: "||x^3||_H ≤ C||A^{1/4}x||_H^2 · ||x||_H ≤ C||x||_V ||x||_H^2, ∀ x∈V." This is a Gagliardo-Nirenberg inequality. On a 1D torus, it should hold with appropriate constants. Probably true.
+
+   Line 378: "||A^σ e^{-At}||_H ≤ C_σ t^{-σ}, ∀ σ>0 ∀ t>0." This is a standard smoothing estimate for the heat semigroup. True.
+
+   Line 593-598: "For any T>0, 0 ≤ θ < β - 1/(2α) and any 0 < p < α, we have E[sup_{0≤t≤T} ||A^θ Z_t||^p_H] ≤ C T^{p/α}, where C depends on α, θ, β, p." I want to check if the condition θ < β - 1/(2α) is correct. For the OU process with α-stable noise, the covariance or moments often involve conditions like θ < β - d/(2α) in d dimensions. Here d=1 (torus), so θ < β - 1/(2α). That seems right. But is the moment exponent p < α correct? For α-stable processes, moments of order p exist only for p < α. So E[||...||^p] is finite only if p < α. The supremum over t might inherit that. So the statement "any 0 < p < α" is correct in the sense that the expectation is finite for p < α, but the inequality might require p < α, which is stated. However, the condition 0 ≤ θ < β - 1/(2α) might be necessary for the estimate to hold. I think this is plausible.
+
+   What about the condition in Lemma \ref{l:Y2}: p ∈ (0, α/4). Why α/4? Because the nonlinearity u - u^3 leads to terms like ||Z_s||_V^3, and when taking p-th moments, we need p < α/4 to apply the α-stable moment conditions. That seems specific but possible.
+
+   Maybe the false assertion is in the statement of Theorem \ref{thm hyper-exp} or its proof, but I need a concrete counterexample. Perhaps the counterexample is: take α=2? But α ∈ (3/2,2), open interval. If α=2, the noise is Gaussian, and many things simplify. But the assumptions exclude α=2.
+
+   Wait: The problem says "a concrete counterexample exists under the assumptions the writing itself has in force at that point." This might mean that if you take the assumptions as given, you can construct a specific example (maybe choosing specific α, β, noise coefficients, initial condition) that violates the assertion. For instance, maybe the LDP claim fails for some choice within the assumed range.
+
+   Let's think about the hyper-exponential recurrence condition. The proof uses p ∈ (0, α/4). But α ∈ (3/2, 2), so α/4 ∈ (3/8, 1/2). The proof then says "which is finite as M > (C_{δ,p} e^λ)^{1/p}." This is fine. However, the condition for the geometric decay PP_ν(τ_M > n) ≤ (C_{δ,p}/M^p)^n requires that the probability of the bad event at each step is bounded by C_{δ,p}/M^p. But this uses the moment bound E_{X_{n-1}}[||X_n||_{H_δ}^p] ≤ C_{δ,p}. Lemma \ref{l: X} gives this for T=1. But is Lemma \ref{l: X} valid for T=1 under the given assumptions? Let's check the proof of Lemma \ref{l: X} (lines 715-722): it says "By Lemma \ref{l:ZEst} and Lemma \ref{l:Y2}, we obtain that for all T>0, δ ∈ (0,1/2) and p ∈ (0,α/4), we have E_x[||X_T||_{H_δ}^p] ≤ C_{T,δ,p}." The proof of Lemma \ref{l:Y2} (lines 689-712) uses estimates that might require T to be large or something, but it says "for all T>0". So T=1 should be included.
+
+   However, there might be a subtle issue: Lemma \ref{l:Y2} estimates E_x[||Y_T||_{H_δ}^p] ≤ C_{T,δ,p}. The proof uses an integral estimate with (T-s)^{-δ}. For T=1, the integral ∫_{1/2}^1 (1-s)^{-δ} ds converges since δ<1/2. So it's fine.
+
+   Maybe the false assertion is that the LDP holds with speed T uniformly for any initial measure ν in M_1(H). But the hyper-exponential recurrence condition only gives uniformity for initial measures in A, or maybe it gives uniformity for all ν if the condition sup_ν E^ν[e^{λτ_M}] < ∞ holds. The proof of Theorem \ref{thm hyper-exp} claims sup_{ν∈M_1(H)} E^ν[e^{λτ_M}] < ∞. If that's true, then uniformity might follow. But is it actually true? The proof uses a geometric decay for the embedded chain, which gives a bound on the probability of not hitting M by time n. But τ_M is defined as inf{k≥1: ||X_k||_{H_δ} ≤ M}. The process X_k is at integer times. The event {τ_M > n} means the process stays outside the ball of radius M for n steps. The geometric decay gives P(τ_M > n) ≤ (C/M^p)^n. Then E[e^{λτ_M}] = ∑ λ e^{λ(n+1)} P(τ_M > n) ≤ ∑ λ e^{λ(n+1)} (C/M^p)^n, which converges if M > (C e^λ)^{1/p}. This seems correct.
+
+   But wait: τ_M is defined using the discrete-time embedded chain {X_n}_{n≥1}. However, the original process X_t is continuous-time. The occupation measure L_T involves continuous time. The hyper-exponential recurrence criterion in Wu's paper might be for discrete-time or skeleton processes. The paper might be applying it to the continuous-time process by considering the embedded jump chain or the skeleton at integer times. If the skeleton at integer times satisfies the recurrence, does that imply the continuous-time process satisfies it? Often, if the process has a density or is strong Feller, the recurrence for the skeleton implies recurrence for the continuous process. But I'm not entirely sure.
+
+   Given the difficulty, maybe I should look for a more obvious false assertion. Let's read the very first mathematical assertion after the model setup. Line 370: "Moreover, we assume that there exist some C_1, C_2>0 so that C_1 γ_k^{-β} ≤ |β_k| ≤ C_2 γ_k^{-β} with β>1/2+1/(2α)." Note that it says "β>1/2+1/(2α)" but in Theorem \ref{Thm Xu 13} it's "1/2+1/(2α) < β < 3/2 - 1/α". So the lower bound is the same, but there's an upper bound added. Is it possible that the upper bound β < 3/2 - 1/α is actually β < 3/2 - 1/α, but for the LDP or the recurrence, the condition should be β > 3/2 - 1/α or something? No.
+
+   Maybe the false assertion is in the statement of the main theorem: "Then the family P_ν(L_T ∈ ·) as T→+∞ satisfies the large deviation principle with respect to the τ-topology, with speed T and rate function J defined by \eqref{rate func} below, uniformly for any initial measure ν in M_1(H)." But the rate function J is defined as J(μ) = inf{H(Q) | Q ∈ M_1^s(Ω) and Q_0 = μ}.

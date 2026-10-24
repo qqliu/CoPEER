@@ -1,0 +1,75 @@
+{
+  "record_id": "tcs_count_graphs_vc_at_most_k",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 2,
+  "parent_sha256": "dea6b3762b5902ff351b12467e4e6fd6aa53ee75420a8402173858cfd57f3bd9",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Complement equivalence and exact endpoint cases. Let F(n,k) count labelled graphs on [n] with vertex-cover number at most k, let N=binom(n,2), and put m=n−k. For 0≤k≤n, F(n,k)=2^N−T(n,m), where T(n,m) is the number of labelled K_m-free graphs. Consequently F(n,n−3)=2^N−T(n,3), with T(n,3) the triangle-free graph count. Also F(n,0)=1; F(n,1)=1+n(2^{n−1}−1)−binom(n,2); F(n,n−2)=2^N−1; and F(n,n−1)=F(n,n)=2^N.",
+      "claim_sha256": "9f87e08e596020b4fd50076061156f82599554e1b6b984faffd52442ade03500",
+      "verdict": "VERIFIED",
+      "evidence": "A set C is a vertex cover iff its complement is independent, so τ(G)=n−α(G). Thus τ(G)≤k iff G has an independent (n−k)-set, and graph complementation bijectively turns this into containing K_{n−k}; this proves F=2^N−T. For k=1, summing the nonempty subgraphs of each labelled star counts every one-edge graph twice and every graph with at least two edges once, yielding the stated correction. The remaining endpoints follow from requiring independent sets of sizes n, 2, 1, and 0. Exhaustive enumeration independently confirmed every applicable identity through n=6.",
+      "witness": "none",
+      "search_method": "Independent bijective and endpoint case analysis, followed by exact exhaustive enumeration of every labelled graph for 0≤n≤6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py"
+    },
+    {
+      "idx": 1,
+      "claim": "There is a deterministic exact algorithm using polynomial space and time 2^{q+O(n)}, where q=binom(n,2)−binom(n−k,2)=kn−k(k+1)/2. Therefore the target is achieved whenever k=o(n), including k=O(n/log n).",
+      "claim_sha256": "228df9eb30a58bc730a1e71110147b812d8099ebb8fb314e52a76c0c9cfea95e",
+      "verdict": "VERIFIED",
+      "evidence": "For each k-set C, exactly q edge positions have at least one endpoint in C, so 2^q graphs have C as a cover. Every graph with τ≤k has a k-cover, and retaining it only for the first such cover counts it once. At most binom(n,k) cover tests per generated pair give poly(n)·binom(n,k)^2·2^q=2^{q+O(n)} time because binom(n,k)≤2^n. The graph, iterators, and an at-most-(N+1)-bit output counter require polynomial space. Since q≤nk, q+O(n)=o(n²) whenever k=o(n). The checker reproduced the canonical-generator count for every n≤6 and every 0≤k≤n.",
+      "witness": "none",
+      "search_method": "Independent enumeration-algorithm analysis and exact implementation of the canonical k-cover generator for all parameters through n=6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py"
+    },
+    {
+      "idx": 2,
+      "claim": "For every fixed k there is a polynomial-time exact algorithm. More explicitly, F(n,k) is computable in time at most poly(n)·sum_{t=0}^k binom(n,t)·2^{binom(t,2)+t}·[2(t+2)]^{2^t−1}.",
+      "claim_sha256": "a1a82343d2cbfc3e60e579133f85193e3a3624e0ac7330ce099da54504123f95",
+      "verdict": "VERIFIED",
+      "evidence": "Fix C of size t and H=G[C]. Removing X⊆C can lead to a smaller cover only when X is H-independent; replacing it by U_X=N(X)∩([n]\\C) proves that C is minimum exactly when |U_X|≥|X| for every such nonempty X. Under this condition, alternative minimum covers correspond exactly to equality, and the smallest label in the symmetric difference shows that C is lexicographically first exactly when min X<min U_X. Hence the capped cardinality and lower-label bit retained for each X are sufficient statistics. There are at most 2^t−1 coordinates, at most 2(t+2) states per coordinate, 2^t neighborhood types per outside vertex, 2^{binom(t,2)} choices of H, and binom(n,t) choices of C, giving the displayed fixed-parameter bound up to polynomial bookkeeping. The independently implemented DP matched brute-force counts separately for every (t,C,H) through n=6.",
+      "witness": "none",
+      "search_method": "Independent minimum-cover and lexicographic uniqueness proof, plus exact per-(C,H) comparison of the capped-state DP with exhaustive graph enumeration through n=6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Exact first- and second-moment formulas give certified bounds for all parameters. For 1≤m≤n, let q=N−binom(m,2), S1=binom(n,m)2^q, and S2=binom(n,m)·sum_{j=max(0,2m−n)}^m binom(m,j)binom(n−m,m−j)2^{N−2binom(m,2)+binom(j,2)}. Then max{2^q, ceil(S1²/S2)}≤F(n,n−m)≤min{2^N,S1}. In particular, q≤log₂F(n,n−m)≤q+n.",
+      "claim_sha256": "639896230606d0a82488a3e98897ab46743ea8b6b12ed4cb855fca3930254430",
+      "verdict": "VERIFIED",
+      "evidence": "Let X(G) count independent m-sets. Counting pairs (G,S) gives Σ_G X(G)=S1. For ordered S,T with intersection j, their two independence requirements forbid exactly 2binom(m,2)−binom(j,2) distinct edges, while the number of T for each S is binom(m,j)binom(n−m,m−j); hence Σ_G X(G)^2=S2 exactly. The upper bound follows from 1_{X>0}≤X, Cauchy–Schwarz gives F≥ceil(S1²/S2), and fixing one independent m-set gives F≥2^q. Finally binom(n,m)≤2^n gives the logarithmic bracket. Direct integer sums of X and X² matched both formulas and all bounds through n=6.",
+      "witness": "none",
+      "search_method": "Independent double counting and Cauchy–Schwarz proof, with exact integer enumeration of the first two moments for every 1≤m≤n≤6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py"
+    },
+    {
+      "idx": 4,
+      "claim": "At the triangle-free endpoint, a substantial subclass is exactly countable in polynomial time. Let B_n be the number of labelled bipartite graphs and P_n=sum_{a=0}^n binom(n,a)2^{a(n−a)}. Then B_0=1 and B_n=(P_n−sum_{a=1}^{n−1}binom(n,a)B_aB_{n−a})/2. Hence F(n,n−3)≤2^N−B_n is an exact-arithmetic, polynomial-time computable bound.",
+      "claim_sha256": "b2add0f9b562ae950d301750cdc32ff5d211579e88e07db9dd2face2df3ec7b2",
+      "verdict": "VERIFIED",
+      "evidence": "P_n counts a labelled graph together with an ordered proper two-coloring. A bipartite graph with c connected components contributes 2^c such colorings. In the convolution, choosing the labelled block of size a and independent bipartite graphs on the two blocks counts the same graph once per assignment of each component to a block, again 2^c times. Thus P_n=Σ_a binom(n,a)B_aB_{n−a}; isolating a=0,n proves the recurrence. Its O(n²) terms and O(n²)-bit integers give polynomial bit complexity. Since bipartite graphs are triangle-free, T(n,3)≥B_n, and the complement identity yields the bound. The recurrence was evaluated exactly through n=12 and matched direct bipartiteness counts through n=6.",
+      "witness": "none",
+      "search_method": "Independent weighted double count, exact recurrence evaluation through n=12, and exhaustive comparison with bipartite and triangle-free graph counts through n=6.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target asks for a uniform 2^{o(n²)} algorithm for arbitrary positive input n,k. The draft does not establish this: for even n and k=n/2, its general exponent has q=(3n²−2n)/8=Θ(n²), while the fixed-k DP and the endpoint bounds do not supply an exact algorithm for the remaining parameter range. It nevertheless proves material correct progress—subquadratic-exponent exact counting for every regime k=o(n), polynomial time for fixed k, and exact reductions and bounds. The final writeup explicitly says the full uniform target remains unresolved, so claimed_resolution PARTIAL is accurate and is not a headline overclaim.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read the exact target and relevant source passage from only the authorized source input, then read only the authorized draft; no web, retrieval database, receipt, prior run, verification report, or other solution was accessed.",
+    "Independently derived target coverage before relying on the draft’s claimed_resolution or self_assessment.",
+    "Created and ran the integer-only checker /tmp/open_frontier_paired_v2/tcs_count_graphs_vc_at_most_k/audit-revision/bugbank/iter_2/audit_exact_checks.py (SHA-256 ff84e1b5404c7af93ef2a3e0e8d44f8d6072ead6022109b86192e77361803698).",
+    "Exhaustively enumerated all 33,868 labelled graphs for 0≤n≤6 and recomputed vertex-cover numbers, clique and independent-set conditions, bipartiteness, and triangle-freeness.",
+    "Checked every complement and endpoint identity and ran the canonical k-cover generator for every 0≤k≤n≤6.",
+    "Implemented the fixed-cover capped-state DP independently and matched brute-force counts for every individual (t,C,H) bucket through n=6.",
+    "Checked S1 and S2 by direct integer moment sums, including ceiling division and power-of-two versions of the logarithmic bounds.",
+    "Evaluated the bipartite recurrence through n=12 and matched direct bipartite counts through n=6; all exact-integer checks passed."
+  ]
+}

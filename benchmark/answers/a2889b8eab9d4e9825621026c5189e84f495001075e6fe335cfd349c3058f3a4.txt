@@ -1,0 +1,128 @@
+We need to analyze the argument and find false assertion. Let's parse the problem: Graph G of order n, size m, maximum degree Δ(G)=n-2. So there is a vertex v of degree n-2 (adjacent to all but one vertex, call u). And condition: any two non-adjacent vertices have a common neighbour. Need to show m ≥ 2n-4.
+
+Given that v has degree n-2, it's missing edge to u only. So v is adjacent to all others except u. u could be missing edges to some of the other vertices v_i (the neighbors of v). Let the neighbor set of v be N(v) = {v1,...,v_{n-2}}. u is nonadjacent to some subset of N(v). For each nonadjacent pair (u, vi) there must be a common neighbour, which must be some vertex w such that w is adjacent to both u and vi. Since u is not adjacent to vi, we need a common neighbor. Could be v itself? v is adjacent to vi but not to u (since v is not adjacent to u). So v is not a common neighbor for (u, vi). So common neighbor must be some other vertex w (maybe another vj). So for each vi that u is not adjacent to, there exists some vj that is adjacent to both u and vi.
+
+Thus the claim that "Given vi (i=k+1,..., n-2), by assumption in the problem, there exists vj (j = 1,..., k) such that vj is adjacent to vi. We can assume v1 will be adjacent to all vi (i=k+1,...,n-2)." is suspect. They assume that there exists vj among the first k (the neighbors of u) adjacent to vi; but they further assume we can pick v1 such that it is adjacent to all those vi. That is a strong assumption not generally true. They claim v1 can be chosen to be adjacent to all missing edges; but that may not hold.
+
+Thus line 0012 is likely false: "Given v_i(i=k+1,..., n-2), by assumption in the problem, there exists v_j(j = 1,..., k) such that v_j is adjacent to v_i. We can assume v_1 will be adjacent to all v_i(i=k+1,...,n-2)." That is false.
+
+Now we need to provide counterexample where the assumptions hold but the claim fails. Let's construct a graph meeting Δ=n-2 and any two nonadjacent vertices have common neighbor, but where for some u missing edges to some vi, there is no single vj among neighbors of u that is adjacent to all those vi.
+
+Simplify: Let n=5. Then Δ = n-2 =3. So we need a vertex v of degree 3 (adjacent to all but one vertex u). So v adjacent to three others: v1,v2,v3; u not adjacent to v. Need that any two nonadjacent vertices have a common neighbor.
+
+We need to define adjacency among v1,v2,v3 and u such that condition holds.
+
+Let’s try n=5, vertices: v (degree 3), u, a,b,c (the three neighbors of v). v adjacent to a,b,c. u may be adjacent to some subset of {a,b,c}. Condition: any two nonadjacent vertices must share a neighbor.
+
+List nonadjacent pairs: (v,u) is nonadjacent (by definition). They need a common neighbor. Since v adjacent to a,b,c, u must be adjacent to at least one of a,b,c to have common neighbor. So u must be adjacent to at least one of a,b,c.
+
+Now consider pairs among a,b,c: they may be nonadjacent; if any two of them are nonadjacent, they need a common neighbor. Could be v (since v adjacent to all a,b,c) or u if u adjacent to both.
+
+Also pairs (u, vi) where vi not adjacent to u need a common neighbor. Since v is not adjacent to u, can't be v. So need some other vertex w that is adjacent to both u and vi.
+
+Goal: construct a graph where u is missing edges to two of the vi, say a and b, but is adjacent to c. Then for nonadjacent (u,a) need common neighbor: could be b? but b not adjacent to u. Could be c? c adjacent to u and maybe to a? Need c adjacent to a. Similarly for (u,b) need c adjacent to b. So we can set c adjacent to both a and b. Also need condition for (a,b) if they are nonadjacent: they need common neighbor; could be c (adjacent to both) or v (adjacent to both). v is adjacent to both a,b anyway, so fine. So we can set a,b not adjacent to each other.
+
+Now check all conditions: vertices: v adjacent to a,b,c. u adjacent to c only. a adjacent to v and c (maybe also to b? no). b adjacent to v and c. c adjacent to v,u,a,b. Let's list degrees: deg(v)=3 (n-2=3) ok. deg(u)=1 (adjacent to c). deg(a)=2 (v,c). deg(b)=2 (v,c). deg(c)=4 (v,u,a,b) but n=5 so max degree possible is 4, okay. Δ(G) = max degree = 4? Actually c has degree 4 which is n-1? n-1 =4. But condition says Δ(G)=n-2=3. So violates because we have a vertex of degree 4 > n-2. Need Δ exactly n-2, i.e., maximum degree equals n-2, not exceeding. So we must ensure no vertex has degree n-1. In our construction, c got degree 4 which is n-1, too high. Need to adjust: maybe make c not adjacent to both a and b? But then need common neighbor for (u,a) and (u,b). Let's think.
+
+We need Δ = n-2 =3, so max degree 3. So any vertex can have at most degree 3. Since v already has degree 3 (adjacent to a,b,c). So all other vertices must have degree ≤3.
+
+We have n=5, so degree ≤3.
+
+We need u adjacent to some vertices; but if u adjacent to c only, degree 1 okay. For (u,a) need common neighbor w adjacent to both u and a. Since u only adjacent to c, w must be c and c must be adjacent to a. So c adjacent to a. Similarly for (u,b) need c adjacent to b. So c must be adjacent to a and b. Then c adjacent to v? v is adjacent to c already (since v adjacent to all a,b,c). So c adjacent to v, a, b => degree 3 (v,a,b) plus maybe u? Wait c adjacent to u? Actually we said u adjacent to c, so c adjacent to u as well. That would give c degree 4 (v,a,b,u) exceeding 3. So we cannot have u adjacent to c if c also adjacent to a and b because that would raise degree of c to 4 >3. So need different arrangement.
+
+Thus for n=5 maybe impossible? Let's test if statement holds for n=5? Let's try to find a counterexample for larger n.
+
+General approach: We need a vertex v of degree n-2 (adjacent to all but u). So v adjacent to all others except u. So v is adjacent to n-2 vertices: call set X = {x1,...,x_{n-2}}. u is nonadjacent to v. For any xi that u is not adjacent to, we need a common neighbor w (not v) adjacent to both u and xi. Since v is not adjacent to u, w must be some other vertex, maybe another xj.
+
+Thus for each xi not adjacent to u, there must exist some xj (j possibly depending on i) such that xj adjacent to both u and xi. Also we need Δ = n-2, meaning no vertex has degree > n-2. Since v already has degree n-2, any other vertex can have degree at most n-2 as well. So we need to avoid any vertex reaching degree n-1.
+
+Goal: construct where u misses edges to a set S ⊆ X of size s ≥ 2 (maybe). For each xi in S, we need some neighbor xj (maybe same or different) that is adjacent to both u and xi. If we try to use a single xj to serve as common neighbor for all xi in S, then xj would need to be adjacent to u and all xi in S. Its degree would be at least |S|+1 (for u) plus maybe connections to v? xj is already adjacent to v (since v adjacent to all X). So degree of xj would be at least 1 (v) + 1 (u) + |S| = |S|+2. To keep degree ≤ n-2, we need |S|+2 ≤ n-2 => |S| ≤ n-4. Since s could be up to n-2 (if u adjacent to none of X). But we can choose s smaller.
+
+But the false assertion in line 0012 claims we can assume v1 (some specific neighbor of u) is adjacent to all vi for i=k+1,...,n-2 (i.e., all vertices that u is not adjacent to). That is assuming there exists a single neighbor of u that is adjacent to all non-neighbors of u among X. This may not hold; we might need different neighbors for different non-neighbors.
+
+Thus we need a counterexample where u has at least two non-neighbors in X, and there is no single neighbor of u that is adjacent to both of them.
+
+So construct: Let n=6 => Δ = n-2 =4. So v adjacent to 4 others: X = {x1,x2,x3,x4}. u not adjacent to v.
+
+We need u adjacent to some subset of X, say u adjacent to x1 and x2 (k=2). Non-neighbors: x3,x4.
+
+We need for each xi in {x3,x4} a common neighbor with u: some xj adjacent to both u and xi. Could be x1 adjacent to u and x3, and x2 adjacent to u and x4. So we need x1 adjacent to x3, x2 adjacent to x4, but we must avoid any vertex having degree >4.
+
+Let's assign edges:
+
+- v adjacent to all x1,x2,x3,x4 (degree 4).
+- u adjacent to x1,x2 (degree 2).
+- x1 adjacent to v, u, x3 (maybe also x4? need to check degree).
+- x2 adjacent to v, u, x4.
+- x3 adjacent to v, x1 (maybe also x2? but careful).
+- x4 adjacent to v, x2.
+
+Now compute degrees:
+- v: 4 (ok)
+- u: 2 (ok)
+- x1: adjacent to v, u, x3 => degree 3 (≤4)
+- x2: adjacent to v, u, x4 => degree 3
+- x3: adjacent to v, x1 => degree 2
+- x4: adjacent to v, x2 => degree 2
+
+Check condition: any two nonadjacent vertices have a common neighbor.
+
+List all pairs:
+
+1) (v,u): nonadjacent. Common neighbor? Need vertex adjacent to both v and u. v adjacent to all X; u adjacent to x1,x2. So x1 is adjacent to v and u => common neighbor x1. Also x2 works. OK.
+
+2) (u, x3): u not adjacent to x3 (by design). Need common neighbor. u adjacent to x1,x2; x3 adjacent to v,x1. Intersection: x1 is common neighbor (adjacent to both u and x3). Good.
+
+3) (u, x4): similarly x2 common neighbor.
+
+4) (x3, x4): are they adjacent? Not defined; we have not added edge between x3 and x4. So they are nonadjacent. Need common neighbor. x3 adjacent to v,x1; x4 adjacent to v,x2. Intersection: v is common neighbor (adjacent to both). Good.
+
+5) (x1, x2): are they adjacent? Not defined; we didn't add edge x1-x2. So they are nonadjacent. Need common neighbor. x1 adjacent to v,u,x3; x2 adjacent to v,u,x4. Intersection: v and u are both common neighbors (v adjacent to both, u adjacent to both). Good.
+
+6) (x1, x3): they are adjacent (we added edge x1-x3). So fine.
+
+7) (x2, x4): adjacent.
+
+8) (x1, x4): are they adjacent? Not defined; nonadjacent. Need common neighbor. x1 adjacent to v,u,x3; x4 adjacent to v,x2. Intersection: v is common neighbor (adjacent to both). Good.
+
+9) (x2, x3): nonadjacent? x2 adjacent to v,u,x4; x3 adjacent to v,x1. Intersection: v common neighbor. Good.
+
+10) (x3, x3) etc ignore.
+
+Thus all nonadjacent pairs have common neighbor (mostly v or u or x1/x2). Condition satisfied.
+
+Maximum degree: v=4, x1=3, x2=3, others ≤2. So Δ=4 = n-2 (since n=6 => n-2=4). Good.
+
+Now check line 0012's claim: They let k be number of neighbors of u among X. In our example, u adjacent to x1,x2 => k=2. Then they consider vi for i=k+1,...,n-2 => i=3,4 corresponding to x3,x4. They claim there exists vj (j=1..k) such that vj adjacent to vi. That's true: For x3, vj = x1 works; for x4, vj = x2 works. Then they claim "We can assume v1 will be adjacent to all vi(i=k+1,...,n-2)." That is, they claim we can assume that x1 (the first neighbor) is adjacent to both x3 and x4. In our example, x1 is adjacent to x3 but not to x4. So the claim fails. They assumed we can pick a single neighbor of u that is adjacent to all non-neighbors of u, which is false in this graph.
+
+Thus line 0012 contains false assertion.
+
+We need to provide claim and counterexample in one sentence each.
+
+Claim: "We can assume v1 will be adjacent to all vi(i=k+1,...,n-2)." Or more generally: "There exists a neighbor of u that is adjacent to every vertex of X that u is not adjacent to."
+
+Counterexample: The graph with n=6 described above where u is adjacent to x1 and x2 but not to x3,x4, and x1 adjacent to x3 only, x2 adjacent to x4 only, satisfies the hypotheses but no single neighbor of u is adjacent to both x3 and x4.
+
+We need to output JSON with candidates list up to three lines, most likely first. The false assertion appears in line 0012. Could also appear elsewhere? The assertion also used later in line 0014 maybe but that's just using the assumption. So candidate line: 0012.
+
+We'll output {"candidates": [12], "claim": "...", "counterexample": "..."}.
+
+Make sure claim is one sentence. Counterexample one sentence.
+
+Let's craft:
+
+Claim: "We can assume that a single neighbor of u (namely v1) is adjacent to every vertex vi that u is not adjacent to."
+
+Counterexample: "Consider the graph on six vertices where v is adjacent to x1,x2,x3,x4, u is adjacent only to x1 and x2, x1 is also adjacent to x3, x2 is also adjacent to x4, and no other edges among the xi; this graph satisfies Δ(G)=4 and the common‑neighbour property but no neighbor of u is adjacent to both x3 and x4."
+
+Check: Δ(G)=4 (v degree 4). Good.
+
+Now output JSON.
+
+We need to ensure correct line numbers: The text lines are numbered 0001,0002,... line 0012 corresponds to line number 12. So candidate: 12.
+
+Thus final.
+
+</think>
+
+{"candidates": [12], "claim": "We can assume that a single neighbor of u (namely v1) is adjacent to every vertex vi that u is not adjacent to.", "counterexample": "Consider the graph on six vertices where v is adjacent to x1,x2,x3,x4, u is adjacent only to x1 and x2, x1 is also adjacent to x3, x2 is also adjacent to x4, and no other edges among the xi; this graph satisfies Δ(G)=4 and the common‑neighbour property but no neighbor of u is adjacent to both x3 and x4."}

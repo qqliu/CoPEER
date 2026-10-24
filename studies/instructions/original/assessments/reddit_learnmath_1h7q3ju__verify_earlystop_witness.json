@@ -1,0 +1,17 @@
+{
+  "record_id": "reddit_learnmath_1h7q3ju",
+  "arm": "verify_earlystop_witness",
+  "verdict": "INVALID",
+  "flawed_step": "0013",
+  "counterexample": "The quantity K defined in line 0011 is a function of delta, K(delta) = (delta+|c|)^2 + |c|(delta+|c|) + |c|^2, so line 0013's instruction \"Set delta = min{1, eps/K}\" defines delta in terms of a K that is itself defined in terms of delta. Concrete instance showing the step's own conclusion fails for the delta it prescribes: take c = 0 and eps = 1. Then line 0011 gives K = (delta+0)^2 + 0*(delta+0) + 0^2 = delta^2, which is not a constant. Run the proof's recipe with the working value delta = 1/2 that lines 0003/0009 permit: line 0011 then legitimately yields K = (1/2)^2 = 1/4 (indeed |x| < 1/2 implies |x^2 + x*0 + 0| < 1/4). Line 0013 now instructs delta := min{1, eps/K} = min{1, 1/(1/4)} = min{1, 4} = 1. With that prescribed delta = 1 and that K = 1/4, the inequality asserted in 0013, |x^3 - c^3| <= delta*K, is FALSE: take x = 0.9, c = 0. Then |x - c| = 0.9 < delta = 1, but |x^2 + xc + c^2| = 0.81 > 1/4 = K (so the bound of line 0011 is destroyed), and |x^3 - c^3| = 0.729 > delta*K = 1 * (1/4) = 0.25. So the bound imported into 0013 and reused in 0015 does not hold for the delta the step itself defines. A second, independent arithmetic failure in the same chain: line 0015 writes delta*K = (eps/K)*K = eps, which is false whenever the min selects 1, e.g. c = 0 with K = 1 (delta = 1) and eps = 8 gives delta = min{1, 8} = 1 and delta*K = 1, not eps = 8. The repair is standard and not performed anywhere in the proof: first impose delta <= 1, then set the constant K = (1+|c|)^2 + |c|(1+|c|) + |c|^2 (independent of delta), and only then set delta = min{1, eps/K}.",
+  "reasoning_summary": "Lines 0001-0011 check out: 0001 states the correct epsilon-delta definition of continuity at each c; 0003's factorization |x^3 - c^3| = |x - c||x^2 + xc + c^2| is an identity; 0007 is the triangle inequality plus |xc| = |x||c|; 0009 correctly derives |x| <= |x - c| + |c| < delta + |c|; 0011 correctly substitutes that bound to get |x^2 + xc + c^2| <= (delta+|c|)^2 + |c|(delta+|c|) + |c|^2, and names this quantity K. The failure is at 0013. K as constructed in 0011 depends on delta, yet 0013 defines delta = min{1, eps/K}, i.e. delta in terms of K in terms of delta. This is not a definition: no value of delta has been produced, and the proof never argues that a self-consistent value exists. The step is therefore unjustified as written, and the concrete instance c = 0, eps = 1 shows that a delta obtained by literally following the recipe (K = 1/4 from delta = 1/2, then delta reset to 1) makes the step's own asserted inequality |x^3 - c^3| <= delta*K false at x = 0.9 (0.729 > 0.25). Line 0015 compounds this by asserting delta*K = (eps/K)*K = eps, which is false on the branch where the min selects 1. Note in fairness: the theorem is true and the argument is one repair away from correct (pin delta <= 1 first so that K = (1+|c|)^2 + |c|(1+|c|) + |c|^2 is a genuine constant); the defect is in the logic/order of the construction as written, not in the final claim.",
+  "verified_steps_ok": [
+    "0001",
+    "0003",
+    "0005",
+    "0007",
+    "0009",
+    "0011"
+  ],
+  "stopped_at": "0013"
+}

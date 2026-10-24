@@ -1,0 +1,20 @@
+Okay, so I need to figure out which line in this mathematical writing contains a false assertion. The problem is about a dynamic programming (DP) formulation for a production/inventory problem. Let me go through the text step by step.
+
+First, the title is asking if the DP formulation is correct. Then, in the text, the author discusses a problem with a friend about whether the DP formula solves the problem. The friend says it's wrong, but the author believes it's correct, proven by induction.
+
+Looking at the problem description, it's about periods t=1 to n, with known demand d_t. The decision variables are x_t (order quantity) and I_t (end-of-period inventory). The cost function p_t(x_t) is tiered: p1_t * x_t if x_t ≤ Q, and p2_t * x_t if x_t > Q, with p2_t ≤ p1_t. Prices are non-increasing over time. There's an inventory balance equation and storage capacity constraints. The objective is to minimize the total cost.
+
+The DP formulation presented defines F(t, i) as the minimum cost from period t to n, given that the end-of-period inventory is i. The recursive formula is F(t, i) = min over x_t and i' of F(t-1, i') + p_c_t(x_t). The base case is F(0,0)=0 and F(0,i)=infty for i>0.
+
+Now, I need to find a false assertion. Let me think about the DP formulation. The state is defined by the inventory level at the end of period t. The decision is x_t, which affects the next period's inventory. The cost is the current period's cost plus the future costs.
+
+Wait, in the DP formula, F(t, i) is defined as the minimum over x_t and i' of F(t-1, i') + p_c_t(x_t). But I think the indexing might be off. Typically, in DP, F(t, i) represents the cost from period t onwards, given the state at t. So, when moving from t to t+1, you should be looking at F(t+1, i'), not F(t-1, i'). 
+
+Looking at line 0083-0087, the definition is F(t, i) = min over x_t and i' of { F(t-1, i') + p_c_t(x_t) }. This seems incorrect because it's referencing F(t-1, i'), which would be the cost up to period t-1, not the future periods. The correct formulation should be F(t, i) = min over x_t of { p_c_t(x_t) + F(t+1, i') }, where i' is the next state.
+
+So the false assertion is in the DP recursive formula. It incorrectly uses F(t-1, i') instead of F(t+1, i'). This would lead to calculating the cost backwards incorrectly, as it's referencing past periods instead of future ones.
+
+A counterexample would be a simple case where n=2, Q=1, p1_1=2, p2_1=1, p1_2=1, p2_2=0.5, d1=1, d2=1, B(1)=1, B(2)=1. If we compute F(1, i) using the given formula, it would incorrectly reference F(0, i'), which is only defined for i'=0, leading to an incorrect cost calculation. The correct approach should build up from t=1 to t=n, not the other way around.
+</think>
+
+{"candidates": [85], "claim": "The DP recursive formula incorrectly uses F(t-1, i') instead of F(t+1, i')", "counterexample": "A simple case with n=2 periods shows incorrect cost calculation when using the given formula."}

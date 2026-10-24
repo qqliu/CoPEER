@@ -1,0 +1,55 @@
+{
+  "record_id": "fun2026_wst_log_worstcase_updates",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 2,
+  "parent_sha256": "b93947248ea494932c5e35175bdc012d41ea959994d148a6e5a4e7a3a44a4669",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Under the recorded definition, an AVL search tree is a Weak Search Tree supporting every insertion and deletion, including rebalancing, in deterministic O(log(n+2)) worst-case time.",
+      "claim_sha256": "02eba46a0189cb2bd8e6933d817d6521abb8d0da31a39fda4d2071d1421c5eaf",
+      "verdict": "VERIFIED",
+      "evidence": "For every node N in a strict BST and every pair of keys l and r in its left and right subtrees, l<key(N)<r, hence l<r; this is exactly the recorded WST cross-subtree invariant. Standard AVL insertion, successor-based deletion, and rotations preserve strict BST order. The AVL balance restoration covers all cases: at a left-heavy node, writing a,b,c for the heights of the left child's two subtrees and the node's right subtree gives 1+max(a,b)=c+2 and |a-b|<=1. If a>=b, then a=c+1 and b is c or c+1, and a single right rotation leaves both affected nodes balanced. If a<b, then a=c and b=c+1; resolving the two children of the root of the height-b subtree shows that a left-right rotation leaves the two children of the new root with equal height c+1. Right-heavy cases are symmetric. Only one ancestor path is processed, with constant work and at most two rotations per visited node. With empty-tree height -1, the exact minimum-size recurrence M(-1)=0, M(0)=1, M(h)=1+M(h-1)+M(h-2) implies by induction M(h)>=2^floor(h/2), so h=O(log(n+2)). Thus every valid distinct-key insertion or deletion, including all rebalancing, has deterministic logarithmic worst-case time. The persisted bounded integer checks corroborated all enumerated local height cases and the recurrence but were not used in place of the general proof.",
+      "witness": "none",
+      "search_method": "Independent invariant and AVL case proof, supplemented by exhaustive exact-integer local-height checks through height parameter 128 and the minimum-size recurrence through height 256.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/bugbank/iter_2/claim_0_avl_integer_checks.py"
+    },
+    {
+      "idx": 1,
+      "claim": "There is a three-node WST on which an ordinary right rotation destroys the WST invariant.",
+      "claim_sha256": "6afe1ec9fe0695e7f32760d199f0d78384c721bf181e1cc01fb14c167d01f865",
+      "verdict": "VERIFIED",
+      "evidence": "Take root z with key 1, its left child y with key 3, and y's left child a with key 2, with every other child null. Before rotation, each internal node has an empty right subtree, so every universally quantified left-versus-right comparison is vacuous and the tree is a WST. An ordinary right rotation at z makes y the root, with a as its left child and z as its right child. The WST condition at y then requires 2<1, which is false. The persisted checker implements the invariant literally over integer key sets and returned before_is_wst=True and after_is_wst=False.",
+      "witness": "Before: root 1 with left child 3, whose left child is 2; all other children null. After right rotation: root 3 with left child 2 and right child 1, violating 2<1.",
+      "search_method": "Direct three-node construction followed by an exact-integer executable pre/post invariant check.",
+      "checker_path": "/tmp/open_frontier_paired_v2/fun2026_wst_log_worstcase_updates/audit-revision/bugbank/iter_2/claim_1_rotation_witness_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The retained AVL construction and the three-node rotation witness do not resolve the recorded weak-only WST target: they give neither worst-case logarithmic updates for general WST states nor a matching obstruction in the source model.",
+      "claim_sha256": "55157ea5c2beebb629a90f00ed9276e860101af532bd1854f7e6ce65b21fa7d6",
+      "verdict": "VERIFIED",
+      "evidence": "The embedded source explicitly notes that every BST is a WST and nevertheless poses worst-case logarithmic updates for WST as open, so mere superclass membership cannot meet the intended weak-only target. The AVL construction reaches only states satisfying the stronger strict-BST invariant and relies on node keys as routers; it supplies no update or conversion guarantee for general non-BST WST states. The three-node example proves only that an unmodified ordinary rotation is not invariant-preserving. It does not rule out repaired rotations, rotation-free balancing, or any other worst-case update method, and it supplies no matching lower bound. Therefore neither requested target alternative is established.",
+      "witness": "none",
+      "search_method": "Direct comparison of the construction and witness scopes with the exact target, recorded WST definition, and embedded source open-question context.",
+      "checker_path": "none"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requires deterministic O(log n) worst-case insertion and deletion, including rebalancing, for the intended weak-only/general WST setting, or a matching obstruction in that source model. The verified AVL result is confined to the already-known strict-BST subclass, while the verified three-node witness obstructs only unconditional use of one ordinary rotation. These are relevant but incomplete results: they neither provide general WST updates at the requested strength nor establish impossibility. The final writeup expressly says “partial only” and that the target remains unresolved, so it does not overclaim. Accordingly, target coverage is VALID_PARTIAL_PROGRESS and the draft's claimed_resolution of PARTIAL is ACCURATE.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the designated source-input JSON and iteration-2 draft JSON; used no web, retrieval database, treatment receipt, prior frontier run, verification report, or other solution.",
+    "Read the exact target, WST definition, distinct-key assumption, update discussion, rotation discussion, expected-amortized result, and concluding worst-case open question from the authorized source input.",
+    "Proved directly that the strict BST invariant implies the WST invariant at every node.",
+    "Audited AVL insertion, successor deletion, all single/double local balance cases, rotation order preservation, ancestor-path work, and the minimum-size height recurrence.",
+    "Ran claim_0_avl_integer_checks.py using only arbitrary-precision integers; 648 enumerated left-heavy height configurations passed, and the recurrence bound passed through height 256.",
+    "Ran claim_1_rotation_witness_checker.py using only exact integer comparisons; it certified the stated WST before rotation and the explicit 2<1 violation afterward.",
+    "Compared the exact target with the state space and guarantees of the AVL construction and with the limited logical force of the rotation witness.",
+    "Created only the required checker programs in the authorized audit directory and did not modify source or draft repository files."
+  ]
+}

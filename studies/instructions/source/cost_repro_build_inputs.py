@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""Build the frozen inputs, ground truth and prompt texts for the Task-1 cost
+experiment reproduction (runs/cost_experiment_repro_20260915).
+
+Two record sets:
+  proofs100  the original Task-1 sample: inputs and ground truth are the
+             existing files under runs/cost_experiment/{inputs,grading_truth}
+             (never copied or changed; hashed here).  Arms and prompt texts are
+             copied VERBATIM from runs/cost_experiment_arms.js.
+  claims60   the eval60 counterexample roster (experiments/single_model_bugbank/
+             datasets/development/eval60_counterexamples_v2.json): 60 false
+             claims, statement + definitions, NO proof.  Inputs are keyed by the
+             roster's opaque public_id (task ids name the answer) and contain
+             only the statement and definitions.  Ground truth = the operator
+             reference witness from evaluator_private/development_labels_v4.json.
+             The four arms are the Task-1 arms transposed from "verify the
+             proof" to "attempt the proof yourself" (see PROMPTS below).
+Outputs (create-only unless --force): <run>/inputs_claims60/<public_id>.json,
+<run>/grading_truth_claims60/<public_id>.json, <run>/claims60_ids.json,
+<run>/prompts.json, <run>/manifest.json (sha256 of every frozen input).
+"""
+import argparse, hashlib, json, os, re, sys
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent.parent
+REPO = BASE.parent
+RUN = BASE / "runs/cost_experiment_repro_20260915"
+XP = REPO / "experiments/single_model_bugbank"
+ROSTER = XP / "datasets/development/eval60_counterexamples_v2.json"
+LABELS = XP / "evaluator_private/development_labels_v4.json"
+ARMS_JS = BASE / "runs/cost_experiment_arms.js"
+GRADING_JS = BASE / "runs/cost_experiment_grading.js"
+SAMPLE100 = BASE / "runs/cost_experiment/sample100.jsonl"
+IN100 = BASE / "runs/cost_experiment/inputs"
+TRUTH100 = BASE / "runs/cost_experiment/grading_truth"
+
+SCHEMA = {"type": "object", "additionalProperties": False,
+          "required": ["record_id", "arm", "verdict", "flawed_step", "counterexample", "assessment_summary"],
+          "properties": {"record_id": {"type": "string"},
+                         "arm": {"type": "string", "enum": ["refute", "verify_full", "verify_earlystop", "verify_earlystop_witness",
+                                                             "prove_full", "prove_earlystop", "prove_earlystop_witness"]},
+                         "verdict": {"type": "string", "enum": ["VALID", "INVALID", "CANNOT_DECIDE"]},
+                         "flawed_step": {"type": "string"}, "counterexample": {"type": "string"},
+                         "assessment_summary": {"type": "string"}}}
+GRADE_SCHEMA = {"type": "object", "additionalProperties": False,
+                "required": ["record_id", "arm", "grade", "justification"],
+                "properties": {"record_id": {"type": "string"}, "arm": {"type": "string"},
+                               "grade": {"type": "string", "enum": ["CAUGHT_MATCHING", "CAUGHT_DIFFERENT", "MISSED", "FALSE_CATCH", "CAUGHT_UNSUPPORTED", "UNVERIFIED"]},
+                               "justification": {"type": "string"}}}
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def extract_js_methods(js_text):
+    """Pull METHOD = {...} arm texts verbatim out of the original workflow script."""
+    m = re.search(r"const METHOD = \{(.*?)\n\}\n", js_text, re.S)
+    assert m, "METHOD block not found"
+    body = m.group(1)
+    out = {}
+    for mm in re.finditer(r"\n\s*(\w+): `(.*?)`,", body, re.S):
+        out[mm.group(1)] = mm.group(2)
+    assert set(out) == {"refute", "verify_full", "verify_earlystop_witness", "verify_earlystop"}, sorted(out)
+    return out
+
+def fn_of(rid):
+    return re.sub(r"[ /]", "_", rid)
+
+def main():
+    ap = argparse.ArgumentParser(); ap.add_argument("--force", action="store_true"); a = ap.parse_args()
+    RUN.mkdir(parents=True, exist_ok=True)
+    js = ARMS_JS.read_text()
+    method_proofs = extract_js_methods(js)
+    # DEVIATION (verified 2026-09-15, probes in <workspace-home>/cost_repro_ops/smoke/p1-p3):
+    # the Opus 5 API safeguard now rejects any prompt/schema naming an output field
+    # "reasoning_summary" (error "safeguards flagged this message ... [reasoning_extraction]",
+    # deterministic, Opus-only; Fable accepts it).  The field is renamed
+    # "assessment_summary" in the schema and wherever a METHOD text names it, for
+    # BOTH models so the contract stays identical across engines.
+    FIELD_RENAME = ("reasoning_summary", "assessment_summary")
+    method_proofs = {k: v.replace(*FIELD_RENAME) for k, v in method_proofs.items()}
+    # Task-1 prompt template, verbatim from runs/cost_experiment_arms.js minus the
+    # trailing "write your JSON to <path>" operational sentence (the harness here
+    # captures the structured output itself; agents have only a file-READ tool).
+    proofs_template = ("You are assessing a mathematical proof for correctness. Read {input_path} — it contains the problem statement and a line-numbered proof. Use ONLY that file: no web, no other files, no code execution. (Reading that file with your file-reading tool, or with a single shell command that only prints it, is allowed and is not code execution.)\n\n"
+                       "{method}\n\n"
+                       "Honesty rules: do not assume the proof is flawed; many proofs are fine. Do not pad. In your structured output set record_id to exactly {record_id_json} and arm to exactly \"{arm}\".")
+    # Claims transposition: the assessed object is a bare statement, so "verify the
+    # proof step by step" becomes "attempt the proof yourself step by step"; the
+    # counterexample-first arm is unchanged in method.  Verdict VALID = the
+    # statement is true (proved), INVALID = false, CANNOT_DECIDE otherwise.
+    method_claims_raw = {
+        "refute": ("METHOD you must follow — COUNTEREXAMPLE-FIRST: read the statement looking for its riskiest implication, and try to construct ONE concrete counterexample (explicit numbers, explicit small structure, explicit trace) that satisfies every hypothesis of the statement and violates its conclusion. The moment you have a counterexample you have checked carefully, report INVALID with that counterexample and STOP — do not attempt a proof. If after honest effort you cannot refute it and believe the statement is true, report VALID with counterexample \"\"."),
+        "prove_full": ("METHOD you must follow — COMPLETE PROOF ATTEMPT: attempt to prove the statement. Write a complete numbered step-by-step argument in reasoning_summary and, for EVERY numbered step, decide whether it is justified given the definitions and the preceding steps, recording a one-line justification or objection per step. You must judge every step even after finding a problem. Verdict VALID if every step is justified and the argument proves the statement; INVALID if the argument fails and you conclude the statement is false (name the first failing step in flawed_step). counterexample may be \"\" — your job is verification by proof, not witness construction."),
+        "prove_earlystop_witness": ("METHOD you must follow — PROOF ATTEMPT WITH EARLY STOP, WITNESS REQUIRED: attempt to prove the statement step by step in order. For each numbered step, decide whether it is justified given the definitions and the preceding steps. You MAY stop at the first step you are certain cannot be justified — but a verdict of INVALID is only complete when you ALSO produce a CONCRETE counterexample (explicit numbers, explicit small structure, explicit trace) to the statement, checked carefully, in the counterexample field. This arm exists to equalize deliverables: your INVALID must come with the same artifact a counterexample-first assessment produces. If your argument completes without a definitive failure, report VALID with counterexample \"\"."),
+        "prove_earlystop": ("METHOD you must follow — PROOF ATTEMPT WITH EARLY STOP: attempt to prove the statement step by step in order. For each numbered step, decide whether it is justified given the definitions and the preceding steps. You MAY stop at the first step you are certain cannot be justified; report INVALID with that step in flawed_step. If your argument completes, report VALID. counterexample may be \"\" — your job is verification by proof, not witness construction."),
+    }
+    method_claims = {k: v.replace(*FIELD_RENAME) for k, v in method_claims_raw.items()}
+    claims_template = ("You are assessing a mathematical statement for truth. Read {input_path} — it contains the statement and the definitions and conventions under which it is to be read. Use ONLY that file: no web, no other files, no code execution. (Reading that file with your file-reading tool, or with a single shell command that only prints it, is allowed and is not code execution.)\n\n"
+                       "{method}\n\n"
+                       "Honesty rules: do not assume the statement is false; many statements are true. Do not pad. In your structured output set record_id to exactly {record_id_json} and arm to exactly \"{arm}\".")
+    # Grader prompts: Task-1 rubric verbatim (proofs) and its transposition (claims).
+    gjs = GRADING_JS.read_text()
+    gm = re.search(r"return agent\(`(.*?)`,\n", gjs, re.S); assert gm
+    grade_proofs = gm.group(1)
+    grade_proofs = grade_proofs.replace("${ASSESS}/${fn}__${arm}.json", "{assessment_path}").replace("${TRUTH}/${fn}.json", "{truth_path}")
+    grade_proofs = grade_proofs.replace("${JSON.stringify(rid)}", "{record_id_json}").replace('"${arm}"', '"{arm}"')
+    grade_proofs = re.sub(r"\n\nSet record_id exactly .*$", "\n\nSet record_id exactly {record_id_json}, arm \"{arm}\".", grade_proofs, flags=re.S)
+    grade_claims = ("You are grading one assessment of a mathematical statement against held-out ground truth.\n\n"
+                    "Read these two files:\n"
+                    "1. {assessment_path} - the assessment (verdict VALID = the statement is true, INVALID = false, CANNOT_DECIDE; a claimed failing step; a counterexample).\n"
+                    "2. {truth_path} - the ground truth: the statement is FALSE and this file gives an independently verified counterexample (the reference witness) and, where recorded, why the statement fails.\n\n"
+                    "Every statement in this sample IS false (reviewer-confirmed, witness verified). Grade the assessment:\n"
+                    "- CAUGHT_MATCHING: it reported INVALID and its counterexample (or, if it gave no explicit witness, its stated reason) is a VALID refutation of the same kind as the reference (the same object or family, or the same failing mechanism; a different-but-valid witness of the same kind counts as matching).\n"
+                    "- CAUGHT_DIFFERENT: it reported INVALID with a DIFFERENT valid refutation (a genuinely different counterexample object or a different correct reason), and after checking its support concretely yourself, that refutation is genuine.\n"
+                    "- MISSED: it reported VALID or CANNOT_DECIDE.\n"
+                    "- FALSE_CATCH: it reported INVALID but the stated counterexample or reason does not hold up under your concrete check (wrong math, an object that violates a hypothesis or satisfies the conclusion, a misread statement, or no checkable support at all).\n"
+                    "- CAUGHT_UNSUPPORTED: it reported INVALID (the correct verdict) but gave neither a counterexample nor a self-contained argument that the statement is false. A 'stated reason' counts as a refutation only if it is itself a complete argument (for example a parity or counting argument, or a named object together with why it meets every hypothesis and fails the conclusion). 'My proof attempt fails at step k', 'the hypotheses do not force the conclusion', or naming a gap in a would-be proof is NOT a refutation.\n"
+                    "- UNVERIFIED: it reported INVALID with a named or large object (a famous graph, a structure with dozens of vertices, a construction you cannot check by hand from the assessment's own text) that is NOT the reference object and that you cannot verify concretely. Never guess: use UNVERIFIED rather than CAUGHT_DIFFERENT or FALSE_CATCH in that case. If the object IS the reference object (or an explicitly stated variant the truth file already covers), grade CAUGHT_MATCHING.\n"
+                    "Be strict about FALSE_CATCH vs CAUGHT_*: verify concretely, do not take the assessment's word; a counterexample must satisfy every hypothesis in the definitions and violate the conclusion. FALSE_CATCH is only for INVALID whose supplied witness or argument is wrong under your concrete check. Clauses in the definitions that describe what a counterexample must include are guidance to the solver: grade on whether the object refutes the statement under the stated conventions, performing any omitted verification (trace, tie-break check, non-isomorphism) yourself; omission of demanded verification text alone never makes a FALSE_CATCH.\n\n"
+                    "Set record_id exactly {record_id_json}, arm \"{arm}\".")
+    schema_task1 = json.loads(json.dumps(SCHEMA).replace("assessment_summary", "reasoning_summary"))  # the original Task-1 answer files
+    prompts = {"schema": SCHEMA, "schema_task1": schema_task1, "grade_schema": GRADE_SCHEMA,
+               "deviations": ["Output field reasoning_summary renamed assessment_summary (Opus 5 safeguard [reasoning_extraction] rejects the original name; applied to both models).",
+                              "The original prompt's final sentence (write your JSON to <path>) is omitted: agents have a read-only tool set and the harness records the structured output.",
+                              "Harness: headless CLI cells (claude -p / codex exec) under Slurm instead of in-session Workflow subagents; same model alias, effort, single read tool and schema mechanism.",
+                              "Grader: every reproduction grade is claude-fable-5-1 at effort medium (Task 1's 400 grades were 295 claude-opus-5 + 102 claude-fable-5 + 3 Fable re-grades); the grade enum adds CAUGHT_UNSUPPORTED and UNVERIFIED, used only by the claims60 rubric.",
+                              "Answer emitted once (structured output only); Task-1 agents also wrote the JSON to a file via a Write tool call, which counted as output tokens, so absolute output-token counts are not contract-identical across harnesses.",
+                              "One parenthetical sentence added after 'no code execution' in both templates, for both models: reading the input file with the file tool or a single print-only shell command is allowed (smoke 2026-09-15: a gpt-5.6-sol cell returned CANNOT_DECIDE without reading the file, treating its shell read as forbidden)."],
+               "proofs100": {"template": proofs_template, "methods": method_proofs,
+                             "arms": ["refute", "verify_full", "verify_earlystop", "verify_earlystop_witness"],
+                             "grade_prompt": grade_proofs,
+                             "source": {"arms_js": str(ARMS_JS.relative_to(REPO)), "arms_js_sha256": sha(ARMS_JS),
+                                        "grading_js": str(GRADING_JS.relative_to(REPO)), "grading_js_sha256": sha(GRADING_JS)},
+                             "note": "METHOD texts verbatim from runs/cost_experiment_arms.js except the field rename; template = the original minus its final write-to-file sentence plus one read-permission parenthetical (see deviations)."},
+               "claims60": {"template": claims_template, "methods": method_claims,
+                            "arms": ["refute", "prove_full", "prove_earlystop", "prove_earlystop_witness"],
+                            "grade_prompt": grade_claims,
+                            "note": "Task-1 arms transposed to bare statements: verify-the-proof becomes attempt-the-proof; the counterexample-first method is unchanged."}}
+    (RUN / "prompts.json").write_text(json.dumps(prompts, indent=1, ensure_ascii=False))
+
+    # claims60 inputs + truth (keyed by public_id; task_id kept only in the truth file)
+    roster = json.load(open(ROSTER)); labels = json.load(open(LABELS))["development"]
+    in_dir = RUN / "inputs_claims60"; truth_dir = RUN / "grading_truth_claims60"
+    in_dir.mkdir(exist_ok=True); truth_dir.mkdir(exist_ok=True)
+    ids = []; manifest = {"claims60": {}, "proofs100": {}}
+    for t in roster["tasks"]:
+        assert t["mode"] == "refute", t["task_id"]
+        pid = t["public_id"]; ids.append(pid)
+        lab = labels[t["task_id"]]; assert lab["truth_label"] == "false", t["task_id"]
+        inp = {"record_id": pid, "statement": t["statement"], "definitions": t["definitions"]}
+        tru = {"record_id": pid, "task_id": t["task_id"], "statement": t["statement"], "definitions": t["definitions"],
+               "truth_label": lab["truth_label"], "ground_truth_witness": lab["reference"],
+               "ground_truth_flaw": lab.get("flaw") or lab.get("explanation") or "",
+               "reference_authority": lab.get("reference_authority"), "verification_level": lab.get("verification_level"),
+               "verification_note": lab.get("verification_note"), "book_citation": lab.get("book_citation"),
+               "label_record": lab, "source_group": t.get("source_group"), "family": t.get("family"), "review": t.get("review"),
+               "note": "verification_level states how far the reference witness was verified (full = executable check; cited_only/partial = literature citation); the grader may rely on the reference object by recognition but must grade other named/large objects UNVERIFIED."}
+        hinted = bool(re.search(r"counterexample|claim under test|the claim (asserts|quantifies)|to be refuted|refut", t["definitions"], re.I))
+        for path, obj in ((in_dir / f"{pid}.json", inp), (truth_dir / f"{pid}.json", tru)):
+            if path.exists() and not a.force:
+                assert json.load(open(path)) == obj, f"frozen file differs: {path}"
+            else:
+                path.write_text(json.dumps(obj, indent=1, ensure_ascii=False))
+        manifest["claims60"][pid] = {"task_id": t["task_id"], "input_sha256": sha(in_dir / f"{pid}.json"), "truth_sha256": sha(truth_dir / f"{pid}.json"),
+                                     "definitions_hint_flagged": hinted}
+    assert len(ids) == 60 and len(set(ids)) == 60
+    manifest["claims60_hint_flagged_ids"] = sorted(pid for pid, m in manifest["claims60"].items() if m["definitions_hint_flagged"])
+    manifest["claims60_hint_flag_rule"] = "definitions text matches /counterexample|claim under test|the claim (asserts|quantifies)|to be refuted|refut/i (roster wording that presupposes refutation); pre-registered subset, reported with and without"
+    (RUN / "claims60_ids.json").write_text(json.dumps(ids, indent=1))
+    # proofs100: reference the frozen original files
+    ids100 = [json.loads(l)["record_id"] for l in open(SAMPLE100)]
+    assert len(ids100) == 100
+    for rid in ids100:
+        fn = fn_of(rid)
+        manifest["proofs100"][rid] = {"input_sha256": sha(IN100 / f"{fn}.json"), "truth_sha256": sha(TRUTH100 / f"{fn}.json")}
+    (RUN / "proofs100_ids.json").write_text(json.dumps(ids100, indent=1))
+    manifest["sources"] = {"roster": str(ROSTER.relative_to(REPO)), "roster_sha256": sha(ROSTER),
+                           "labels": str(LABELS.relative_to(REPO)), "labels_sha256": sha(LABELS),
+                           "sample100": str(SAMPLE100.relative_to(REPO)), "sample100_sha256": sha(SAMPLE100),
+                           "prompts_sha256": sha(RUN / "prompts.json")}
+    (RUN / "manifest.json").write_text(json.dumps(manifest, indent=1))
+    print("claims60 inputs:", len(ids), "proofs100 ids:", len(ids100), "prompts sha", manifest["sources"]["prompts_sha256"][:16])
+
+if __name__ == "__main__":
+    main()

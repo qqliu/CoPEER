@@ -1,0 +1,123 @@
+{
+  "record_id": "fun2026_recursive_maze_linear",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 4,
+  "parent_sha256": "1356afaf8460d0bfa094b50905c12bd049be337cd4f9b8b8d5a479fe91bbf15b",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Reachability is exactly a sparse unary congruence-closure query.",
+      "claim_sha256": "a39cc912250770e8c8d014dcf4dfe7199e3a328bc2038e0738590cd3b918d907",
+      "verdict": "VERIFIED",
+      "evidence": "Let R be reachability by a run that preserves a protected stack suffix. R is an equivalence. For same-box edges (o,X,t),(o',X,t'), if t R t', then pushing along the first edge, following the protected neutral run above X, and popping along the reverse second edge gives o R o'; hence θ⊆R. Conversely, induction on the standard Dyck decomposition of any protected neutral run—empty runs, concatenation, and push-X/neutral/pop-X excursions—gives R⊆θ. Before done, every run from the bottom stack protects ⊥, so exitability is exactly equality in θ between the start and an outer-pin wire. The reversed edges therefore specify sparse partial unary operations whose congruence closure is θ.",
+      "witness": "For each folding generator, o|S → t|X;S, followed by a neutral run to t'|X;S and the reverse pop to o'|S, realizes the asserted equality.",
+      "search_method": "Direct symbolic derivation from the source DPDA transitions and least-folding definition; no external search.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 1,
+      "claim": "There is a deterministic O(B+(W+E) log(W+E))-time, O(W+E+B)-space algorithm, eliminating the dense W·B initialization.",
+      "claim_sha256": "c96d252f4f098755d06fd0b17c68f58965a90b38c7e648d6921c6cdd8a2cf7b3",
+      "verdict": "VERIFIED",
+      "evidence": "Every queued equality is forced because its two cited targets are already in one current class, so the computed partition P always refines θ. A representative deleted at a key collision creates one queue record, and after the queue drains every pair of same-box edges with P-equivalent targets has P-equivalent origins; thus P is stable and θ refines P. Hence P=θ. There are at most E collisions. Smaller-to-larger relabeling charges each wire O(log W) times, while deterministic split/join tree melding charges the E representatives O(log(E+1)) each in total, including a final charge for a deleted overlap. Radix initialization is O(W+E+B), and all retained representatives, queue records, maps, and class records are linear in W+E+B.",
+      "witness": "The exact checker compared the event-driven per-class-map algorithm with naive least folding closure on 78,152 finite labeled feature graphs; every partition agreed.",
+      "search_method": "Forcedness/stability proof, merge-tree amortization, and exhaustive exact finite comparison.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "Both outcomes have certificates of size O(W+E) verifiable deterministically in O(W+E+B) time.",
+      "claim_sha256": "03b13c8063b5fa8b8710ef5c8ec6acc3956a4ebfa98112bbc58d5e3e13ecce64",
+      "verdict": "VERIFIED",
+      "evidence": "For a no-certificate, bounded wire labels define an equivalence P; radix grouping by (X,P(t)) checks stability, and separation in this coarser stable relation implies separation in least θ. Taking P=θ proves completeness. For a yes-certificate, use one fixed leaf per wire and at most W−1 chronological binary merge nodes. Each node's two original same-box edges and earlier target witness justify its merge inductively. Earlier child indices, unique child-parent links, unique wire leaves, and subtree intervals make all containment and chronology checks linear. Recording the successful merges of any closure computation supplies such a forest, including the reflexive leaf case.",
+      "witness": "For every graph in the exact suite, the checker generated a chronological merge forest, checked its edge witnesses and subtree containments, and obtained the same partition as naive θ.",
+      "search_method": "Independent soundness, completeness, size, and verifier-cost analysis, supplemented by exact forest generation.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "The target O(W+E+B) bound holds for graded dual graphs: graphs admitting an integer rank ρ with ρ(o)=ρ(t)+1 for every edge (o,X,t).",
+      "claim_sha256": "0c150d8c5dbbde3ce6c8c0e6c3687714fa4c38fc2458be6339bc17bea040bdec",
+      "verdict": "VERIFIED",
+      "evidence": "Folding preserves rank by induction. Every fold of rank-r origins depends only on final rank-(r−1) target classes, so the connected components of the per-key stars at rank r are exactly θ's rank-r classes. Across all ranks the stars have at most E edges. Integer difference constraints are assigned and checked by a weak-component DFS; folding cannot cross original weak components, so componentwise normalization is sound. Each normalized range has length below W, permitting linear buckets. Sparse grouping and component searches therefore total O(W+E+B) time and space.",
+      "witness": "The checker identified 346 graded graphs in its exhaustive suites and found exact equality between every rank sweep and naive θ.",
+      "search_method": "Rank-invariant induction, difference-constraint analysis, and exhaustive exact finite comparison.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Canonical longest-path box stratification is recognizable in O(W+E+B) time and includes non-graded instances with nontrivial folds.",
+      "claim_sha256": "1c286525623664cb8fa0012459d2ee369c10751c91554dc86195e83cbfdc86fc",
+      "verdict": "VERIFIED",
+      "evidence": "Topological sorting of the reversed feature graph detects acyclicity and computes longest-path levels in O(W+E). Bucketing arcs by tail level and using touched-box timestamps checks the unique head-level condition in O(W+E+B). In the stated five-wire example, λ(a,b,c,d,e)=(0,1,1,2,2); both X-arcs have level-0 tail and level-2 heads, so d and e fold. A unit-difference rank would make d one unit above a on the direct arc but two units above it on a→b→d, which is impossible. Distinct pin labels realize the arcs as a valid dual maze.",
+      "witness": "Arcs a→P b, b→Q d, a→R c, c→S e, a→X d, and a→X e form an accepted, non-graded instance with d θ e.",
+      "search_method": "Direct recognition-cost audit and exact evaluation of the supplied separating example.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "In a box-stratified feature DAG, every class of the least folding equivalence θ is homogeneous in canonical level λ.",
+      "claim_sha256": "3e4cadbf7886893b5ea59f4bc4a755d4c0ab7d7a6d351598fb6d50340f4967b3",
+      "verdict": "VERIFIED",
+      "evidence": "Identity classes are level-homogeneous. If equivalent tails of two same-box arcs have their common level s, stratification gives both heads the same level. Thus every newly forced equality joins equal-level vertices, and equivalence closure preserves the invariant. Since the finite least closure is obtained by such additions, every θ-class is homogeneous.",
+      "witness": "All 358 box-stratified DAGs encountered in the exhaustive suites had level-homogeneous naive θ-classes.",
+      "search_method": "Induction over the finite least-closure construction plus exhaustive counterexample search.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "A level-by-level star decomposition computes θ, and hence exit reachability, in O(W+E+B) time and space on box-stratified feature DAGs.",
+      "claim_sha256": "4fdfdea41b6877bf82fa8ae2a35558b22ecb892a82999b5d6e991ec8294ee74a",
+      "verdict": "VERIFIED",
+      "evidence": "Every feature tail lies at a strictly lower canonical level than its head. By level homogeneity and stratification, all arcs belonging to a key (X,target class) have heads at one common level. Consequently, when that head level is processed, the target class is final. Each star edge is forced, so the sweep partition P refines θ. Conversely, any two same-box arcs with P-equivalent tails were placed in the same star group, so P is stable and θ refines P. Sparse nested grouping by touched boxes and target classes processes each arc O(1) times; all stars contain at most E edges, and static component searches scan each wire and star edge once.",
+      "witness": "For all 358 qualifying graphs in the exact suites, the level sweep produced precisely the naive least folding partition.",
+      "search_method": "Two-inclusion proof, sparse-work accounting, and exhaustive exact finite comparison.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "Repeated global fixed-point rescanning can require Θ(W) changing rounds even with one box and E=Θ(W).",
+      "claim_sha256": "d62b858b1814466949614a64661fc275d95897596927ca2a7befeb56b53238ee",
+      "verdict": "VERIFIED",
+      "evidence": "In the supplied family, round 1 merges only a₀,b₀, and induction shows round k+1 merges only a_k,b_k: target equivalence propagates exactly one level per synchronous round, while z and distinct levels remain separate. Thus there are n+1 changing rounds with W=2n+3 and E=2n+2. No finite equivalence process can have more than W−1 changing rounds because each reduces the class count. Distinct pins, with an additional unused outer pin if needed, give a valid one-box maze.",
+      "witness": "The checker verified the exact round count for every n from 0 through 32.",
+      "search_method": "Symbolic round induction, class-count upper bound, and exact family simulation.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 8,
+      "claim": "Any folding implementation that explicitly stores every live box representative per class and handles each class union by scanning all representatives of one operand has an Ω((W+E+B) log(W+E+B)) worst case.",
+      "claim_sha256": "bbdec37bd9d373b7a35d83fd660ecea169acdf02cbb74a8e6c3ea87ddaec206e",
+      "verdict": "VERIFIED",
+      "evidence": "Fresh box labels serialize the N−1 balanced data unions, so scheduling cannot bypass a level. Before a level-k union, each of its two 2^k-wire operands contains at least 2^k distinct live Y_i representatives. Scanning either operand therefore costs at least 2^k, and the N/2^(k+1) unions at each of h=log₂N levels cost at least N/2; total work is at least Nh/2. The anchor/control chain makes every Y_i equality necessary before the final start-to-v₀ fold, so these representatives cannot be dropped as irrelevant. The explicit construction has W=4N+2, E=6N, B=3N, hence input size Θ(N) and the asserted Ω(N log N) lower bound within the stated eager-scanning model.",
+      "witness": "The checker generated the full edge family for N=2 through 128, verified the unique enabled-union order, all counts, the scan lower bound, final positive query, and failure of that query after deleting any Y_i box.",
+      "search_method": "Reconstructed exact fresh-box construction, symbolic per-level charging, and exact dependency simulation.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    },
+    {
+      "idx": 9,
+      "claim": "The bounded-key radix sorts used above rely only on the standard lexicographic stable-pass invariant, not on preservation of earlier-key blocks.",
+      "claim_sha256": "5b7e2861843b8176e9a9ae84762d32b14eeb4640a93edc43c925cb6cc0915e5f",
+      "verdict": "VERIFIED",
+      "evidence": "After a stable minor-key pass and stable major-key pass, major keys are ordered, and stability preserves minor-key order only within each equal-major-key group. That is exactly the lexicographic invariant needed; preservation of complete minor-key blocks is neither true nor used. The W- and B-bounded coordinate ranges give O(W+E+B) counting-sort work and space.",
+      "witness": "The checker tested all 597,871 record sequences of lengths 0 through 6 over two keys in {0,1,2}; the two stable passes always matched direct lexicographic sorting.",
+      "search_method": "Direct stable-sort invariant proof and exhaustive bounded-record enumeration.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/bugbank/attempt_4/fun2026_attempt4_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The source target is an unrestricted deterministic O(W+E+B)-time exit-reachability algorithm. The draft does not claim to supply one: its unrestricted construction retains a logarithmic factor, certificate verification does not find certificates, and its linear algorithms require graded or box-stratified graphs. Those correct general and subclass results are material partial progress, so PARTIAL is accurate but the entire target remains unresolved.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json among evidence inputs and used no web, retrieval database, receipt, other arm, or prior-run material.",
+    "Verified that /evidence/parent.json has SHA-256 1356afaf8460d0bfa094b50905c12bd049be337cd4f9b8b8d5a479fe91bbf15b.",
+    "Audited the DPDA-to-folding characterization, both partition inclusions, certificate soundness and completeness, rank and level invariants, sparse complexity accounting, lower-bound quantifiers, and radix invariant directly from definitions.",
+    "Created and ran /work/fun2026_attempt4_checker.py, SHA-256 39fd65ad7483d9e88be32047e27f51f5bf5b61d00a6b750fa6addaebea3c940d.",
+    "The checker examined 78,152 exact finite graphs, including 346 graded and 358 box-stratified qualifying cases; every tested closure and sweep agreed.",
+    "The checker also verified the synchronous-round family for n=0..32, eager lower-bound constructions through N=128 with every Y_i essential, and 597,871 stable radix-pass sequences; all exact checks passed."
+  ]
+}

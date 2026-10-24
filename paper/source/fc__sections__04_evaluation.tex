@@ -1,0 +1,70 @@
+\section{Evaluating Critics and Supporting Proof Repair}
+\label{sec:evaluation}
+\label{sec:certified-localization}
+
+\subsection{Human review and the human-approved core}
+Human reviewers assessed selected subsets of BugBank by answering three questions. First, does the objection accurately represent the source claim and its assumptions? Second, does the counterexample satisfy those assumptions and make the claim false? Third, does the Lean formalization correctly represent the counterexample?
+
+Two human-review studies on earlier BugBank collections show why source correspondence requires its own check. In an initial review of 100 dossiers from the 401-dossier census, 76 reviews approved both the counterexample's mathematics and its Lean translation. Of those 76, however, 61 also approved the source interpretation, while seven rejected it and eight were uncertain. A later study audited a stratified random sample of 100 dossiers from the earlier 284-dossier collection using one human reviewer, with earlier verdicts masked in the review packets and prior project exposure recorded for 28 dossiers. In that audit, 91 dossiers received approval on all three questions, and weighting the strata gives an estimated 91.0\% approval rate for that collection (95\% sampling interval 81.0\%--96.5\%). The two cohorts have different sampling frames, and neither estimates the quality of the benchmark core below (Appendix~\ref{app:recent-human-review}).
+
+Two further checks concern the counterexamples and the references themselves. Across 604 executable search tasks, separately written checker programs confirmed 348 of 351 proposed counterexamples and rejected three (Section~\ref{sec:results}). Conversely, errors in the references can also mislead a model grader. In the instruction study of Section~\ref{sec:complementary}, 13 reference records from an earlier panel later failed source or witness checks. Even so, the reference-assisted model grader had credited 60 of the 78 responses to those texts (three models across two instructions) as matching them (Section~\ref{app:reference-reconciliation}).
+
+\paragraph{The human-approved core.}
+For our localization benchmark, we select from BugBank a \emph{human-approved core} of 147 dossiers from 137 distinct sources. Several dossiers may concern different passages or answers from the same source, such as a paper version, a question-and-answer thread, a ProofWiki page, a Reddit post, or a QEDBench problem. To enter the core, a dossier must have a completed human review that answered yes to all three questions above and applies to the current dossier version. It must also have no unresolved negative or uncertain human judgment, and no unresolved concern about whether the objection applies to the selected source claim under its assumptions. For 113 dossiers, the current scientific content is identical to the reviewed version; for the other 34, we confirmed that the earlier positive review still applies. Assessing what the objection shows about the surrounding argument (local step failure or global falsity) was optional and is recorded separately, so core membership does not imply a positive consequence assessment. Every core dossier has a named Lean theorem, a successful build, and inspected proof assumptions. Across the core, 109 of the 147 objections target intermediate assertions, as do 74 of the 100 benchmark inputs below. Appendix~\ref{app:recent-human-review} documents the review rounds, exclusions, and version continuity, and Table~\ref{tab:population-map} maps each study to its population. BugBank includes objections to vetted community answers, and the core contains two model-generated proofs from QEDBench \citep{gonzalez2026qedbench} that had received perfect human rubric scores (Section~\ref{app:corpus-sources} and Appendix~\ref{sec:method}).
+
+\subsection{Error localization: inputs, outputs, and scoring}
+In our localization benchmark, which we call \emph{certified-claim localization} (CCL), the critic receives a numbered proof text known to contain an error. The prompt tells the critic that the text contains an error and asks for up to three ranked candidate line numbers with a brief explanation. Each benchmark input is backed by a held-out dossier from the human-approved core with a Lean certificate, which the critic does not see (Figure~\ref{fig:benchmark-example}).
+
+\begin{figure}[t]
+\centering
+\fbox{
+\begin{minipage}{0.97\textwidth}
+\footnotesize
+\begin{minipage}[t]{0.52\textwidth}
+\textbf{Numbered input (excerpt)} \\
+\textit{(10 nonblank numbered lines total)} \\[0.25em]
+{[1]} Q1: Suppose a function has the property that whenever ``x'' is in the domain of ``f'', then so is ``-x''. Show that f can be written as the sum of an even function and an odd function.\\[0.25em]
+{[3]} By definition, an even function has the equation $f(x) = f(-x)$ and by definition, an odd function satisfies the equation $f(-x) = -f(x)$.\\[0.25em]
+{[5]} Therefore, f can be written such that $f(x) = f(-x) + (-f(x))$.\\[0.25em]
+$\dots$
+\end{minipage}%
+\hfill
+\vrule
+\hfill
+\begin{minipage}[t]{0.44\textwidth}
+\textbf{Recorded GPT-OSS 20B selection} \\[0.25em]
+\texttt{"candidates": [5, 7]} \\
+\textit{Score:} Hit@1 = 1, Hit@3 = 1
+
+\vspace{0.4em}
+\hrule
+\vspace{0.4em}
+
+\textbf{Held-out reference evidence} \\
+\textit{(not shown to the critic)} \\[0.25em]
+\textit{Reference line:} Line 5 \\
+\textit{Witness:} $D=\{-1,1\}$, $f \equiv 1$, $x=1$. Then $f(1)=1$ while $f(-1)+(-f(1)) = 1 - 1 = 0 \neq 1$. \\[0.25em]
+\textit{Lean-checked statement:} \\
+The domain is closed under negation, 1 belongs to it, and $f(1) \neq f(-1) + (-f(1))$.
+\end{minipage}
+\end{minipage}
+}
+\caption{A primary localization input with a false intermediate deduction at line 5 (\texttt{reddit\_learnmath\_dm6itc}). The critic does not see the held-out reference evidence and selects line 5 first. The witness refutes the identity at line 5; the theorem itself is true.}
+\label{fig:benchmark-example}
+\end{figure}
+
+The \emph{reference lines} of an input are its reviewed set of accepted error lines; 57 of the 100 primary inputs have more than one. A selected line earns credit if it is a reference line. \textbf{Hit@1} is the percentage of inputs whose first choice is a reference line, and \textbf{Hit@3} is the percentage with a reference line anywhere in the top three choices. A response \emph{meets the rules} when it follows the response and execution rules: the required format, the token budget, and no disallowed tool use or extra turns. Missing answers, format errors, and budget exhaustion score zero, and an invalid or duplicate line label does not advance later choices (Appendix~\ref{app:certified-localization}). Human approval of a dossier is separate from human review of its reference-line labels. Of the 100 primary inputs, 69 have a recorded positive human check of the current line selection, including 55 checked on the exact current source text and line numbering (Appendix~\ref{app:recent-human-review}).
+
+\paragraph{Inputs and comparisons.}
+The localization benchmark comprises 100 proof texts, each with at least ten nonblank lines, grouped into 92 clusters of related sources across community forums, reference pages, research-paper excerpts, and model-generated proofs from Reddit, Stack Exchange, ProofWiki, arXiv, and QEDBench. These source collections indicate provenance rather than author identity (Section~\ref{app:structure-census}). We compare language-model critics against the best of four simple text rules that pick a line by character length, word count, mathematical-symbol count, or TF-IDF centroid similarity to the full text~\citep{salton1988termweighting}. Confidence intervals resample the 92 clusters so that related texts stay together~\citep{efron1979bootstrap,field2007clustered}. Appendix~\ref{app:certified-localization} details the selection mask, statistical methods, budgets, and execution settings for all 13 evaluated configurations (Table~\ref{tab:ccl-execution-settings}).
+
+\input{fc__sections__localization_table}
+
+\subsection{Results: localization, ranking, and response failures}
+Table~\ref{tab:localization} reports 12 model configurations on the 100 benchmark texts. Gemini 3.1 Pro achieves the highest Hit@1, selecting a reference line as its first choice on 73.0\% of texts (73 of 100). This compares with 18.0\% for the best of the four simple text rules (TF-IDF centroid similarity) and an expected 6.7\% for random line selection. When three choices are allowed, Gemini 3.1 Pro and Opus 5.5 tie at 85.0\% Hit@3. Expanding from one choice to three raises Gemini from 73 to 85 texts and Opus from 68 to 85, showing that identifying a flawed step and ranking it first are distinct challenges. Rule compliance also shapes the scores: Nemotron 3.5 Lightning produced a response meeting the rules on only 41 of the 100 inputs and exhausted its token budget on the rest. Because all 100 inputs are scored, Hit@1 and Hit@3 measure whether a critic both answers within the rules and locates a reference line. Conditional accuracies restricted to responses meeting the rules have different denominators and are not matched comparisons. The locally run GPT-OSS 120B and 20B reach 49.0\% and 43.0\% Hit@1 (25 percentage points above the best simple text rule for the 20B model). Appendix~\ref{app:certified-localization} provides complete results, including both reporting views for Haiku.
+
+\subsection{Selecting a reference line and supplying a valid objection}
+Matching a reference line does not guarantee that a critic's explanation is mathematically sound, nor does missing the reference line mean the critic's objection is wrong. A separate LLM-review study of 48 saved responses on 24 texts from an earlier evaluation set (one response per text from Gemini 3.1 Pro and one from Nemotron 3 Super 120B) illustrates both cases. For Nemotron, reviewers accepted a valid objection in 15 of its 18 reference-line matches and in 4 of its 6 misses (for Gemini, 20 of 24 overall). To count as valid, a response had to meet the response and execution rules and refute the selected source claim with mathematically sound evidence under its assumptions, as determined by recorded LLM adjudications and source-correspondence checks (Table~\ref{tab:b-results}, Section~\ref{app:secondary-objections}). Appendix~\ref{app:metrics} formalizes this gap between reference-line matching and objection validity and proves bounds on what line-matching scores can establish.
+
+\input{fc__sections__04b_complementary}
+

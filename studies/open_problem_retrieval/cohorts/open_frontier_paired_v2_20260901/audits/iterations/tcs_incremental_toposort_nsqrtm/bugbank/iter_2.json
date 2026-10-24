@@ -1,0 +1,64 @@
+{
+  "record_id": "tcs_incremental_toposort_nsqrtm",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 2,
+  "parent_sha256": "538cbc02bcd44311d068258ef743e94874cdc6fe675199559eed55bd219c00b1",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The two source-stated bounds imply total update time Õ(min{n²,m^(4/3)}). This meets Õ(n√m) when m≤n^(6/5) and when m≥n²/log^{O(1)}n; over all m it is within an Õ(n^(1/4)) factor of the target.",
+      "claim_sha256": "79003b417cee6573b8c836f7fd4f5efe82f393a8dfcd3dfee6043f7ded223a27",
+      "verdict": "VERIFIED",
+      "evidence": "The source states soft-O(n²) and soft-O(m^(4/3)) bounds, so selecting the better gives their minimum. Relative to n√m, the sparse ratio is m^(5/6)/n, at most one for m≤n^(6/5), while the dense ratio is n/√m, which is polylogarithmic when m≥n²/log^C n for a constant C. The bounds cross at m=n^(3/2). Below that point the sparse ratio is at most n^(1/4), and above it the dense ratio is at most n^(1/4); logarithmic factors are absorbed by soft-O notation.",
+      "witness": "none",
+      "search_method": "Independently derived every exponent using exact rational arithmetic and split the full simple-edge range at the exact crossing m=n^(3/2).",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_2/audit_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "Corrected balanced-cut lemma: for every order-violating insertion u→v into a DAG, either v already reaches u, so the insertion closes a cycle, or one can find equally sized sets B,F and a cut c such that F consists of the descendants of v at or left of c, B consists of the ancestors of u right of c, the stable order (L\\F),B,F,(R\\B) is topological after the insertion, and all |B||F| ordered pairs in B×F become newly reachable.",
+      "claim_sha256": "76b33884b45bcb42d8f9cba826e81e36204c1dd3420a109e05b64fe9487b8ffd",
+      "verdict": "VERIFIED",
+      "evidence": "Fix the old topological order with v before u and use reflexive descendants D of v and ancestors A of u. If v reaches u, u→v closes a cycle. Otherwise D and A are disjoint. Sweeping a cut from immediately before v to immediately after u, h(c)=|D∩L|-|A∩R| starts negative and ends positive. Crossing a vertex raises h by zero or one because D∩A is empty, so an internal zero exists; it has positive common size because v is already left and u remains right. Set F=D∩L and B=A∩R. The only old-edge orientations that the four-block stable move could reverse are F→L\\F, R\\B→B, and F→B. Descendant closure excludes the first, ancestor closure excludes the second, and the third would create an old v-to-u path. The inserted edge has u∈B and v∈F, hence is forward in the new order. For every b∈B and f∈F, the new path b→*u→v→*f exists; previously b followed f in a topological order, so b could not reach f. Exhaustive checking through six vertices confirmed every conclusion for every balanced cut in all non-cycle cases.",
+      "witness": "none",
+      "search_method": "Completed a direct sweep-and-edge-class proof, then exhaustively enumerated every fixed-order DAG through six vertices and every backward insertion using integer-bitset reachability.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_2/audit_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The balanced-cut construction gives an explicit combinatorial algorithm with total time Õ(m+n√m+A), where A is the total number of adjacency entries scanned from selected forward vertices and selected backward vertices. Consequently it attains Õ(n√m) whenever A=Õ(n√m), including sequences in which every selected forward vertex has polylogarithmic out-degree and every selected backward vertex has polylogarithmic in-degree at its expansion time.",
+      "claim_sha256": "1e3b755a91cfb2c9e7b71b948548bc049c5686be8c3f70aea12a6364f7205a45",
+      "verdict": "VERIFIED",
+      "evidence": "Min- and max-priority searches can enumerate descendants of v in old topological order and ancestors of u in reverse order. After q expansions on each side, their next-frontier positions determine whether the two cut intervals overlap; when they do, the expanded sets are exactly D∩L and A∩R for a balanced cut. If v reaches u, any apparent separating cut is crossed by a v-to-u path, and scanning its boundary edge causes the forward and backward discovery sets to intersect before a reorder is accepted. Thus a cycle update needs at most Õ(n+A) work. For every non-cycle violating update, the q² pairs in B×F become reachable for the first time. Monotonicity makes these products disjoint across updates, so Σq_i²≤n(n−1); with at most m such updates, Cauchy–Schwarz gives Σq_i=O(n√m). Heap work and stable sequence-tree deletion/reinsertion cost soft-O of scanned entries plus Σq_i, while edge storage and per-update initialization contribute soft-O(m). This establishes Õ(m+n√m+A). Under the directional polylog-degree condition, A=Õ(Σq_i+n)=Õ(n√m); and in the standard distinct-simple-edge model m≤n² implies m≤n√m. The exact checker also modeled the ordered two-frontier stopping rule for all 502,170 backward insertions through six vertices, finding no false cut or missed cycle.",
+      "witness": "none",
+      "search_method": "Derived a concrete ordered bidirectional-search stopping rule, proved its cut and cycle behavior, audited every heap/sequence-tree charge, and exhaustively tested the search logic with exact bitsets.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_2/audit_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Full adjacency-list rescanning cannot be charged automatically to the balanced-search vertex bound: there is a DAG sequence with n=2r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, yet rescanning the selected forward list costs r².",
+      "claim_sha256": "52567c84ad8041cb3bc36f8d47aa749b024b2b3014b8efa9e2e527fc45212061",
+      "verdict": "VERIFIED",
+      "evidence": "With order v,u₁,…,u_r,z,w₁,…,w_r, the 3r initial edges v→w_j, z→w_j, and u_i→z are forward. Inductively, before u_i→v the order is u₁,…,u_(i−1),v,u_i,…,u_r,z,w₁,…,w_r. Vertex u_i has no proper ancestor, so the cut between v and u_i has F={v}, B={u_i}, and q=1. Before insertion u_i already reaches z and every w_j; after insertion its only additional proper reachable vertex is v. Vertex v retains all r outgoing entries, so expanding it on each of r violating updates scans r² entries. The final graph has 3r+r=4r edges and remains acyclic. Exact simulation verified these statements for every r from 1 through 64.",
+      "witness": "For every r≥1, use vertices v,u₁,…,u_r,z,w₁,…,w_r; initial edges v→w_j, z→w_j, u_i→z; then insert u_i→v in increasing i. For example, r=2 gives n=6, m=8, two q=1 updates, one new pair per update, and four scans of v's two-entry list.",
+      "search_method": "Proved the parameterized family by induction on the maintained order and checked reachability differences and scan counts exactly for 2,080 violating updates across r=1,…,64.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_2/audit_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requests an unconditional combinatorial soft-O(n√m) incremental topological-sort algorithm for arbitrary insertion sequences. The draft establishes known-bound comparisons, a valid balanced-cut lemma, and a combinatorial algorithm whose time is Õ(m+n√m+A), but it does not prove A=Õ(n√m) for arbitrary degrees. Claim 3 concretely shows why the new-pair potential alone cannot supply that missing charge. These are material, correct advances and give the target bound for a stated nontrivial degree-restricted class, but they do not resolve the full target. The final writeup explicitly calls the result partial and says the arbitrary-degree case remains unresolved, so claimed_resolution PARTIAL is accurate and not overstated.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the authorized source input and iteration-2 draft; did not consult the web, retrieval data, treatment receipts, prior runs, reports, or other solutions.",
+    "Recomputed the four exponent identities with fractions only: 5/6, 6/5, 3/2, and 1/4.",
+    "Enumerated all 33,866 fixed-order DAGs through six vertices and all 502,170 backward insertions using integer bitsets.",
+    "Checked 325,405 cycle cases, 176,765 non-cycle cases, all 214,503 balanced cuts, every stable reorder, and every claimed fresh B×F pair.",
+    "Modeled the ordered bidirectional-search implementation and confirmed a valid cut or cycle detection on every enumerated insertion.",
+    "Simulated the rescanning family exactly for r=1,…,64, confirming n=2r+2, m=4r, q=1, one new proper reachability pair per violating update, and r² scans.",
+    "Persisted and ran /tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_2/audit_checker.py; SHA-256 1b6525f646bcde1aaec8d1a6c3cca88590e2f490b7593d60cb912562ef80f85f."
+  ]
+}

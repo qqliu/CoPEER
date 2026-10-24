@@ -1,0 +1,187 @@
+{
+  "record_id": "E01",
+  "census_record_id": "SE_cs_97637__a97647",
+  "namespace": "SqrtFailureBoundary",
+  "environment": "core (compiled in the shared Lean 4.30.0 + Mathlib project; the packet imports nothing)",
+  "template_file": "template.lean",
+  "template_hole": {
+    "marker": "«HOLE»",
+    "hole_name": "?step",
+    "declaration": "step",
+    "kind": "program_step",
+    "type": "Nat → Nat → Nat",
+    "description": "the recursive step (guard comparison and the two branch values) of the corrected program progC"
+  },
+  "allowed_edits": {
+    "repair_object": "a corrected program prog' : Nat → Nat together with a kernel-checked proof of ∀ x : Nat, R x (prog' x)",
+    "may_change": "only the recursive step of `prog`: the guard comparison (`n + 1 ≤ (b + 1) * (b + 1)`) and/or the two branch values, expressed in n and b = prog' n",
+    "must_preserve": [
+      "the specification R, byte for byte",
+      "the recursion shape: prog' 0 = 0 and prog' (n+1) computed from prog' n by one comparison and one of two branch values",
+      "input domain Nat, all inputs"
+    ],
+    "hypotheses_not_strengthenable": "the correctness statement must quantify over every natural input; no precondition on x may be added",
+    "nonvacuity": "the submitted prog' must differ from prog on at least one input and agree with R at the witness input 1 (i.e. R 1 (prog' 1))",
+    "not_allowed": "changing R; restricting the domain; a lookup-table program; leaving prog unchanged"
+  },
+  "hole_syntax": {
+    "regex": "if\\s+(?:(?!\\bif\\b).)+\\s+then\\s+(?:(?!\\bif\\b).)+\\s+else\\s+(?:(?!\\bif\\b).)+",
+    "forbidden_tokens": [
+      "prog",
+      "progC",
+      "sqrt",
+      "match",
+      "let",
+      "fun",
+      "sorry",
+      "step"
+    ],
+    "max_lines": 1,
+    "note": "one `if <guard> then <v1> else <v2>` in n and b (the contract's recursion shape); a lookup table (nested if) or a call to prog is excluded syntactically (harness validator has no hole-grammar check; check_record.sh applies this)"
+  },
+  "hidden_reference_names": [
+    "SqrtFailureBoundary.progStrict",
+    "SqrtFailureBoundary.strict_guard_correct",
+    "SqrtFailureBoundary.error_and_repair",
+    "SqrtFailureBoundary.original_is_delayed",
+    "SqrtFailureBoundary.exact_failure_boundary",
+    "SqrtFailureBoundary.complete_diagnosis",
+    "SqrtFailureBoundary.prog_refutation"
+  ],
+  "reference_repair": "progStrict (line 24): guard `n + 1 < (b + 1) * (b + 1)`; strict_guard_correct (35): ∀ x, R x (progStrict x); exact_failure_boundary (71): ¬ R x (prog x) ↔ ∃ k > 0, x = k * k",
+  "endpoint_type": "change_incorrect_program_preserving_spec",
+  "endpoint_statement_name": "final_theorem",
+  "has_final_theorem": true,
+  "endpoint_is_universal": true,
+  "endpoint_statement": "the universal obligation itself (change_incorrect_program_preserving_spec: 'submit an allowed corrected program and universal correctness proof'); task.json carries it a second time under the final role because the harness validator requires a final role for all_pass",
+  "obligations": [
+    {
+      "name": "repair_statement",
+      "role": "universal"
+    },
+    {
+      "name": "repair_nonvacuous",
+      "role": "nonvacuity"
+    },
+    {
+      "name": "final_theorem",
+      "role": "final"
+    }
+  ],
+  "test_instances": [
+    {
+      "x": 0,
+      "expected": 0
+    },
+    {
+      "x": 1,
+      "expected": 1
+    },
+    {
+      "x": 2,
+      "expected": 1
+    },
+    {
+      "x": 3,
+      "expected": 1
+    },
+    {
+      "x": 4,
+      "expected": 2
+    },
+    {
+      "x": 5,
+      "expected": 2
+    },
+    {
+      "x": 8,
+      "expected": 2
+    },
+    {
+      "x": 9,
+      "expected": 3
+    },
+    {
+      "x": 10,
+      "expected": 3
+    },
+    {
+      "x": 15,
+      "expected": 3
+    },
+    {
+      "x": 16,
+      "expected": 4
+    },
+    {
+      "x": 17,
+      "expected": 4
+    },
+    {
+      "x": 24,
+      "expected": 4
+    },
+    {
+      "x": 25,
+      "expected": 5
+    },
+    {
+      "x": 26,
+      "expected": 5
+    },
+    {
+      "x": 35,
+      "expected": 5
+    },
+    {
+      "x": 36,
+      "expected": 6
+    },
+    {
+      "x": 48,
+      "expected": 6
+    },
+    {
+      "x": 49,
+      "expected": 7
+    }
+  ],
+  "test_instances_source": "reference progStrict = integer square root; failure set of prog = positive squares (exact_failure_boundary)",
+  "library_shortcut_names": [
+    "Nat.sqrt",
+    "Nat.sqrt_le'",
+    "Nat.lt_succ_sqrt'"
+  ],
+  "reserved_names": [
+    "R",
+    "prog",
+    "ProgramCorrect"
+  ],
+  "source_exposed_repair": {
+    "exposed": true,
+    "where": "stored answer lines 0036 (`S a < (b + 1)²`, the strict guard) and 0038-0041 (case split with complement `(b + 1)² ≤ S a`), 0043-0047 (proof outline of the inductive step); stored problem text P0057-P0059 (the asker's Haskell `isqrt` with the equivalent strict/non-strict branches `sqr (S (isqrt x)) <=@ (S x)` / `(S x) <@ sqr (S (isqrt x))`). The extracted program at answer lines 0066-0072 is the only place with the off-by-one guard `a + 1 <= (b+1)*(b+1)`. (Reviewer's labels: answer lines 36-41, problem lines 42-43; the problem-text labels here use the stored problem_text numbering.)",
+    "consequence": "repair reconciliation / universal formalization task, not hidden-repair discovery: the solver must reconcile the extracted program with the answer's own strict case split and prove the reconciled program correct for every input"
+  },
+  "unresolved_status": "source-NO: the human reviewer rejected the source correspondence of the selected program-only quote while accepting the mathematics in full context; the Lean package contains only R and prog (no source text), so the full specification/context must be supplied by the runner from the record's dossier, not relabelled",
+  "harness_files": {
+    "task_json": "../packets/E01/task.json",
+    "evaluator_dir": "../harness/evaluator/E01/"
+  },
+  "task": {
+    "title": "Square root: the incremental integer square-root routine",
+    "located_defect": {
+      "declaration": "SqrtFailureBoundary.ProgramCorrect (the program prog against the specification R)",
+      "lean_text": "abbrev R (x y : Nat) : Prop := y * y ≤ x ∧ x < (y + 1) * (y + 1)\ndef prog : Nat → Nat\n  | 0 => 0\n  | n + 1 =>\n      let b := prog n\n      if n + 1 ≤ (b + 1) * (b + 1) then b else b + 1\ndef ProgramCorrect : Prop := ∀ x : Nat, R x (prog x)",
+      "description": "The extracted program (stored source lines 0066-0072) is claimed to compute the integer square root, i.e. to satisfy R on every input; that universal claim is the located defect. Change only the recursive step (the guard comparison and/or the two branch values) so that the program meets the unchanged specification R on every natural input, and prove it; there is no separate target theorem for this record."
+    },
+    "allowed_edit": "Replace the hole in `step` by one expression of the form `if <comparison in n and b> then <value> else <value>` (values are expressions in n and b; exactly one `if`; no call to prog or progC, no match/let); nothing else in the fixed part may change. The specification R, the recursion shape (progC 0 = 0, progC (n+1) from progC n by one comparison and two branch values) and the domain (all natural inputs, no precondition) are fixed. Do not redefine R, prog or ProgramCorrect; no instances, notations, macros, axioms or exports.",
+    "forbidden_tokens_extra": [],
+    "challenged_passage": "0066-0072 prog :: Int → Int / prog 0 = 0 / prog n = let a = n - 1 ; b = prog a in if a + 1 <= (b + 1) * (b + 1) then b else b + 1"
+  },
+  "notes": [
+    "Endpoint = universal obligation (change_incorrect_program_preserving_spec); the final role restates it because validate.py reports endpoint_final failed when no final role exists (README says it may be absent).",
+    "Declaration names must not contain an apostrophe: validate.py's #print axioms parser cannot read such names and reports them as not_reported (axioms check fails); the template therefore uses progC, not prog'.",
+    "Nonvacuity is `∃ x, progC x ≠ prog x` (the program was changed), leak-free; the witness input 1 and the value check R 1 (progC 1) live in AGREE.lean (agree_1).",
+    "unresolved_status source-NO copied from the contract: the source correspondence of the program-only quote was rejected by the human reviewer; the full specification/context is supplied through source_context.txt."
+  ]
+}

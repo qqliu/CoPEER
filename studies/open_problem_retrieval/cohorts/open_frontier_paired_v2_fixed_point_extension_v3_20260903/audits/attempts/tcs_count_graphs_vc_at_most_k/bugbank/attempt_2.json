@@ -1,0 +1,85 @@
+{
+  "record_id": "tcs_count_graphs_vc_at_most_k",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 2,
+  "parent_sha256": "706c8510a230d37a32166d6653638997d0794e09d6219f80767b355952cc1aa1",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Complement equivalence and exact endpoint cases. Let F(n,k) count labelled graphs on [n] with vertex-cover number at most k, let N=binom(n,2), and put m=n−k. For 0≤k≤n, F(n,k)=2^N−T(n,m), where T(n,m) is the number of labelled K_m-free graphs. Consequently F(n,n−3)=2^N−T(n,3), with T(n,3) the triangle-free graph count. Also F(n,0)=1; F(n,1)=1+n(2^{n−1}−1)−binom(n,2); F(n,n−2)=2^N−1; and F(n,n−1)=F(n,n)=2^N.",
+      "claim_sha256": "9f87e08e596020b4fd50076061156f82599554e1b6b984faffd52442ade03500",
+      "verdict": "VERIFIED",
+      "evidence": "For each graph G, C is a vertex cover iff V(G)\\C is independent, so τ(G)=n−α(G). Thus τ(G)≤k iff G has an independent m-set; complementation bijects these graphs with graphs containing K_m, yielding F=2^N−T (including m=0 under the stated empty-clique convention). For k=1, summing nonempty subgraphs of each labelled star counts each single-edge graph twice and every graph with at least two edges once, giving the correction −binom(n,2). The other endpoints follow directly from independent sets of sizes n, 2, 1, and 0.",
+      "witness": "The exact checker verified the complement equivalence graph-by-graph and all endpoint formulas for every labelled graph with 0≤n≤6.",
+      "search_method": "From-scratch complement bijection and endpoint counting, followed by exhaustive labelled-graph enumeration using integer arithmetic.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    },
+    {
+      "idx": 1,
+      "claim": "There is a deterministic exact algorithm using polynomial space and time 2^{q+O(n)}, where q=binom(n,2)−binom(n−k,2)=kn−k(k+1)/2. Therefore the target is achieved whenever k=o(n), including k=O(n/log n).",
+      "claim_sha256": "228df9eb30a58bc730a1e71110147b812d8099ebb8fb314e52a76c0c9cfea95e",
+      "verdict": "VERIFIED",
+      "evidence": "For a fixed k-set C, precisely q edge positions may be present when C is a cover. Every graph with τ≤k has at least one k-cover, and retaining it only for the first such cover counts it exactly once. There are binom(n,k)2^q generated pairs and at most binom(n,k) polynomial-time cover tests per pair, hence time poly(n)·binom(n,k)^2·2^q=2^{q+O(n)}. All iteration can be streamed with one O(n²)-bit graph mask and counter. Since q≤nk, q+O(n)=o(n²) whenever k=o(n).",
+      "witness": "For all 0≤k≤n≤6, the checker explicitly generated every (k-cover, compatible graph) pair, applied the first-cover rule, and recovered the brute-force value F(n,k).",
+      "search_method": "Direct canonical-enumeration proof, complexity accounting, and exhaustive comparison with brute-force counts.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    },
+    {
+      "idx": 2,
+      "claim": "For every fixed k there is a polynomial-time exact algorithm. More explicitly, F(n,k) is computable in time at most poly(n)·sum_{t=0}^k binom(n,t)·2^{binom(t,2)+t}·[2(t+2)]^{2^t−1}.",
+      "claim_sha256": "a1a82343d2cbfc3e60e579133f85193e3a3624e0ac7330ce099da54504123f95",
+      "verdict": "VERIFIED",
+      "evidence": "Fix a t-cover C, H=G[C], and independent outside set I. If D is another cover and X=C\\D, then X must be H-independent and D∩I must contain U_X. Consequently C is minimum exactly when |U_X|≥|X| for every nonempty H-independent X. Under this condition, every alternative minimum cover is exactly (C\\X)∪U_X for an equality case. Comparing sorted t-subsets shows C precedes it exactly when min X<min U_X. The proposed capped count and low-label bit therefore determine both minimum and lex-first status. There are at most 2^t−1 coordinates, at most 2(t+2) syntactic values per coordinate, and 2^t neighborhood transitions per outside vertex; summing over C and H gives the displayed bound with polynomial-bit integer arithmetic. For fixed k, every factor outside poly(n) is constant or binom(n,t), hence polynomial.",
+      "witness": "For every labelled graph through n=5 and every candidate C, the checker matched the stated terminal predicate to direct lexicographically-first minimum-cover testing. It also implemented the finite-state DP and recovered the exact distribution by vertex-cover number.",
+      "search_method": "Derived all alternative covers from X=C\\D, checked the lexicographic quantifier for every equality case, audited the state/time bounds, and exhaustively tested the resulting DP.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Exact first- and second-moment formulas give certified bounds for all parameters. For 1≤m≤n, let q=N−binom(m,2), S1=binom(n,m)2^q, and S2=binom(n,m)·sum_{j=max(0,2m−n)}^m binom(m,j)binom(n−m,m−j)2^{N−2binom(m,2)+binom(j,2)}. Then max{2^q, ceil(S1²/S2)}≤F(n,n−m)≤min{2^N,S1}. In particular, q≤log₂F(n,n−m)≤q+n.",
+      "claim_sha256": "639896230606d0a82488a3e98897ab46743ea8b6b12ed4cb855fca3930254430",
+      "verdict": "VERIFIED",
+      "evidence": "Let X(G) count independent m-sets. Summing over the chosen set gives ∑G X(G)=S1. For an ordered pair S,T with intersection j, exactly 2binom(m,2)−binom(j,2) distinct edges are forbidden, and the number of T for each S is binom(m,j)binom(n−m,m−j); hence ∑G X(G)^2=S2 with no missing symmetry factor. The upper bound follows from 1_{X>0}≤X, while Cauchy–Schwarz gives S1²≤F·S2. Fixing one independent m-set supplies 2^q distinct graphs. Finally binom(n,m)≤2^n gives the logarithmic upper bound.",
+      "witness": "The checker computed ∑X and ∑X² directly over every labelled graph for 1≤m≤n≤6, matched S1 and S2 exactly, and checked both integer-rounded bounds.",
+      "search_method": "Independent ordered-pair moment derivation and exhaustive exact-integer evaluation over all small graphs.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    },
+    {
+      "idx": 4,
+      "claim": "At the triangle-free endpoint, a substantial subclass is exactly countable in polynomial time. Let B_n be the number of labelled bipartite graphs and P_n=sum_{a=0}^n binom(n,a)2^{a(n−a)}. Then B_0=1 and B_n=(P_n−sum_{a=1}^{n−1}binom(n,a)B_aB_{n−a})/2. Hence F(n,n−3)≤2^N−B_n is an exact-arithmetic, polynomial-time computable bound.",
+      "claim_sha256": "b2add0f9b562ae950d301750cdc32ff5d211579e88e07db9dd2face2df3ec7b2",
+      "verdict": "VERIFIED",
+      "evidence": "P_n counts a graph with an ordered proper two-coloring. A bipartite graph with c connected components has exactly 2^c such colorings. The convolution over a also counts each bipartite graph 2^c times: the chosen a-set can be any union of connected components, after which the two induced bipartite graphs are fixed. Thus P_n=∑a binom(n,a)B_aB_{n−a}; isolating a=0,n proves the recurrence. Sequential evaluation uses polynomially many operations on O(n²)-bit integers. Since every bipartite graph is triangle-free, B_n≤T(n,3), so subtraction reverses this into the asserted upper bound on F.",
+      "witness": "For every n≤6, direct bipartiteness testing of all labelled graphs agreed exactly with the recurrence; the induced bound on F(n,n−3) also held for every n≥3 tested.",
+      "search_method": "Double-counted ordered two-colorings/component splits, audited bit complexity, and exhaustively compared the recurrence with direct bipartite counts.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    },
+    {
+      "idx": 5,
+      "claim": "There is a two-sided explicit-enumeration obstruction near the opposite endpoint, with its exact boundary at m=3. For 2≤m≤n, put r=m−1, write n=ar+b with 0≤b<r, and let t_r(n)=[n²−b(a+1)²−(r−b)a²]/2. Then 2^{N−binom(m,2)}≤F(n,n−m) and 2^{t_r(n)}≤2^N−F(n,n−m)=T(n,m). Hence, for every fixed m≥3, both the counted and excluded families have size 2^{Ω(n²)}. In particular, at k=n−3, F(n,n−3)≥2^{N−3} and T(n,3)≥2^{floor(n²/4)}. Thus neither member-by-member enumeration of the target family nor of its complement can give a 2^{o(n²)} algorithm; a successful uniform algorithm must aggregate graphs. This obstruction does not rule out such aggregation.",
+      "claim_sha256": "9afe383e7206726b97cb540a1e43c97806e4a4da046d544608880ba4e4a836a5",
+      "verdict": "VERIFIED",
+      "evidence": "Fixing one independent m-set leaves N−binom(m,2) free edges and proves the first lower bound. A balanced partition into r=m−1 parts has exactly t_r(n) cross edges; every spanning subgraph of the complete r-partite graph is K_m-free by the pigeonhole principle, proving the second bound. For fixed m≥3, the exponents are respectively N−O(1)=Θ(n²) and ((m−2)/(2(m−1)))n²+O(1). At m=3 the balanced cross-edge count is floor(n²/4); at m=2 it is zero and K_2-free graphs consist only of the edgeless graph. Thus the claimed boundary and the lower bound against literal member-by-member enumeration are valid, without implying a general counting lower bound.",
+      "witness": "For every 2≤m≤n≤6, the checker constructed the balanced multipartite family, verified every generated graph was K_m-free, and checked both lower bounds against exhaustive counts. The closed-form partition identities were additionally checked for all 2≤n≤300.",
+      "search_method": "Constructive family-size proof, explicit examination of the m=2 and m=3 boundary, and exact-integer exhaustive checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_count_graphs_vc_at_most_k/audit/bugbank/attempt_2/tcs_count_graphs_vc_attempt2_audit.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The source asks for one uniform exact 2^{o(n²)} algorithm for positive n and k. Claim 1 meets that target only in the regime k=o(n), and claim 2 only for fixed k. The complement identities, bounds, recurrence, and enumeration obstruction do not compute F exactly in the remaining regimes, notably k=n−3. Thus the entire target is not resolved, but the exact algorithms for substantial parameter regimes and the valid structural reductions constitute material partial progress. The draft explicitly labels itself PARTIAL and states that the uniform target remains unresolved, so its claimed resolution is accurate.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json among supplied evidence; did not use the web or any referenced retrieval, receipt, prior-run, other-arm, or solution material.",
+    "Verified /evidence/parent.json SHA-256 as 706c8510a230d37a32166d6653638997d0794e09d6219f80767b355952cc1aa1 and /evidence/source.json SHA-256 as 67e7d00c3a9c66c606a6f982409cbe943d68f92a4b19e618679438f0823fdacd.",
+    "Recomputed all six claim-text SHA-256 bindings; each matched the supplied binding exactly.",
+    "Created and ran /work/tcs_count_graphs_vc_attempt2_audit.py; checker SHA-256 is 324100617214500465203061b4d64414678dbc162f54efd60752dc153a430178.",
+    "Exhaustively enumerated every labelled simple graph for 0≤n≤6 and checked the complement identity, endpoint formulas, canonical k-cover enumeration, moment identities and bounds, bipartite recurrence, and multipartite lower bounds.",
+    "Matched the canonical minimum-cover characterization and the stated finite-state DP against direct counting for every labelled graph with 0≤n≤5.",
+    "Checked the balanced-partition edge formula and its m=2 and m=3 boundaries using integer arithmetic for 2≤n≤300.",
+    "Independently audited quantifiers, endpoint domains, ordered-versus-unordered factors, lexicographic direction, polynomial-space accounting, fixed-k state complexity, and the distinction between an explicit-enumeration obstruction and a general counting lower bound."
+  ]
+}

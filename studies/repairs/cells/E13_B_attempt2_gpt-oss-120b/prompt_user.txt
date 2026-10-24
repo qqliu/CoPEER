@@ -1,0 +1,192 @@
+# Record E13: Recursive increment: the odd branch of the induction
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E13 (reddit_learnmath_8yjpp7)
+public source: https://www.reddit.com/r/learnmath/comments/8yjpp7/proof_by_induction_is_my_proof_by_induction/
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | [Proof by induction] Is my proof by induction correct?
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Hey guys,
+0002 | 
+0003 | I am reading Skienas *The Algorithm Design Manual* and I have to prove an algorithm is correct via induction. Here is the algorithm pseudocode:
+0004 | 
+0005 |     Increment(y)
+0006 |         if y = 0 then return(1) else
+0007 |             if (y mod 2) = 1 then
+0008 |                 return(2 · Increment(y/2))
+0009 |             else return(y + 1)
+0010 | 
+0011 | Here is where I got up to until now:
+0012 | 
+0013 |     Base: y = 0. Then the function returns 1, as it should.
+0014 |     Inductive step: The function returns the correct value for all of the numbers to n – 1.
+0015 |     Induction: Let's prove that the function returns the correct value for the number n. We differentiate between 2 cases. First one is where n is even, and the second one is where n is odd.
+0016 |     1) n is even:
+0017 |         Function returns n + 1, as it should.
+0018 |     2) n is odd:
+0019 |         Function returns (2 * Increment(floor(n / 2))). floor(n / 2) is either even or odd. 
+0020 | 
+0021 |         If floor(n / 2) is even then we have the aforementioned case 1) in the recursive call and thus we have (floor(n / 2)+ 1) * 2 = n + 2. This is the correct result because floor(n / 2) is the florred integer and thus we have to add 2 to it.
+0022 | 
+0023 |         If floor(n / 2) is odd then we have case 2) again and we go into case 2) again. Then we can either go into case 1) and it will, as is explained above, yield a correct result, or we can go into case 2) again. We can go into case 2) only a finite number of times, since n is assumed to be a finite number (this wasn't stated but is implied by the limitations of computer memory). Thus after a finite amount of recursions, we will either end up in case 1) (where floor(n / 2) is even) or where floor(n / 2) is 1, which is the base of the induction. Therefore the algortihm returns the correct answer.
+0024 | 
+0025 |     Q.E.D. - not really so
+0026 | 
+0027 | I write my proofs so that I can understand them. I understand all the parts of the proof, but the part that starts with `If floor(n / 2) is odd` is convulted and I don't understand it, even though I've written it. I proved that if `floor(n / 2)` is even, then we get the correct result, but I have to prove this for each and every level of induction.
+0028 | 
+0029 | *What I don't understand is how I can inductively prove that for k recursive calls of my algorithm that each k-th recursive call will "fit into the bigger picture" correctly*. For example, if floor(n / 2) is odd multiple times and I have multiple layers of recursion, then I find it hard to follow my proof. 
+0030 | 
+0031 | Any suggestions on this?
+0032 | 
+0033 | Thanks in advance!
+0034 | 
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+If floor(n / 2) is even then we have the aforementioned case 1) in the recursive call and thus we have (floor(n / 2)+ 1) * 2 = n + 2.
+located at line label(s): 0021
+
+## Located defective declaration
+
+Declaration: `Census_reddit_learnmath_8yjpp7.SourceClaim (both hypotheses) / Census_reddit_learnmath_8yjpp7.SourceClaimQuoteOnly (quoted sentence alone)`
+
+```lean
+def SourceClaim : Prop :=
+  ∀ n : Nat, IsOdd n → IsEven (n / 2) → (n / 2 + 1) * 2 = n + 2
+```
+
+In the odd branch of its induction the source asserts (stored source line 0021) that the recursive call returns `(floor(n/2) + 1) * 2 = n + 2`. As a universal statement over the n satisfying its hypotheses (n odd, floor(n/2) even) this equation is the located defect. Supply the corrected right-hand side, prove the corrected equation under the source's hypotheses, and prove the statement the source's induction is after, `SourceGoal`, about the unchanged program `Increment`.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/-!
+Record reddit_learnmath_8yjpp7 (E13).  Core Lean, no imports.
+
+Source claim (the odd branch of an induction about the pseudocode `Increment`):
+  "If floor(n / 2) is even then we have the aforementioned case 1) in the recursive
+   call and thus we have (floor(n / 2)+ 1) * 2 = n + 2."
+Oddness of n comes from the enclosing "2) n is odd" branch; the floor-even hypothesis from
+the quoted sentence.  `Odd` and `Even` are Mathlib's, unfolded on Nat as `IsOdd`, `IsEven`.
+The located statement is `SourceClaim`; `SourceClaimQuoteOnly` is the quoted sentence read
+alone (only the floor-even hypothesis).
+The source's pseudocode is `Increment`; the statement its induction is after is `SourceGoal`.
+-/
+
+namespace Census_reddit_learnmath_8yjpp7
+
+/-- Mathlib's `Odd` on Nat, unfolded. -/
+def IsOdd (n : Nat) : Prop := ∃ m, n = 2 * m + 1
+/-- Mathlib's `Even` on Nat, unfolded. -/
+def IsEven (n : Nat) : Prop := ∃ r, n = r + r
+
+/-- The source's local claim, both hypotheses retained (oddness comes from the
+enclosing "2) n is odd" branch, the floor-even hypothesis from the quoted sentence). -/
+def SourceClaim : Prop :=
+  ∀ n : Nat, IsOdd n → IsEven (n / 2) → (n / 2 + 1) * 2 = n + 2
+
+/-- The quoted sentence read alone: only the floor-even hypothesis. -/
+def SourceClaimQuoteOnly : Prop :=
+  ∀ n : Nat, IsEven (n / 2) → (n / 2 + 1) * 2 = n + 2
+
+/-- The source's pseudocode:
+    Increment(y): if y = 0 then return(1) else
+                    if (y mod 2) = 1 then return(2 · Increment(y/2)) else return(y + 1) -/
+def Increment (y : Nat) : Nat :=
+  if h0 : y = 0 then 1
+  else if y % 2 = 1 then 2 * Increment (y / 2)
+  else y + 1
+termination_by y
+decreasing_by omega
+
+/-- The statement the source's induction is after (statement only). -/
+def SourceGoal : Prop := ∀ n : Nat, Increment n = n + 1
+
+end Census_reddit_learnmath_8yjpp7
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record reddit_learnmath_8yjpp7 (E13): the located claim fails at n = 5. -/
+namespace Census_reddit_learnmath_8yjpp7
+
+/-- `n = 5` is odd, `5 / 2 = 2` is even, and `(5 / 2 + 1) * 2 = 6 ≠ 5 + 2`. -/
+theorem claim_fails_at_five :
+    IsOdd 5 ∧ IsEven (5 / 2) ∧ (5 / 2 + 1) * 2 = 6 ∧ (5 / 2 + 1) * 2 ≠ 5 + 2 :=
+  ⟨⟨2, rfl⟩, ⟨1, rfl⟩, rfl, by decide⟩
+
+theorem source_claim_false : ¬ SourceClaim :=
+  fun h => absurd (h 5 ⟨2, rfl⟩ ⟨1, rfl⟩) (by decide)
+
+theorem source_claim_quote_only_false : ¬ SourceClaimQuoteOnly :=
+  fun h => absurd (h 5 ⟨1, rfl⟩) (by decide)
+
+end Census_reddit_learnmath_8yjpp7
+
+#print axioms Census_reddit_learnmath_8yjpp7.claim_fails_at_five
+#print axioms Census_reddit_learnmath_8yjpp7.source_claim_false
+#print axioms Census_reddit_learnmath_8yjpp7.source_claim_quote_only_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E13: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace Census_reddit_learnmath_8yjpp7
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected right-hand side of the odd-branch equation `(n / 2 + 1) * 2 = rhs n`.
+The hole must be a closed arithmetic expression in `n`: no division or remainder, no `if`/`match`,
+no reference to `Increment`. -/
+def rhs (n : Nat) : Nat := «HOLE»
+
+/-- The corrected located claim under the source's two hypotheses (shape fixed). -/
+def CorrectedClaim : Prop := ∀ n : Nat, IsOdd n → IsEven (n / 2) → (n / 2 + 1) * 2 = rhs n
+-- ===== END FIXED PART =====
+
+end Census_reddit_learnmath_8yjpp7
+```
+
+Allowed edit: Replace the hole in `rhs` by a closed arithmetic expression in `n` (no division or remainder, no `if`/`match`, no reference to `Increment`); nothing else in the fixed part may change. The left-hand side (n / 2 + 1) * 2, the two hypotheses and the program `Increment` are fixed. Do not redefine IsOdd, IsEven, SourceClaim, SourceClaimQuoteOnly, Increment or SourceGoal; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): IsOdd, IsEven, SourceClaim, SourceClaimQuoteOnly, Increment, SourceGoal
+
+## OBLIGATIONS (exact names and statements, inside `namespace Census_reddit_learnmath_8yjpp7`)
+
+```lean
+theorem repair_statement : ∀ n : Nat, Census_reddit_learnmath_8yjpp7.IsOdd n → Census_reddit_learnmath_8yjpp7.IsEven (n / 2) → (n / 2 + 1) * 2 = Census_reddit_learnmath_8yjpp7.rhs n
+```
+(universal: Universal: the corrected equation holds for every `n` satisfying the source's hypotheses.)
+
+```lean
+theorem repair_nonvacuous : ∃ n : Nat, Census_reddit_learnmath_8yjpp7.IsOdd n ∧ Census_reddit_learnmath_8yjpp7.IsEven (n / 2) ∧ (n / 2 + 1) * 2 = Census_reddit_learnmath_8yjpp7.rhs n ∧ Census_reddit_learnmath_8yjpp7.rhs n ≠ n + 2
+```
+(nonvacuity: Non-vacuity: the hypotheses are jointly satisfiable, the corrected equation holds there, and the corrected right-hand side is not the source's `n + 2` there.)
+
+```lean
+theorem final_theorem : Census_reddit_learnmath_8yjpp7.SourceGoal
+```
+(final: The statement the source's induction is after, unchanged (`SourceGoal` from defs_only: `∀ n : Nat, Increment n = n + 1`). If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

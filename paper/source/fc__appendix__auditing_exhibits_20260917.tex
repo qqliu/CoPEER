@@ -1,0 +1,72 @@
+\section{Worked examples: source-linked counterexamples and what they establish}
+\label{app:auditing-exhibits}
+Each example below names the source, the counterexample, the Lean theorem that checks it, and what the objection establishes about the surrounding argument. Five of the examples belong to the 147-dossier human-approved core: the geometric-series formula, the spanning-tree proof, the coding-theory converse, and two QEDBench proofs with perfect prior rubric scores; the handshaking example in Section~\ref{app:path-scope} is a sixth. The graph-criterion example and the square-root follow-up are supplementary; the reasons are given with each. Appendix~\ref{app:sqrt-proof} proves the square-root results.
+
+\paragraph{Finding a source and its certificate.}
+A dossier identifier locates its objection at \path{bugbank/dossiers/<record-id>.json}, its source text at \path{bugbank/sources/<record-id>.json}, and its formal proof at \path{bugbank/certificates/<record-id>.lean} in the repository; the \href{https://github.com/qqliu/CoPEER/blob/main/README.md}{README} and \href{https://github.com/qqliu/CoPEER/blob/main/ARTIFACTS.md}{artifact guide} give the layout. Core membership is recorded in \path{bugbank/core/membership.json}, the 100-input evaluation set in \path{benchmark/core/README.md}, and the exhibits below, with their recorded builds, in \path{bugbank/reviews/source_continuity/source_trust/auditing_exhibits.json}.
+
+\paragraph{A three-vertex counterexample to a graph criterion.}
+Dossier \path{arxiv_0709.2689v3__source_enriched_codex} concerns Claim~1 in \href{https://arxiv.org/abs/0709.2689v1}{version~1} of \citet{kettani2007independent}. For an $n$-vertex graph with strictly upper adjacency matrix $U$, the claim equates the size $k$ of a maximum independent set with the condition $U^{n-k+1}=0$, where the algorithm tests this power in the supplied vertex order. The path with vertices numbered $1$--$2$--$3$ has independence number two, but $U^2\ne0$. For any numbering of this path, $U^2$ is nonzero exactly when the degree-two vertex receives the middle number. Using vertices $0,1,2$, the theorem \path{Arxiv07092689v3SourceEnrichedCodex.refutes_claim1_forward_implication_on_ordered_path} proves that $\{0,2\}$ is independent, that no independent set is larger, and that the specified power is nonzero, using Mathlib's independent sets and matrix powers. Its saved build and axiom audit passed with \texttt{propext}, \texttt{Classical.choice}, and \texttt{Quot.sound}. The identifier's version-three suffix refers to the withdrawal notice of 21~September 2007, which attributes the withdrawal to an error in Claim~1; the notice is preserved in \path{bugbank/reviews/source_continuity/source_trust/source_notice_0709_2689.json}. This dossier has a certificate but no saved human approval on all three review questions, so it is outside the human-approved core. Section~\ref{app:path-scope} shows the matrix and places this refutation next to a different use of the same graph.
+
+\paragraph{A community formula with an explicit correction.}
+Dossier \path{SE_cs_13118__a13122} concerns the CS Stack Exchange answer \citepalias{filmus2013recurrenceanswer}, which sums powers of $c$ from $1$ to $n-1$ but applies a geometric-series quotient with a different lower endpoint. At $c=2$ and $n=3$ the sum is $6$ and the printed quotient is $7$. The theorem \path{QEDCert.SE_cs_13118__a13122.real_sum_counterexample} checks these values and their inequality over the reals; its saved build and axiom audit passed with the same three standard axioms. The finite geometric-sum identity gives the correction $(c^n-c)/(c-1)$ for $n\ge1$ and $c\ne1$: the sum starts at $1$, not at $0$. The certificate proves the concrete discrepancy; the identity supplies the general correction.
+
+\paragraph{A program error with a certified repair.}
+The printed integer-square-root algorithm in \citetalias{alhassy2018sqrtanswer} is stored as \path{SE_cs_97637__a97647}. Its theorem \path{SE_cs_97637_a97647.refutation} certifies the failure at the natural-number input $x=1$, where the printed algorithm returns $0$ instead of $1$; this input also satisfies the source's integer specification. A human reviewer questioned the original dossier's reading of the source, so the dossier is outside the human-approved core (Appendix~\ref{app:recent-human-review}). The results that follow concern the printed algorithm itself. The file \path{mathematics/extensions/sqrt_repair/SE_cs_97637_a97647_repair.lean} preserves the original \texttt{prog}, the correction \texttt{progStrict}, and the specification $R(x,y)\equiv y^2\le x<(y+1)^2$. The correction proposed in the source changes the test $x\le(b+1)^2$ to $x<(b+1)^2$. The theorem \texttt{strict\_guard\_correct} proves this corrected version for every natural-number input, and \texttt{error\_and\_repair} pairs that result with the original failure. The file \path{mathematics/extensions/sqrt_boundary/SqrtFailureBoundary.lean} proves $\mathrm{prog}(n+1)=\mathrm{progStrict}(n)$ for every $n\in\mathbb N$, and its theorem \texttt{complete\_diagnosis} combines the universal correctness of the correction with the exact failure set of Equation~\eqref{eq:sqrt}. Earlier annotations had noticed the pattern at perfect squares, and the follow-up proves that it accounts for every failure. Both files have recorded successful builds under Lean~4.30.0 and 4.34.0 using only \texttt{propext} and \texttt{Quot.sound}, with receipts beside the sources. Appendix~\ref{app:sqrt-proof} gives the written argument.
+
+\paragraph{A tied cut explains a failed exchange.}
+Dossier \path{Algorithms_19__sol3} from QEDBench~\citep{gonzalez2026qedbench} concerns a spanning-tree proof. A triangle with weights $w_{01}=w_{02}=1$ and $w_{12}=2$ has the unique minimum spanning tree $\{01,02\}$, yet the cut $\{0\}\mid\{1,2\}$ has two tied minimum edges. Deleting $01$ and choosing $02$ as its replacement leaves a disconnected graph, because $02$ was already in the tree. The theorem \path{QEDReview19cut.refuted} checks the unique minimum spanning tree, the tied cut minima, and the failed exchange using Mathlib graph objects. The mistake is to assume that deleting a tree edge produces the two sides of an arbitrarily chosen cut.
+
+\paragraph{A false converse in coding theory.}
+Dossier \path{arxiv_1303.4920v2__source_enriched_codex} targets Theorem~3.3 in version~1 of \citet{dougherty2013automorphism}. For
+\[
+ C=\langle(1,1)\rangle\le\mathbb Z_4^2,
+\]
+the standard Gray image is the binary self-dual code $\{0000,0101,1111,1010\}$, but $C$ is not quaternary self-dual: $(1,1)\mathbin{\cdot}(1,1)=2$ modulo four. The theorem \path{Arxiv13034920Mathlib.original_witness_refutes} proves this using submodules and orthogonal complements. Binary self-duality of the Gray image therefore does not imply quaternary self-duality of the original code. The numbered theorem asserts this converse for every $\mathbb Z_4$ code; the manuscript also considers a more restricted length-72 application. The version-two identifier refers to a later withdrawal notice citing a different lemma.
+
+\subsection{Objections in previously reviewed collections}
+\label{app:corpus-sources}
+Review by others does not settle individual assertions. The completed 425-record audit retained eight local objections from a 200-answer vetted CS collection and five from 43 accepted math.SE answers that carried no recorded flaw comments; these counts predate the selection of the human-approved core, and the identifiers, denominators, and decisions are recorded in \path{bugbank/reviews/source_continuity/source_trust/source_trust_reconciliation.json}. Two current-core records, \path{Algorithms_29__sol5} and \path{Algorithms_36__sol3}, concern QEDBench proofs that had received perfect human rubric scores~\citep{gonzalez2026qedbench}. The reconciliation's denominator of 19 counts retained QEDBench records with linked scores, not perfect-scored proofs, so we report these as two examples rather than a rate. Their original rubric scores and the later reviews of the counterexample dossiers are separate assessments. The geometric-series answer above is a third case of accepted mathematics with a local error.
+
+\subsection{One graph, two different conclusions}
+\label{app:path-scope}
+What a counterexample establishes depends on the assertion being checked. Figure~\ref{fig:scope} uses the path on three vertices twice. In one source it contradicts a matrix assertion, as in the first example above. In another it shows why a proposed proof step fails although the identity being proved, the handshaking identity, is true. This is the distinction in scope introduced in Section~\ref{sec:evidence}: the same object can refute a stated claim or expose a faulty step in a proof of a true statement, and the figure states exactly what each use refutes.
+
+An independent set is a set of vertices with no edges between them, and the independence number $\alpha(G)$ is its largest possible size. For a graph with numbered vertices, the adjacency matrix has entry one where two vertices share an edge and zero elsewhere; its strictly upper part $U$ keeps only the entries above the diagonal. The power $U^2$ is an ordinary matrix product, and the subscript $13$ selects row one, column three.
+
+\begin{figure}[ht]
+\centering
+\setlength{\fboxsep}{6pt}
+\fbox{\begin{minipage}[t]{.45\linewidth}\small
+\textbf{A false matrix assertion}\par\smallskip
+The path $1$--$2$--$3$ has $n=3$ vertices and a largest independent set
+$\{1,3\}$ of size $k=2$. Its strictly upper adjacency matrix is
+\[
+U=\begin{pmatrix}0&1&0\\0&0&1\\0&0&0\end{pmatrix}.
+\]
+The entry $(U^2)_{13}=1$. This contradicts the printed assertion that an
+independent set of size $k$ forces $U^{n-k+1}=0$, for this vertex order.
+The source's withdrawal notice also identifies a fault in that claim.
+\end{minipage}}\hfill
+\fbox{\begin{minipage}[t]{.45\linewidth}\small
+\textbf{A failed step in a proof of a true identity}\par\smallskip
+A leaf is a vertex with one neighbor. Deleting the path's two leaves
+removes two edges, whereas reversing the proposed construction would
+require removing just one. Thus the construction misses this graph.
+\par\smallskip
+The degrees, or numbers of neighbors, are one, two, and one. With two
+edges, the handshaking identity holds:
+\[
+1+2+1=4=2\times2.
+\]
+The graph pinpoints an error in the proposed proof step.
+\end{minipage}}
+\caption{A counterexample's conclusion depends on the assertion being
+checked. The path contradicts the matrix assertion on the left and the
+proposed construction on the right. Its degree sum satisfies the
+handshaking identity.}
+\label{fig:scope}
+\end{figure}
+
+\paragraph{The proposed handshaking proof.}
+Math Stack Exchange question 782216 proposes building every graph by repeatedly adding two degree-one vertices and one edge. That operation adds an isolated $K_2$ component, two vertices joined to each other and to nothing else, so reversing it requires an isolated $K_2$, which the connected three-vertex path does not contain. The original certificate checked a separate base-case error; the later follow-up proves the construction's exact boundary, including the path example (Appendix~\ref{app:explanation-census}). This dossier is in the human-approved core. The matrix assertion on the left is the supplementary dossier of the first example: a valid refutation whose dossier lacks a saved approval on all three review questions. The repository's \path{ARTIFACTS.md} links the source survey, quoted passages, formal statements, and review records for both.

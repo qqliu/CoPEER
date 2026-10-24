@@ -1,0 +1,47 @@
+\section{Corpus construction, audit procedures, and executable checks}
+\label{sec:method}
+
+\paragraph{Workflow and recorded search limits.}
+This appendix gives the procedures behind the six-stage workflow of Section~\ref{sec:resource}: the search limits, the prompts' requirements, the independent checks, and the model review. The original auditing protocol favors short objects: at most 12 graph vertices, 10 objects, or 10 significant trace steps. For each research conjecture we separately specify the types of examples to examine and the ranges of parameter values to test. A separately written checking program tests each proposed witness with exact arithmetic. Human contributors and coding agents translate surviving failures into Lean and inspect the selected theorem and its proof dependencies. A separate model-assisted review judges whether the objection applies to the selected source claim and records what it shows about the surrounding argument. The stages follow the principle of producing a result and checking its certificate separately \citep{mcconnell2011certifying,moura2021lean,mathlib2020}.
+
+A successful exhaustive check establishes the claim only for the example types and sizes it covers, and separately written checking programs and separate model calls can share mistaken assumptions. Appendix~\ref{app:recent-human-review} documents the human reviews and the human-approved core that supplies the 100 primary benchmark inputs.
+
+\subsection{Generating and checking counterexamples}
+\label{sec:method-generation}
+
+Let $P$ be an informal proof, $q$ a claim used in $P$, and $w$ a proposed counterexample. Checking the objection requires three things: $w$ must violate the stated mathematical condition, that condition must represent $q$ under the source's assumptions, and the checking program must perform the intended calculation. The workflow checks the three separately and saves the evidence from each stage.
+
+\paragraph{What each check establishes.}
+A separately written program tests the proposed witness, and a Lean proof certifies the formal counterexample~\citep{moura2021lean,mathlib2020}; file hashes, source-passage matching, and axiom checks link that proof to its dossier. Human review, where performed, checks whether the objection represents the source claim and satisfies its assumptions. An executable Python check also depends on the Python interpreter. The division follows certifying algorithms and proof-carrying code: a producer supplies evidence that a smaller checker can verify~\citep{mcconnell2011certifying,necula1997pcc}.
+
+\paragraph{Selecting claims to investigate.}
+Two separate calls to the same fixed model version receive the problem and a line-numbered proof, and each identifies a claim that may admit a short counterexample, within the size limits above and with a target Lean proof of roughly 50 lines. The response must quote the source exactly, describe a concrete candidate, and supply the required metadata. A deterministic validator checks the quotation and the response format, and a second model then reviews the claim, its assumptions, the relevance of the quotation, and the proposed size. These calls only choose candidates: the programs and Lean proofs that follow test the witnesses, and separate reviews check their connection to the source.
+
+\paragraph{Searching, checking, and proving.}
+A search agent receives the record identifier, the quoted claim, and the surrounding text, but not earlier witnesses or Lean files, so that it attempts a fresh construction. It writes and runs a deterministic program over integers and exact rationals, and records one of four outcomes: a witness, an exhaustive search with no witness in a specified finite set, an inconclusive search, or a claim outside the permitted search setting. A separately written checker reconstructs the mathematical condition from the claim and tests the proposed witness; both programs are replayed with two hash seeds. Human contributors and coding agents translated suitable witnesses into Lean~4 and built them with a fixed toolchain. The audit enumerates each theorem's axiom dependencies with \texttt{Lean.collectAxioms}, distinguishes computation trusted to the compiler from kernel-checked proofs, and detects \texttt{sorryAx}; every selected declaration in the current release has a kernel-checked proof. Separate stage inputs and fresh processes keep each stage's evidence inspectable.
+
+\paragraph{Connecting files to claims.}
+The record stores SHA-256 hashes of the problem, solution, quoted claim, certificate, and original source passage; when matching uses normalized text, an index map identifies the original bytes. A scanner checks commands, declarations, and imports against the allowed configuration. The reporting code is checked separately from the Lean kernel~\citep{wiedijk2012pollack}, with an attack suite that exercises wrong targets, added axioms, \texttt{sorry}, altered source passages, imports, duplicate rows, aliases, and aggregate counts; the saved results distinguish completed tests from tests not run.
+
+\subsection{Reviewing the recorded objection}
+\label{sec:method-revalidation}
+
+The model review assigns three complementary checks to fresh agents. A blind input contains the problem and the quoted claim; a full input adds the witness, explanation, and certificate. Review documents are assembled from these files, with hashes recomputed from disk and each quotation located in the numbered source text.
+
+\paragraph{Three mathematical checks.}
+The first agent uses only the blind input to seek a new counterexample
+with exact arithmetic, recording its finite search set and whether the
+search is exhaustive. The second reads the full input, writes a checker
+without seeing the first agent's work, and substitutes the recorded
+witness values. It reports whether the witness works and identifies any
+information needed to reproduce it. The third compares the Lean
+certificate with the quoted claim and witness: do the definitions encode
+the source's objects and conditions, does the construction use the
+recorded values, and does the theorem refute the intended assertion?
+Any partial match must name the modeling choice or discrepancy.
+
+\paragraph{Resolving disagreements.}
+A fourth model agent examines flagged records, the three verdicts, and the generated programs. It checks the disputed mathematics with its own exact-arithmetic program and reads the quotation in context. Its conclusion distinguishes an error in the record or checker from a misplaced quotation or a documented modeling choice, and it recommends keeping, repairing, removing, or referring the record for human review. An accepted adjudication includes an executable check and a mathematical justification. The saved decisions identify unresolved disputes and required repairs. Records pass after all checks succeed or an adjudication resolves every flag without requiring a change. A second model campaign repeated these checks on the admitted inputs with the same prompts and fresh processes; its verdicts were saved separately, and the intersecting passing sets supplied the initial human-review handout.
+
+\paragraph{Human review and reproduction.}
+Human-review packets include the source context, the selected theorem, the complete Lean file, and its project-local dependencies; Appendix~\ref{app:recent-human-review} presents the review process, and Section~\ref{app:human-verification} the initial review conditions and version evidence. In the repository, \path{bugbank/reviews/README.md} indexes the completed human judgments and \path{bugbank/core/README.md} explains current admission; the saved model-audit decisions and construction lineage are available through \path{bugbank/annotations/README.md} and \path{bugbank/annotations/initial401/results/audit_analysis.json}.

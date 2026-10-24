@@ -1,0 +1,104 @@
+{
+  "record_id": "fun2026_recursive_maze_linear",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 6,
+  "parent_sha256": "4bbe6b012722f4d20abb85bfd00b3ddec885ec4ff295c1dbbecbeeedb93bebe0",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "Reachability is exactly a sparse unary congruence-closure query.",
+      "claim_sha256": "a39cc912250770e8c8d014dcf4dfe7199e3a328bc2038e0738590cd3b918d907",
+      "verdict": "VERIFIED",
+      "evidence": "The source defines the least equivalence θ satisfying the fold rule: same-box edges whose targets are θ-equivalent force their origins equivalent, and exitability is exactly θ-equivalence of the start with an outer-pin wire. For equations f_X(t)=o, congruence compatibility gives precisely this fold rule. Conversely, any stable wire equivalence defines a quotient interpretation of each f_X; stability makes its value well-defined wherever an edge exists, and arbitrary values complete it elsewhere. Hence the ground congruence restricted to wire constants is exactly θ. Balanced-path induction establishes the semantic correspondence.",
+      "witness": "For edges (o,X,t) and (o',X,t'), t≡t' implies f_X(t)≡f_X(t'), hence o≡o'. Conversely, quotienting wires by any stable relation produces a model of every equation f_X(t)=o. The checker independently compared naive ground congruence closure with synchronous folding closure.",
+      "search_method": "Reconstructed the fold semantics and both directions of the quotient/congruence correspondence from the source definition; exhaustively compared independent implementations on finite instances.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "The congruence closure and exit query decompose exactly over weak components of the undirected support graph.",
+      "claim_sha256": "94f68d3404a6377e24e2547fe719bc6fdf48d3ac70914d67d8a59cd95dfff415",
+      "verdict": "VERIFIED",
+      "evidence": "Same-support-component equivalence is stable: if two targets are in one component, each corresponding origin is joined to its target by a support edge, so both origins are in that component. Minimality therefore prevents θ from crossing components. Conversely, the disjoint union of the componentwise least closures is globally stable, since every dual edge has both endpoints in one support component. The two inclusions prove exact decomposition, including the exit query.",
+      "witness": "For every component C, θ restricted to C is stable for C's edges, while the disjoint union of all local θ_C is stable globally. Thus θ|C=θ_C. Exhaustive checks recomputed each component locally and compared every pair with the global closure.",
+      "search_method": "Proved both minimality inclusions and exhaustively checked every enumerated instance component-by-component.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "There is a deterministic O(W+B+E α(W+E)+E log(min{B,E}+1))-time, O(W+E+B)-space algorithm, sharpening the general sparse bound and eliminating dense W·B initialization.",
+      "claim_sha256": "eb0dd987b389fa0b77600f70416f900df34c5e9eaaaca72760f7dd12e20b48dc",
+      "verdict": "VERIFIED",
+      "evidence": "The per-class map invariant is sound: every queued origin equality is forced by two same-box edges into an already-equivalent target class. Each collision permanently discards a distinct retained original edge, so there are at most E queue events. When the queue empties, all same-box edges into each target class have equivalent origins, making the resulting relation stable; soundness plus leastness yields exactly θ. Linear radix grouping is valid for the source's word-sized wire and box identifiers. Deterministic split/join tree union costs O(m log(n/m+1)); with K=min(B,E), potential Φ=Σq log q telescopes, while deletion of d duplicate keys costs only O(d log(K+1)). Together with at most O(E) DSU operations, this proves the stated bounds and linear space.",
+      "witness": "The exact checker compared a literal DSU/per-class-map implementation against independent synchronous closure on 328,210 exhaustively enumerated graphs. The asymptotic accounting separately uses at most E discarded entries, maps of size at most K, and the standard balanced-tree union potential.",
+      "search_method": "Audited initialization, invariants, termination, DSU accounting, map-meld amortization, duplicate-key charging, and storage separately; supplemented correctness with exhaustive comparison.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Both outcomes have certificates of size O(W+E) verifiable deterministically in O(W+E+B) time.",
+      "claim_sha256": "03b13c8063b5fa8b8710ef5c8ec6acc3956a4ebfa98112bbc58d5e3e13ecce64",
+      "verdict": "VERIFIED",
+      "evidence": "For a no-instance, a wire labeling P is sufficient: sorting edges by (X,P(t)) and checking a unique P(o) per group proves stability, and separation of the start from every accepting wire then follows because θ refines every stable relation. Taking P=θ proves completeness. For a yes-instance, every successful fold union yields one binary node whose two origin components are justified by an earlier node containing both targets. Induction proves every forest node sound; a root containing the start and an accepting wire proves exit. Any successful folding computation supplies such a forest with at most W−1 internal nodes. Edge lookup, forest validation, DFS intervals, radix grouping, and accepting-wire scanning fit the stated deterministic time and size.",
+      "witness": "Negative witness: the final θ-class identifier of each wire. Positive witness: the chronological forest of successful unions, with two original same-box edge identifiers and the earlier target-class node at each internal node.",
+      "search_method": "Constructed soundness and completeness arguments for both certificate types and audited all verifier operations and malformed-certificate checks.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 4,
+      "claim": "The target O(W+E+B) bound holds for graded dual graphs: graphs admitting an integer rank ρ with ρ(o)=ρ(t)+1 for every edge (o,X,t).",
+      "claim_sha256": "0c150d8c5dbbde3ce6c8c0e6c3687714fa4c38fc2458be6339bc17bea040bdec",
+      "verdict": "VERIFIED",
+      "evidence": "Every generated equality preserves rank. Consequently, final classes at rank r depend only on already-final classes at rank r−1: grouping rank-r edges by (X,class(t)) supplies all fold generators at rank r, and ordinary connected components supply their equivalence closure. Higher ranks cannot affect rank r. Difference constraints for ρ are checkable by graph traversal; component normalization bounds the rank range by O(W). Rank, box, and target-class timestamp buckets plus star edges process every wire and edge O(1) times overall and initialize only O(W+B) arrays.",
+      "witness": "Induction over increasing rank proves the one-pass partition equals θ. The checker solved the rank constraints independently and compared this graded one-pass algorithm with full fixed-point closure on every gradable graph in its exhaustive families.",
+      "search_method": "Proved rank preservation and rank-by-rank finality, audited the linear bucket implementation, and exhaustively compared the algorithm on small gradable instances.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "On W-wire graded dual graphs, the exact maximum number of changing synchronous fixed-point rounds is floor((W−1)/2); this is attained with one box and E=2 floor((W−1)/2).",
+      "claim_sha256": "4a3e374cf22b5deffec6dbf9f3037787414e3dda2528c3db4d83d83b1583a175",
+      "verdict": "VERIFIED",
+      "evidence": "A generator first becoming effective in round k has targets that became equivalent in round k−1; otherwise it would already have been effective. Tracing a newly connecting generator through the preceding equivalence-closure path yields a dependency at each preceding round. Grading places these dependencies at k consecutive ranks. Each changing rank needs two distinct wires, and the bottom identical target needs one additional wire, so W≥2k+1. The stated construction has one bottom wire and one pair at each higher rank, and direct induction shows pair j merges exactly in round j+1.",
+      "witness": "With R=floor((W−1)/2), use z and pairs a_j,b_j. Edges a_0→_Xz,b_0→_Xz start the cascade; edges a_j→_Xa_{j−1},b_j→_Xb_{j−1} continue it. Distinct pins realize all edges. Exact simulation confirmed R rounds and 2R edges for every W=1,…,16.",
+      "search_method": "Proved the dependency-chain lower requirement, checked boundary cases W=1 and W=2, and exhaustively tested all small gradable graphs plus the constructions.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "For unrestricted W-wire dual graphs, the universal maximum W−1 changing synchronous rounds is attained with one box, exactly E=W, origin outdegree one, and target indegree at most two.",
+      "claim_sha256": "f142f69e0731c3eacd38e491caa89ecaecda98c4bb26a1e2026cd9d798ced1e8",
+      "verdict": "VERIFIED",
+      "evidence": "Every changing round strictly reduces the number of equivalence classes, giving the universal W−1 upper bound. In the construction, round one merges v₀,v₁ through their common target v₀; inductively, after round r the sole nonsingleton class is {v₀,…,v_r}, which enables exactly v_{r+1} next. There are W edges, every wire has one outgoing edge, and only v₀ has target indegree two. For W=1 the single self-loop has zero changing rounds.",
+      "witness": "Edges are (v₀,X,v₀), (v₁,X,v₀), and (v_i,X,v_{i−1}) for 2≤i<W. Exact simulation verified all structural conditions and W−1 rounds for W=1,…,16.",
+      "search_method": "Checked the class-count upper bound, proved the construction invariant by induction, audited source-model realizability using distinct pins, and ran exact simulations.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "The exact minimum number of edges among W-wire instances attaining W−1 changing synchronous rounds is 0 when W=1 and W when W≥2.",
+      "claim_sha256": "b784c768cabc456696eb903bde6435e3e658086896610e19fd5c25d70f156abf",
+      "verdict": "VERIFIED",
+      "evidence": "For W≥2, W−1 changing rounds starting from W singleton classes force the terminal partition to contain one class. Every nonreflexive generator has edge origins as both endpoints; therefore a wire that is never an edge origin can never leave its singleton class. All W wires must consequently occur as origins, forcing E≥W. Claim 6's construction attains the bound with E=W. For W=1, equality is already final, so the edgeless graph attains zero rounds and zero is minimal.",
+      "witness": "The lower bound is an origin-incidence argument independent of boxes or labels; the matching W-edge construction is explicit. Exhaustive enumeration confirmed the bound for all checked small instances, including two-box W=3 graphs.",
+      "search_method": "Derived the universal incidence lower bound, checked W=1 separately, matched it to the explicit construction, and exhaustively searched the finite test families.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_recursive_maze_linear/audit/plain/attempt_6/fun2026_attempt6_audit_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The draft does not prove the exact unrestricted source target. Its general deterministic algorithm retains E·α(W+E) and E·log(min{B,E}+1) terms, while the genuinely linear algorithm applies only to the graded subclass. The certificate and round results do not remove those terms or furnish an unrestricted linear algorithm. These are correct, material intermediate results, and the writeup explicitly labels its resolution PARTIAL, so its coverage claim is accurate rather than overstated.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Verified /evidence/parent.json has SHA-256 4bbe6b012722f4d20abb85bfd00b3ddec885ec4ff295c1dbbecbeeedb93bebe0 and /evidence/source.json has SHA-256 2510bf3b41e71c6ecaa6df4413c0af0ea1885c96200c7ab9c16ef05c90be536a.",
+    "Read only /evidence/source.json and /evidence/parent.json among supplied evidence; used no web, revision prompt, database, receipt, other arm, prior-run material, audit file, or other solution.",
+    "Reconstructed the source dual-graph semantics, wormhole closure, exit criterion, representation assumptions, and deterministic word-RAM model directly from the source.",
+    "Created and ran the exact finite checker /work/fun2026_attempt6_audit_checker.py, SHA-256 ca1504b678fb351a4f8c0916e82ae9e8d37e07a7d7f5e683b2f14e867bd52e53.",
+    "The checker exhaustively tested all 2, 16, 512, 65,536, and 262,144 subsets for (W,B)=(1,1),(2,1),(3,1),(4,1),(3,2), respectively. It compared synchronous closure, sparse-map closure, ground unary congruence closure, exact componentwise closure, and graded one-pass closure where applicable.",
+    "The checker verified the graded and unrestricted extremal constructions, edge counts, changing-round counts, outdegrees, and indegrees for every W from 1 through 16.",
+    "Separately audited the balanced-tree meld potential, duplicate-deletion charging, DSU event bound, certificate soundness/completeness, rank induction, boundary cases, and source-model realizability with distinct pins."
+  ]
+}

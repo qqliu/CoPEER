@@ -1,0 +1,47 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["projective_cube_families"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "tab:projective-cube-families",
+  "main_tex_lines": [
+   2293,
+   2309
+  ],
+  "caption": "Three families of counterexamples verified by Lean. Every row holds for every integer $k\\ge1$. The last column compares the density of the constructed set with the conjectured upper bound."
+ },
+ "header": [
+  "d",
+  "M",
+  "Excluded residues F",
+  "N",
+  "|A_N|",
+  "Density"
+ ],
+ "rows": [
+  {
+   "d": 5,
+   "M": 16,
+   "excluded_residues": "$\\{0,4,12\\}$",
+   "N": "$80k$",
+   "size": "$65k$",
+   "density": "$13/16>4/5$"
+  },
+  {
+   "d": 7,
+   "M": 24,
+   "excluded_residues": "$\\{0,6,18\\}$",
+   "N": "$168k$",
+   "size": "$147k$",
+   "density": "$7/8>6/7$"
+  },
+  {
+   "d": 8,
+   "M": 36,
+   "excluded_residues": "$\\{0,6,12,30\\}$",
+   "N": "$72k$",
+   "size": "$64k$",
+   "density": "$8/9>7/8$"
+  }
+ ]
+};

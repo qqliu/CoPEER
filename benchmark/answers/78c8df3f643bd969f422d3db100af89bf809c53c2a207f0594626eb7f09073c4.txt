@@ -1,0 +1,32 @@
+analysisWe need to find false assertion. Look at the problem: Xi geometric with mean 2 (fair coin). Indeed mean of geometric (number of trials until first success inclusive) with p=1/2 is 1/p =2. That's fine.
+
+MGF: For geometric with support {1,2,...}, MGF is E[e^{tX}] = (p e^{t})/(1-(1-p)e^{t}) for t< -ln(1-p). Here p=1/2, so MGF = (0.5 e^{t})/(1-0.5 e^{t}) = e^{t}/(2- e^{t}). They derived MXi(t)= e^{t}/2 - e^{t}? Wait they wrote: MXi(t)= e^{t} /2 1 - e^{t}/2? Actually they wrote: MXi(t) = et /2 / (1 - et/2) = et / (2 - et). Let's verify: et/2 divided by (1 - et/2) = (et/2) / (1 - et/2) = et / (2 - et). Yes matches known formula.
+
+But they wrote at line 0042: et 2? Let's see lines: 0042 | et
+0043 | 2
+0044 | 1 −et
+0045 | 2
+
+Probably formatting: MXi(t) = et/2 / (1 - et/2). That's correct.
+
+Now Chernoff bound: They set a = (1+δ)2n = (1+δ)E[X]. Then apply Markov: Pr(X > a) ≤ E[e^{tX}] / e^{ta}. That's correct.
+
+But they then write inequality with MX(t) * exp{2n(1+δ) t} in denominator? Wait they wrote: MX(t) / exp{t(1+δ)2n}. Actually line 0088: MX(t) exp{2n(1 + δ)t}. Let's check: In inequality, Pr ≤ MX(t) * e^{-t a}. Since a = (1+δ)2n, we have e^{-t a} = exp{-2n(1+δ) t}. But they wrote exp{2n(1+δ) t} (positive exponent). That's a mistake: should be negative exponent. So line 0088 is false.
+
+Specifically line 0088: "MX(t) exp{2n(1 + δ)t}" should be "MX(t) exp{-2n(1 + δ)t}". So the false assertion is that the bound is MX(t) * exp{2n(1+δ) t}.
+
+Thus candidate line 0088.
+
+Check also later steps: they then continue using that sign? At line 0090 etc they combine incorrectly? They later have expression: (et/2 - et)^n * exp{2n(1+δ) t}. Actually they omitted negative sign. So the derived bound is wrong (gives huge bound). So false assertion is line 0088.
+
+Provide counterexample: Take n=1, δ=1, t small positive (e.g., t=0.1). Then the bound becomes >1, which cannot bound probability ≤1. So false.
+
+Thus answer JSON with candidates maybe [0088, 0090] but primary 0088.
+
+Provide claim sentence and counterexample.
+
+assistantfinal{
+  "candidates": [888, 890],
+  "claim": "In line 0088 the Chernoff bound is written as Pr[X > a] ≤ MX(t) exp{2n(1+δ) t}, i.e., with a positive exponent instead of the required negative exponent.",
+  "counterexample": "For n=1, δ=1 and t=0.1, the right‑hand side equals MX(0.1)·e^{0.2} > 1, contradicting the fact that a probability cannot exceed 1."
+}

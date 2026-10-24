@@ -1,0 +1,116 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 3,
+  "parent_sha256": "5ff3210161bcce35d1bb4986e34d9d1649c17e3bab2301b59eeae01f67bcc773",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The literal optimized algorithm’s complexity is Θ(n+M), where M=Σ_t d(p_t) along its actual FIFO trajectory, but the ordered queue is part of the state.",
+      "claim_sha256": "e561a8595588c1d9fdbcc68dd6b8e1f41e680dd079ab0d10c6422b3d40196074",
+      "verdict": "VERIFIED",
+      "evidence": "Initially the queue is exactly the descent-bottom set. Given boundary queue Q=(x1,…,xk), moving each queued item once produces reverse(Q) followed by the unqueued elements in stable order. The front tests generate exactly the descents within reverse(Q) and at its boundary with the stable suffix. For two consecutive surviving elements a,b, the deleted intervening descent bottoms form a strictly decreasing chain; the successor test enqueues b exactly once precisely when that chain crosses from below b to above b, equivalently when a>b. Hence the next queue is exactly the new descent-bottom set, without duplicates. Thus each noninitial round costs Θ(|Q|)=Θ(d(p)), the initialization costs Θ(n), and total cost is Θ(n+M).",
+      "witness": "For P6=(6,1,2,3,4,5), boundary 2 has shelf (2,1,6,3,4,5) and historical FIFO (3,1), whereas fresh shelf-order initialization gives FIFO (1,3); their next shelves differ. Therefore shelf order alone is not the complete state.",
+      "search_method": "Direct invariant proof from the sealed pseudocode, supplemented by exhaustive literal execution of all permutations through n=9; no web or external search.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 1,
+      "claim": "For every m≥3, the literal FIFO algorithm on A_m=(1,2m,2,2m−1,…,m,m+1) makes exactly (m²+5m−4)/2 moves in m+2 rounds.",
+      "claim_sha256": "7ba170682a258fbd3e44be950e0bd4566e7cc163c79a04163883dfa60847a268",
+      "verdict": "VERIFIED",
+      "evidence": "The stated initial two transitions follow from the two literal enqueue tests. Thereafter the displayed states S(a),Q(a) satisfy the exact induction (S(a),Q(a))→(S(a−1),Q(a−1)) for a≥2: the first front test enqueues a, later front tests enqueue 1,…,a−2, and all successor tests fail. The a=1 endpoint produces queues (2) and then (1), which sorts. The queue sizes are therefore m−1,2m−2,m−1,m−2,…,1,1. They contain m+2 terms and sum to (m²+5m−4)/2.",
+      "witness": "At m=3 the exact queue sizes are 2,4,2,1,1, giving 10 moves in 5 rounds, matching the formula and endpoint treatment.",
+      "search_method": "Symbolic state-transition induction plus two-representation exact checks for every m from 3 through 256.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 2,
+      "claim": "The worst-case step complexity of the literal optimized algorithm is Ω(n²).",
+      "claim_sha256": "4337e9e33758d8282745784330f10c0a318348f6aca676bc0378f684d61e4d56",
+      "verdict": "VERIFIED",
+      "evidence": "For n=2m, claim 1 supplies n²/8+5n/4−2 moves. Appending the new maximum for n=2m+1 neither enters a queue nor makes either enqueue comparison true, so the even trajectory and move count are preserved. Since every move requires constant positive work, these inputs establish a worst-case Ω(n²) lower bound for all sufficiently large input lengths.",
+      "witness": "The family A_m and its appended-maximum odd extension give at least (⌊n/2⌋²+5⌊n/2⌋−4)/2 moves.",
+      "search_method": "Asymptotic reduction from the verified exact family, with exact even/odd trajectory checks for m=3,…,256.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 3,
+      "claim": "There is an exact phase decomposition that isolates the unresolved cost.",
+      "claim_sha256": "6858373dfd4a652ea50332c604ca51909f9738dc94ab555b1ced2a3ebbe05c0d",
+      "verdict": "VERIFIED",
+      "evidence": "When i is the largest unfixed value, all larger values form a permanent fixed suffix, so i lies at position s_i<i and cannot be queued. Relative to i at the start of a round, moving a left-side item removes and then restores one preceding position, for net zero; moving a right-side item adds exactly one preceding position. Hence the round displacement is q_t. At the phase endpoint i is at position i, so Σq_t=i−s_i. Every phase move is uniquely left- or right-side, yielding exact cost (i−s_i)+Σℓ_t. FIFO order does not enter this positional accounting.",
+      "witness": "The checker verified the per-round displacement and completed-phase identities at every phase endpoint in all 409,113 permutations of sizes 1 through 9.",
+      "search_method": "Direct positional proof and exhaustive phase-invariant validation; no external search.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 4,
+      "claim": "The parent’s Ω(n^{3/2}) lower bound and coefficient (4√2/3+o(1)) are not established for the literal optimized FIFO algorithm.",
+      "claim_sha256": "59a3f83eb6cd3afece5f7d3455e1723ebfdf78e37876c82221a426c99103c4e3",
+      "verdict": "VERIFIED",
+      "evidence": "The finite P6 calculation reproduces the asserted model mismatch: after two rounds the shelf is (2,1,6,3,4,5), but the historical FIFO is (3,1), not the shelf-ordered descent list (1,3). Processing those orders gives different third boundaries. Therefore a staircase recurrence using the shelf-ordered transition does not prove a bound for the literal persistent-FIFO execution. The claim appropriately says the bound is unestablished, not that its numerical conclusion is false.",
+      "witness": "After three rounds P6 gives literal shelf (1,3,2,6,4,5), versus shelf-ordered shelf (3,1,2,6,4,5).",
+      "search_method": "Exact hand reconstruction and independent execution of both transitions on the stated counterexample.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 5,
+      "claim": "For n≤9, the exact maximum numbers of moves are 0,1,3,6,11,18,27,38,53.",
+      "claim_sha256": "23403f98c2d9f0fc4a9fd5851ae0bb0aefe0392325275f895df9634e1f2a2aec",
+      "verdict": "VERIFIED",
+      "evidence": "All Σ_{n=1}^9 n!=409,113 permutations were enumerated. A vector implementation and an independent predecessor/successor linked representation agreed at every boundary on shelf, FIFO, moves, and termination. The attained maxima for n=1,…,9 were exactly 0,1,3,6,11,18,27,38,53.",
+      "witness": "The exhaustive run completed with output `exhaustive_permutations=409113 maxima=0,1,3,6,11,18,27,38,53`.",
+      "search_method": "Complete finite enumeration under the literal pseudocode using two cross-checked state representations.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 6,
+      "claim": "For every m≥2, the canonical boundary-descent-pair charging rule has unbounded load: on B_m=(2,1,4,3,…,2m,2m−1), the single pair {1,3} is charged at least m−1 times.",
+      "claim_sha256": "619219771e08cc36bf656d25be9df3a76d2c07acc8c20de05bdcfa8123bef114",
+      "verdict": "VERIFIED",
+      "evidence": "The base transition yields S1 with odd values decreasing at its front and Q1=(1,3,…,2m−3). The stated induction maintains Q_r=P_rL_r and the shelf prefix reverse(L_{r−1}). Processing L_r appends L_{r+1} to the next FIFO; the only intervening gate is 2 or 4 and obeys the described two-step recurrence, so it does not disrupt that suffix. Consequently, for each r=1,…,m−1, Q_r contains 1 while the boundary shelf has adjacent 3,1. The move of 1 is therefore charged to {1,3} in at least m−1 distinct rounds, which is unbounded with m.",
+      "witness": "Exact checks covered every m=2,…,256. On B_2048 the same boundary rule charged {1,3} 130,304 times, well above the required 2,047.",
+      "search_method": "Inductive audit of the FIFO suffix/gate construction plus exact linked-list executions over a broad finite prefix and B_2048.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 7,
+      "claim": "Even with arbitrary reassignment of moves to unordered pairs, a uniform pair capacity must be at least 19 on one 4096-element execution.",
+      "claim_sha256": "bf8c9fdf9fbeb8aa88a523d9d4b3e7075a663eff924e329445918680aaf5f18f",
+      "verdict": "VERIFIED",
+      "evidence": "Independent array-linked and std::list implementations both produced 156,213,604 moves and 130,514 rounds on B_2048. There are exactly C(4096,2)=8,386,560 unordered pairs. Capacity 18 covers only 150,958,080 moves, leaving 5,255,524 uncovered; hence every complete one-pair-per-move assignment has maximum integral load at least ceil(156,213,604/8,386,560)=19.",
+      "witness": "B_2048=(2,1,4,3,…,4096,4095) is the claimed 4096-element execution.",
+      "search_method": "Two independent exact literal-FIFO simulations followed by integer pigeonhole arithmetic.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_optimized_magazine_steps/audit/bugbank/attempt_3/fun2026_attempt3_audit_checker.cpp"
+    },
+    {
+      "idx": 8,
+      "claim": "No asymptotically tight worst-case bound is proved here; the improved Ω(n²)–O(n³) interval remains unresolved.",
+      "claim_sha256": "2bba14315832ea70b650b96f376783edfda36df6bdd967e23f5a93404821f3ba",
+      "verdict": "VERIFIED",
+      "evidence": "The A_m family establishes Ω(n²), while the source supplies O(n³). The phase identity leaves Σℓ_t uncontrolled, the canonical-charge result only invalidates one proof method, and the capacity-19 result concerns one finite input. None supplies a matching upper and lower bound. Thus the draft correctly reports an unresolved Ω(n²)–O(n³) interval.",
+      "witness": "The surviving endpoints Ω(n²) and O(n³) differ by a factor of n, and no asserted result closes that gap.",
+      "search_method": "Proof-coverage comparison against the exact source target and the surviving audited claims.",
+      "checker_path": "none"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The draft does not determine the requested asymptotically tight complexity. It does, however, rigorously improve the lower bound from Ω(n log n) to Ω(n²), characterize the literal FIFO cost and state, and establish valid limitations of two pair-charging approaches. Its explicit PARTIAL resolution label accurately reflects this material but incomplete progress.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json as evidence inputs; used no web, retrieval database, treatment material, other arm, prior-run material, or other solution.",
+    "Verified /evidence/parent.json SHA-256 as 5ff3210161bcce35d1bb4986e34d9d1649c17e3bab2301b59eeae01f67bcc773.",
+    "Created and ran /work/fun2026_attempt3_audit_checker.cpp, SHA-256 09ee9b33be7579776f424b327431aa5029737fbceef66e4ecbc0a1d488b22ea4.",
+    "Exhaustively executed all 409,113 permutations of sizes 1 through 9 with vector and linked representations agreeing at every round boundary.",
+    "Checked the exact phase displacement and cost identities on every phase in the exhaustive run.",
+    "Checked A_m and its appended-maximum odd extension for every m=3,…,256, including queue-size sequences, move formulas, and round counts.",
+    "Checked the B_m pair-{1,3} lower bound for every m=2,…,256.",
+    "Executed B_2048 independently with array-linked and std::list implementations; both returned 156,213,604 moves and 130,514 rounds.",
+    "Reproduced the P6 historical-FIFO versus shelf-order divergence and verified all capacity-19 integer arithmetic."
+  ]
+}

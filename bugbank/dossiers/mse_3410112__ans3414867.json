@@ -1,0 +1,53 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "n_nonblank_text": 17,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": false
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/mse_3410112__ans3414867.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "Note that the probability that the population goes directly from size $M$ to size $0$ is just some constant $c_M \\in (0,1)$ depending on $M$.",
+  "explanation": "The claim asserts a positive one-step extinction probability from every size M ≥ 1. At M = 1 the model's death probability p(1 − 1/1) vanishes, so the lone bacterium cannot die and direct extinction is impossible. The selected Lean theorem certifies deathProbability (1/3) 1 = 0 and that the one-step kernel from size 1, transitionFromOne (1/3), assigns probability 0 to size 0 (a Mathlib Bernoulli PMF for the birth, mapped to sizes 2 and 1). Modelling disclosure: that kernel at size 1 is defined directly from the zero death probability rather than derived from a general definition of the daily transition for all sizes; given death probability 0 it coincides with the model at M = 1. The answer's eventual-extinction conclusion is not adjudicated by this record.",
+  "flaw": "The probability that the population goes directly from size M to size 0 is a constant c_M ∈ (0,1) depending on M, for every M ≥ 1 (Claim 1 of the answer).",
+  "problem": "Title: Extinction probability in a population with competition\n\nSuppose we have a colony of bacteria. At the end of each day, each bacterium produces an exact copy of itself with probability $p$ and then dies with probability $q$. However, $q$ is not constant, but a function of $N$, the total number of bacteria:\n$$q=p\\bigg(1-\\frac{1}{N}\\bigg)$$\nSo in larger populations of bacteria, each bacterium is more likely to die (because of competition, say).\n\nTo clarify, $N$ counts the number of bacteria before new ones were born. For instance, if there are $2$ bacteria on one day and they both reproduce to form $4$ bacteria, both of them still have exactly $p/2$ chance of dying (not $3p/4$). And the babies that have just been born cannot die immediately.\n\nLet $P_N$ be the probability that a bacteria colony consisting of $N$ bacteria initially eventually goes extinct. Can we find an asymptotic formula for $P_N$? I suspect that we will have\n$$P_N\\sim \\alpha^N$$\nfor some $\\alpha$, but I don’t know how to calculate this constant.\n\nI did manage to figure out that if we keep $q$ constant, then the probability of eventual extinction starting with $N$ bacteria is exactly equal to\n$$\\bigg(1-\\frac{p-q}{p(1-q)}\\bigg)^N$$\nfor $p>q$, and equal to $1$ for $p\\le q$. But that problem was much easier because “newborn” bacteria were independent from their parents, whereas in this problem the chance of each bacterium’s survival is dependent on the overall population size.\n\nSo, really my question is: what is the value of\n$$\\lim_{N\\to\\infty}P_N^{1/N}=\\space ?$$",
+  "source_context": "0001 | The extinction probability is $1$ for any initial size population and any $p \\in (0,1)$ (for $p=0,1$, the extinction probability is obviously $0$). Fix $p \\in (0,1)$. Assume for the sake of contradiction that there is some $N_0 \\ge 1$ such that the probability of no extinction with initial size $N_0$ is greater than $0$. \n0002 | \n0003 | Our probability space is with respect to initial population sizes of $N_0$, probability $p$ of reproduction, and probability $p(1-\\frac{1}{N})$ probability of death when population size is $N$. Let $s: \\mathbb{Z}^{\\ge 0} \\to \\mathbb{Z}^{\\ge 0}$ represent population size ($s(t)$ is size of population on day $t$, $s(0) := N_0$). \n0004 | \n0005 | .\n0006 | \n0007 |   Claim 1: $P(\\{\\omega \\in \\Omega : \\lim_{t \\to \\infty} s(t) = \\infty | \\text{no extinction}\\}) = 1$.\n0008 | \n0009 | Proof: For $M \\ge 1$, let $E_M := \\{\\omega \\in \\Omega : \\liminf_{t \\to \\infty} s(t) = M \\text{and no extinction}\\}$. Then, since $M$ is a natural number, $P(E_M) \\le P(\\{\\omega \\in \\Omega : s(t) = M \\text{infinitely often}\\})$. Note that the probability that the population goes directly from size $M$ to size $0$ is just some constant $c_M \\in (0,1)$ depending on $M$. So, if we let $A_n$ denote the event that the population size does not go directly to $0$ after being at $M$ for the $n^{th}$ time, we see that $P(E_M) \\le P(\\cap_{n \\ge 1} A_n) = \\lim_{N \\to \\infty} P(A_1\\cap\\dots\\cap A_N) = \\lim_{N \\to \\infty} P(A_1)P(A_2 | A_1)P(A_3 | A_1,A_2)\\dots P(A_N | A_1,\\dots, A_{n-1}) = \\lim_{N \\to \\infty} c_M^N = 0$, since [not going directly to $0$ after being at size $M$ for the $n^{th}$ time] does not affect the probability of [directly going to $0$ after being at size $M$ for the $(n+1)^{st}$ time]. \n0010 | \n0011 | .\n0012 | \n0013 |   Lemma 1: Let $(x_n)_{n \\ge 1}$ be a sequence of positive integers with $\\lim_{n \\to \\infty} x_n = \\infty$. Then, there is a sequence $N_1  of positive integers so that, for each $i \\ge 1$, there is some $n \\ge 1$ with $x_n = N_i$ and $x_m \\ge N_i$ for each $m \\ge n$. \n0014 | \n0015 | Proof:  Elementary. \n0016 | \n0017 | .",
+  "witness": "M = 1 under the question's own model: with probability p one bacterium reproduces, and each pre-existing bacterium then dies with probability p(1 − 1/N), where N = 1 is the size before the birth, so the death probability is p·0 = 0; the newborn cannot die that day. The next size is therefore 1 (no birth) or 2 (birth); size 0 has probability 0, so c_1 = 0 ∉ (0,1). The certificate instantiates p = 1/3; the death probability p(1 − 1/1) is 0 for every p."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_FOR_CORRECTED_VERSION",
+ "record_id": "mse_3410112__ans3414867",
+ "scope_metadata": {
+  "final_theorem_status": "The answer's eventual-extinction conclusion is not adjudicated; only Claim 1's constant c_M ∈ (0,1) is refuted at M = 1.",
+  "source_kind": "Wrong local step (Claim 1's 'c_M ∈ (0,1) for every M ≥ 1', frozen line 9) in a Math.SE answer; under the question's own model the one-step extinction probability from size 1 is exactly 0.",
+  "source_scope": "The process of the question (frozen lines P2, P5): reproduce with probability p, then each pre-existing bacterium dies with probability p(1 − 1/N), N the pre-birth size, and newborns cannot die that day. Certified at M = 1 with p = 1/3 via a kernel defined from the zero death probability (modelling disclosure in the explanation)."
+ },
+ "selected_declarations": [
+  {
+   "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+   ],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "MSE3410112.certificate",
+   "native_candidate_axioms": [],
+   "type": "MSE3410112.deathProbability (1 / 3) 1 = 0 ∧\n  (MSE3410112.transitionFromOne (1 / 3) ⋯) 0 = 0 ∧ ¬0 < (MSE3410112.transitionFromOne (1 / 3) ⋯) 0",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/mse_3410112__ans3414867.json",
+ "source_group": "mse",
+ "supporting_evidence": []
+}

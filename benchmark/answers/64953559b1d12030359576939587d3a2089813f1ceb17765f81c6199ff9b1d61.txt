@@ -1,0 +1,602 @@
+We need to find a false assertion in the text, under the assumptions the writing itself has in force at that point. So we need to examine each claim/statement that could be false given the definitions.
+
+The problem: River crossing problem with pilot Charon, capacity k (including Charon). Safety: No pair of enemies may be present together on either riverbank unless Charon is also present at that location.
+
+They claim NP-hardness via reduction from Vertex Cover: G has vertex cover of size <= K iff river crossing instance (G, k) with k := K+1 is feasible.
+
+We need to check correctness.
+
+We need to examine Lemma 1: At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set in G. This seems correct: safety says no pair of enemies may be present together on a bank unless Charon is also present. If Charon absent, then any pair present must not be enemies => set must be independent.
+
+Thus Lemma 1 holds.
+
+Now the forward direction (=>): Suppose crossing feasible. Consider first trip from left to right. Let S be set of passengers who board boat with Charon on this first trip; thus |S| ≤ k-1 = K. By Lemma 1, set left behind on left bank at that moment is V \ S, and it must be independent. Therefore S is a vertex cover of G with |S| ≤ K. That seems correct: if V \ S independent, then every edge has at least one endpoint in S (since otherwise edge wholly in V \ S would be an edge inside independent set). So forward direction holds.
+
+Now backward direction (<=): Suppose G has vertex cover S with |S| ≤ K = k-1. They construct schedule. Need to verify correctness of schedule.
+
+They claim if S empty (i.e., E empty), trivial: I = V independent, Charon can shuttle at most k-1 passengers at a time until everyone on right bank; when boat away, left bank contains only independent set, and right bank also contains an independent set when Charon departs it.
+
+If S non-empty, they pick a vertex j ∈ S, J={j}. They repeat a four-move cycle moving one vertex from I to right bank per cycle.
+
+Let's test steps for correctness.
+
+We need to check capacity: boat capacity k includes Charon, so maximum passengers besides Charon is k-1.
+
+Given k = K+1, and |S| ≤ K = k-1. So |S| ≤ k-1, i.e., S fits in boat with Charon.
+
+Step 1: L→R: Charon takes entire S to right bank. Allowed since |S| ≤ k-1. Left bank now contains exactly I, which is independent, so safe while Charon away. Good.
+
+Step 2: R→L: Charon returns to left bank with S \ J (i.e., leaving J={j} on right bank). This is allowed since |S \ J| = |S| -1 ≤ k-2 < k. The set J is independent, so right bank safe when Charon departs. Need to verify right bank after step2: Right bank currently has J={j} (since S all moved to right in step1, then Charon returns with S\{j}, leaving j alone). Right bank has just vertex j. Since J is a singleton, independent. Good.
+
+Step3: L→R: From left bank, Charon takes back S\J together with one arbitrary vertex x ∈ I that is still on left bank (if any). Capacity: |S \ J| + 1 ≤ (k-2)+1 = k-1. After departure, left bank contains I \ {x} (still independent), so safe. Upon arrival, right bank temporarily contains S ∪ {x} with Charon present.
+
+Let's examine: Before step3, left bank has I (all vertices not in S). Right bank has J={j} and Charon is on left bank (since step2 ended with Charon on left). Actually after step2, Charon is on left bank (since returned). Right bank has J={j} alone. Left bank has I plus S \ J? Wait step2: Charon returns with S \ J to left bank. So after step2, left bank has (S \ J) plus I (since I never moved). Right bank has J alone. Charon is on left bank.
+
+Now step3: Charon takes back S\J (i.e., the same set he just brought) together with one vertex x from I. So he takes S\J + {x} to right bank. After departure, left bank loses S\J and x, leaving I \ {x} (since S\J removed). Right bank gains S\J and {x} plus already had J={j}. So right bank after arrival contains J={j} plus S\J plus {x} = S ∪ {x}. And Charon is present on right bank (since he arrived). So right bank now has Charon plus S ∪ {x}. Safety condition: when Charon present, any set allowed (since constraint only applies when Charon absent). So fine.
+
+Step4: R→L: Charon returns with entire S to left bank (again allowed since |S| ≤ k-1), leaving {x} on right bank. Since {x} ⊆ I is independent, right bank safe when Charon departs. Let's verify: Before step4, right bank has Charon plus S ∪ {x}. He returns with S (i.e., takes S onto boat). After departure, right bank loses S, leaving Charon? Wait he takes S, but Charon is on boat, so after departure, Charon leaves right bank with S. So right bank after departure has {x} only (since J={j} was part of S? Actually J={j} is a subset of S? Yes J={j} where j∈S, so S includes j. So when Charon takes S, he takes j as well, leaving only {x} on right bank. Right bank now has only {x} (independent). Left bank after step4: previously left bank had I \ {x} (from after step3). Charon returns with S to left bank, so left bank gains S plus Charon. So left bank now has (I \ {x}) ∪ S plus Charon. That's fine.
+
+Thus each cycle moves exactly one vertex x from I to right bank permanently (since after step4, x stays on right bank). Good.
+
+After |I| cycles, all I moved to right bank, left bank contains S plus Charon. Then final trip L→R taking all S to right bank (capacity ok) yields all passengers on right bank.
+
+Thus construction seems valid.
+
+Potential flaw: The capacity condition for step3: they claim |S \ J| + 1 ≤ (k-2)+1 = k-1. Since |S| ≤ k-1, then |S \ J| = |S| -1 ≤ k-2. So yes.
+
+But need to ensure that when I is empty (i.e., S = V), the algorithm still works? If S = V, then I = ∅. They handle S=∅ case separately. For S non-empty but I possibly empty? If I empty, then V = S, meaning vertex cover is all vertices, which is only possible if graph has edges? Actually if S = V, then I empty. The algorithm's cycle would have zero repetitions (since |I|=0). Then final trip takes S to right bank. That's fine.
+
+Edge case: k = K+1, with K possibly zero? They handle K=0 separately.
+
+Thus the reduction seems correct.
+
+But maybe there is a hidden assumption: The boat capacity k includes Charon, but they assume that Charon must be on boat to operate. That's given. The reduction uses k = K+1. In forward direction, they argued that first trip S has size ≤ k-1 = K. That's correct because boat can hold at most k-1 passengers besides Charon. However, is it necessary that the first trip must take some set S? Could the first trip be empty? i.e., Charon crosses alone? The boat capacity includes Charon, but he could cross alone (0 passengers). They define S as set of passengers who board the boat with Charon on this first trip; thus |S| ≤ k-1. If he crosses alone, S = ∅, which is allowed. Then left bank behind is V, which must be independent by Lemma 1 (since Charon absent). That would imply V independent, meaning graph has no edges. Then S=∅ is a vertex cover of size 0 ≤ K. So forward direction still works: if there is a feasible solution, either first trip carries some passengers or none; in either case, the set left behind must be independent, giving a vertex cover (maybe empty). So forward direction still holds.
+
+Now backward direction: they assume S is a vertex cover of size ≤ K. They construct schedule as described. Need to ensure that at each step, the set left behind on a bank when Charon absent is independent. They relied on Lemma 1 for safety. Let's verify each departure:
+
+- After step1 departure: Charon leaves left bank with S, left bank has I (independent). Good.
+
+- After step2 departure: Charon leaves right bank with S\J? Actually step2 is Charon returning from right to left. He departs right bank with set S\J (since he takes S\J onto boat). Right bank after departure has J={j} (independent). Good.
+
+- After step3 departure: Charon leaves left bank with S\J + {x}. Left bank after departure has I \ {x} (independent). Good.
+
+- After step4 departure: Charon leaves right bank with S. Right bank after departure has {x} (independent). Good.
+
+Thus all good.
+
+Thus the reduction appears correct.
+
+But maybe there is a subtle issue: The reduction assumes that the boat capacity k includes Charon, but they used k = K+1. In the backward direction, they require that |S| ≤ k-1 = K. That's given by vertex cover size ≤ K. However, they also need to ensure that the boat can carry S plus possibly an extra passenger (x) in step3: they claimed capacity is |S\J| +1 ≤ k-1. Since |S| ≤ k-1, |S\J| ≤ k-2, plus one ≤ k-1. Good.
+
+But what about the case where |S| = k-1 exactly (i.e., |S| = K). Then |S\J| = k-2, plus one = k-1, fits exactly. Good.
+
+Now step1: Charon takes S to right bank. If |S| = k-1, boat is full (Charon plus k-1 passengers). That's allowed.
+
+Step2: Charon returns with S\J, size = k-2, leaving J on right. That's fine.
+
+Step4: Charon returns with S (size k-1) to left bank. That's allowed.
+
+Thus all steps valid.
+
+Thus the reduction seems correct.
+
+So maybe the false assertion is somewhere else. Let's examine the text for any other claim.
+
+Potential false assertion: "Lemma 1. At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set in G." This is true as argued.
+
+Maybe false: "If S = ∅(i.e., E = ∅)" They claim S empty iff E empty. Actually S empty means vertex cover of size 0, which implies that every edge has at least one endpoint in empty set => there are no edges. So yes, S empty iff E empty. So correct.
+
+Maybe false: "If E = ∅, map to any edgeless crossing instance (e.g., (G, 2)), which is trivially feasible". Need to check: If graph has no edges, then any set of passengers is independent, thus safety condition always satisfied regardless of Charon presence? Actually safety condition: no pair of enemies may be present together on a bank unless Charon is also present. If there are no enemies (no edges), then condition is vacuously true, even if Charon absent. So any configuration is safe. So instance is feasible as long as capacity constraints allow moving all passengers. With capacity k >=1 (since k integer >=1). They propose (G,2) as example: boat capacity 2 (including Charon) so can carry at most 1 passenger each trip. Can we move n passengers across? Yes, Charon can ferry one passenger each trip, returning alone, etc. So feasible. So correct.
+
+"If E ≠ ∅, map to a fixed infeasible crossing instance (e.g., a triangle graph with k = 2), which is infeasible because any first move would leave two adjacent vertices unsupervised on the left bank." Let's test: triangle graph (3 vertices, each pair adjacent). k=2 means boat capacity 2 including Charon, so can carry at most 1 passenger besides Charon. Initially all three passengers on left bank, Charon left. Any first move: Charon can take at most one passenger to right bank (or go alone). If he takes a passenger, left bank has two passengers left; since triangle graph, any two vertices are adjacent (enemies). Charon absent from left bank, so left bank has two enemies together without Charon => violates safety. If he goes alone, left bank has all three passengers, which includes edges, also violates safety. So indeed infeasible. So that remark is correct.
+
+Thus all claims appear correct.
+
+But the problem statement says: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point." So there must be a false assertion.
+
+Maybe the false assertion is in the theorem statement: "Theorem 1. The above decision problem is NP-hard." Could be false if the problem is actually in P? But they gave reduction from Vertex Cover, which is NP-complete. If reduction is correct, then NP-hard. So maybe reduction has a subtle bug making it not a valid many-one reduction, thus the decision problem might be in P. Let's think deeper: Is the river crossing problem with conflict constraints actually NP-hard? Let's consider known results: This resembles the classic "jealous husbands" or "missionaries and cannibals" problem, which is known to be NP-complete? Actually missionaries and cannibals is a specific small case; general version with arbitrary conflict graph might be NP-complete. I recall a known problem: "River crossing problem" with enemies is NP-complete (maybe known as "Anti-social river crossing" or "Wolf, goat, cabbage" generalization). I think it is NP-complete. So theorem likely true.
+
+But maybe the reduction fails because they assume that the first trip determines a vertex cover, but there could be feasible solutions where the first trip leaves behind an independent set that is not a vertex cover's complement? Wait they argued: If first trip leaves behind set L = V \ S, which must be independent. Then S is a vertex cover. That's correct: If L independent, then S is a vertex cover. So any feasible solution yields a vertex cover S being the set of passengers on first trip (with Charon). However, is it necessary that the first trip must include Charon? Yes, because boat requires Charon to operate. So first trip always has Charon plus some passengers (maybe zero). So S defined as passengers on first trip with Charon is correct.
+
+Thus forward direction seems solid.
+
+Maybe the false assertion is in the backward direction construction: they claim that each four-move cycle moves exactly one vertex x from I to the right bank permanently. Let's verify that after the cycle, the vertex x indeed stays on right bank and never returns left. In step4, Charon returns with S to left bank, leaving {x} on right bank. After that, left bank has I \ {x} plus S plus Charon. Right bank has {x}. In subsequent cycles, they will again take S to right bank (step1), leaving I \ {x} on left bank (still independent). Then step2: return with S\J leaving J on right bank (which is {j}) plus maybe previous xs? Wait need to track accumulation of xs on right bank.
+
+Let's simulate multiple cycles: Initially, right bank empty. After first cycle: step1: S to right. step2: return with S\J, leaving j on right. step3: take S\J + x1 to right, left bank loses x1, right bank now has j + S\J + x1 = S + x1 (with Charon). step4: return with S, leaving {x1} on right. So after cycle1, right bank has {x1}. Left bank has I \ {x1} plus S plus Charon.
+
+Now second cycle: step1: Charon takes S to right (again). Left bank currently has I \ {x1} plus S plus Charon. He takes S away, leaving left bank with I \ {x1} (independent). Right bank currently has {x1} plus receives S (so temporarily S ∪ {x1} with Charon). step2: return with S\J, leaving J={j} on right. So right bank after step2: {x1} ∪ {j} (since S\J removed). Wait need to be careful: Right bank before step2 had S ∪ {x1}. Charon departs with S\J, leaving behind (S ∪ {x1}) \ (S\J) = J ∪ {x1} = {j} ∪ {x1}. So right bank now has {j, x1}. step3: From left bank (which has I \ {x1}), Charon takes S\J plus another vertex x2 ∈ I \ {x1} (if any). He takes S\J + {x2} to right. Left bank after departure: (I \ {x1}) \ {x2} = I \ {x1, x2}. Right bank after arrival: prior {j, x1} plus S\J + {x2} = {j, x1} ∪ S\J ∪ {x2} = S ∪ {x1, x2} (since S = J ∪ S\J). With Charon present. step4: Charon returns with S to left bank, leaving {x1, x2} on right bank. So after cycle2, right bank has {x1, x2}. So indeed each cycle adds one new x to right bank, never removed. After |I| cycles, right bank has all I. Left bank has S plus Charon. Final step moves S to right. Works.
+
+Thus construction valid.
+
+Thus the reduction appears correct.
+
+Maybe the false assertion is hidden in the assumption that k ≥ 1 (boat capacity counting pilot). They said "integer k ≥ 1 (boat capacity, counting the pilot Charon)". That's fine.
+
+Maybe the false assertion is about the remark on K = 0 edge case: "If K = 0, then Vertex Cover is a YES-instance iff E = ∅, which can be checked in polynomial time. If E = ∅, map to any edgeless crossing instance (e.g., (G, 2)), which is trivially feasible; if E ≠ ∅, map to a fixed infeasible crossing instance (e.g., a triangle graph with k = 2), which is infeasible because any first move would leave two adjacent vertices unsupervised on the left bank." Let's test the infeasible instance claim: triangle graph with k=2. As argued, any first move leaves two adjacent vertices unsupervised on left bank. However, what about the possibility that Charon could take two passengers? Wait capacity k=2 includes Charon, so max passengers besides Charon is 1. So he cannot take two passengers. So indeed any move leaves at least two passengers on left bank (since n=3). If he takes one passenger, left bank has two passengers, which are adjacent (enemies). If he goes alone, left bank has three passengers, which includes edges. So infeasible. Good.
+
+But is there a possibility of a different sequence where Charon shuttles back and forth such that at some point left bank has 0 or 1 passenger, which is safe? But to get there, he must at some point have moved passengers to right bank while leaving safe config on left. However, first move must be safe. Since initial left bank has all three passengers (triangle). Any move that changes the configuration must leave left bank with either 2 or 3 passengers (if he takes 0 or 1). Both unsafe as argued. So indeed no feasible first move, thus infeasible. So remark correct.
+
+Thus all statements appear correct.
+
+Maybe the false assertion is about the definition of the decision problem: "Instance: a simple undirected graph G = (V, E) with |V| = n, and an integer k ≥ 1 (boat capacity, counting the pilot Charon). Initially, Charon and all n passengers are on the left bank." That's correct.
+
+Maybe the false assertion is about the statement: "We will show that for any graph G and any integer K ≥ 1, the following equivalence holds: G has a vertex cover of size ≤ K ⇔ the river crossing instance (G, k) with k := K + 1 is feasible." This is the core. Let's test with a small counterexample to see if equivalence holds.
+
+Take G = a single edge (two vertices u,v) with edge between them. So n=2. Vertex cover size ≤ K? Minimum vertex cover size is 1 (pick either u or v). So for K=0, vertex cover of size ≤0? No, because need at least 1. For K=1, vertex cover size ≤1 yes.
+
+Now set k = K+1. For K=1, k=2. Boat capacity 2 including Charon => can carry at most 1 passenger.
+
+We need to check if river crossing instance (G,k=2) is feasible.
+
+Let's attempt to find a sequence.
+
+Passengers: u and v (enemies). Initially both on left bank with Charon.
+
+We need to get both to right bank safely.
+
+Capacity: boat can hold Charon + at most 1 passenger.
+
+We need to ensure that when Charon absent from a bank, the set there is independent (no enemy pair). Since there is only one edge, any set of size ≤1 is independent; set of size 2 (both u and v) is not independent.
+
+We need to move both across.
+
+Possible solution: Charon takes u to right (left bank has v alone -> independent). Leaves u on right with Charon. Then Charon returns alone (left bank has v, right bank has u). Left bank v alone (independent). Right bank u alone (independent). Then Charon takes v to right (left bank empty -> independent). Arrives right bank with u and v and Charon. Done. So feasible.
+
+Thus for K=1, feasible. Equivalence holds.
+
+Now test K=0: k=1 (boat capacity 1 including Charon => can carry 0 passengers besides Charon). So boat can only carry Charon alone. Vertex cover size ≤0? Only possible if graph has no edges. For our edge graph, vertex cover size ≤0 false. So equivalence predicts infeasible. Let's test: k=1 means Charon cannot take any passengers. So he can only go back and forth alone. Initially left bank has u and v together without Charon? Actually Charon is on left bank initially. The safety condition applies when Charon absent from a bank. Initially Charon present left bank, so left bank has u and v together but Charon present, so allowed. However, to make progress, Charon must cross the river. If he crosses alone, he leaves left bank with u and v without Charon -> they are enemies together unsupervised => violation. So he cannot leave left bank. If he stays, never gets anyone across. So infeasible. Thus equivalence holds.
+
+Now test a more complex graph: Suppose G is a star: center c connected to leaves l1,l2,...,lm. Vertex cover size minimum = 1 (choose center). So for K=1, k=2. Is river crossing feasible? Let's test.
+
+Passengers: center c and leaves li.
+
+Boat capacity: Charon + at most 1 passenger.
+
+We need to move all across.
+
+Strategy: Charon takes center c to right (left bank has leaves only, which are independent since leaves not adjacent to each other). Right bank has c with Charon. Then Charon returns alone (left bank leaves, right bank c). Left bank leaves independent (no edges among leaves). Right bank c alone (Charon absent? Actually Charon on left bank after return, so right bank has c alone, Charon absent, but a single vertex is independent). Good. Then Charon takes a leaf l1 to right (left bank leaves minus l1, still independent). Right bank now has c and l1 with Charon. However, c and l1 are enemies (edge), but Charon present so allowed. Then Charon returns with c? He could return with c to left bank, leaving l1 on right. Let's see: After dropping l1, Charon could return alone? He could return alone leaving c and l1 on right bank unsupervised? That would be edge c-l1 unsupervised => not allowed. So he must bring back either c or l1 to avoid leaving enemies unsupervised. If he brings back c, then right bank has l1 alone (independent). Left bank gets c plus remaining leaves. Continue.
+
+Seems plausible to shuttle leaves one by one, bringing center back each time. At end, after moving all leaves, left bank has center c with Charon, right bank has all leaves. Then final trip: Charon takes center c to right (left bank empty). Done. So feasible.
+
+Thus equivalence holds.
+
+Now test a graph where minimum vertex cover size is > K but maybe still feasible due to some clever schedule? Let's try to find a counterexample where vertex cover size > K but crossing feasible.
+
+Suppose G is a triangle (3-clique). Minimum vertex cover size = 2 (need at least two vertices to cover all edges). So for K=1, k=2. According to equivalence, instance should be infeasible because vertex cover size >1. Let's test feasibility manually.
+
+Boat capacity: Charon + at most 1 passenger.
+
+We need to move three passengers (all mutually enemies). Let's attempt.
+
+State: left: A,B,C + Charon; right: empty.
+
+Goal: move all to right.
+
+Since any two together unsupervised cause conflict (they are enemies). So we must ensure that whenever Charon absent from a bank, at most one passenger there.
+
+We can try: Charon takes A to right. Left: B,C (two enemies) unsupervised => violation. So cannot take any passenger alone because leaves two together.
+
+If Charon goes alone: left: A,B,C unsupervised (three enemies) => violation.
+
+Thus first move impossible. So infeasible. Good.
+
+Now test K=2, k=3 (boat capacity 3 including Charon => can carry up to 2 passengers). Vertex cover size ≤2? Minimum vertex cover of triangle is 2, so yes. So equivalence predicts feasible.
+
+Let's test: capacity allows Charon plus up to 2 passengers.
+
+We need to move three vertices.
+
+Strategy: Charon takes two passengers, say A and B, to right. Left bank: C alone (independent). Right bank: A,B with Charon (allowed since Charon present). Now Charon returns with maybe one passenger? He needs to eventually get C across.
+
+If Charon returns alone: left bank: C (independent) ok; right bank: A,B unsupervised (since Charon left) => A and B are enemies together unsupervised => violation. So cannot return alone.
+
+If Charon returns with A: left bank: C + A (two enemies) unsupervised => violation. If returns with B: similarly left bank C+B enemies. So cannot return with one passenger.
+
+If Charon returns with both A and B: left bank: C + A + B (three enemies) unsupervised => violation. So any return leads to violation.
+
+Thus maybe not feasible? Let's think other first move: Charon takes one passenger (say A) to right. Left: B,C (two enemies) unsupervised => violation. So cannot.
+
+Charon takes zero passengers (goes alone): left: A,B,C (three enemies) unsupervised => violation.
+
+Thus seems infeasible for k=3 as well? Wait but capacity is 3 including Charon, so max passengers 2. We tried all possibilities and all lead to violation after first move? Let's double-check.
+
+Initial: left: A,B,C + Charon. Right empty.
+
+If Charon takes set S of passengers (size s ∈ {0,1,2}) to right.
+
+After move, left bank has V \ S (size 3-s). Right bank has S plus Charon.
+
+Safety condition: When Charon away from a bank, the set there must be independent.
+
+During the trip, Charon is in boat, not on either bank. So both banks are without Charon during the crossing? Actually while crossing, Charon is in boat, not on either bank. So both banks must be independent at that moment. However, the safety condition as stated: "No pair of enemies may be present together on either riverbank unless Charon is also present at that location." So while Charon is in boat, he is not present at either bank, so both banks must have no enemy pair.
+
+Thus after departure, before arrival, both banks must be independent. That's stricter than just checking after departure? The lemma considered only when Charon departs a bank, the set he leaves behind must be independent. But we also need to consider the bank he is heading to? Actually while crossing, Charon is not on either bank, so both banks must be independent. However, the lemma only addresses the bank he leaves; but the destination bank initially may have some set; we need that set also be independent while Charon is away. Typically, the destination bank before arrival has whatever was there previously; if Charon is not there, it must be independent. So we need both banks independent during crossing.
+
+In their Lemma 1, they only considered the bank he departs from. But they also implicitly rely on the fact that the destination bank is safe because Charon is arriving there? Wait they need to check safety during crossing: while Charon is in boat, both banks lack Charon. So we must ensure that both banks are independent sets at that moment.
+
+In their proofs, they only checked the bank he left behind. Did they check the bank he arrives at? Let's examine their step reasoning.
+
+Step1: L→R: Charon takes S to right. They said: "Left bank now contains exactly I, which is independent, so it is safe while Charon is away." They didn't mention right bank safety during crossing. However, right bank before arrival had J? Actually initially right bank empty. After departure, right bank still empty (since Charon hasn't arrived yet). Empty set is independent. So safe.
+
+Step2: R→L: Charon returns with S\J. They said: "The set J is independent, so the right bank is safe when Charon departs." They considered right bank safety when Charon departs (i.e., after he leaves right bank). But they also need left bank safety during crossing: left bank currently has I (independent). Good.
+
+Step3: L→R: they said: "After departure, the left bank contains I \ {x} (still independent), so it is safe." They didn't check right bank during crossing: right bank before arrival has J (independent). So safe.
+
+Step4: R→L: they said: "Since {x} ⊆ I is independent, the right bank is safe when Charon departs." They checked right bank safety when Charon departs (i.e., after he leaves right bank). They didn't check left bank safety during crossing: left bank before arrival has I \ {x} plus S? Actually before arrival, left bank has I \ {x} plus S (since Charon hasn't arrived yet). Wait step4: Charon is on right bank with S, about to return to left bank. Left bank currently has I \ {x} (from previous step) plus maybe? Let's track: At start of step4, left bank has I \ {x} (since after step3 departure, left bank lost S\J and x, leaving I \ {x}). Right bank has S ∪ {x} with Charon. Charon departs right bank with S, leaving {x} on right. During crossing, left bank has I \ {x} (still independent). Right bank during crossing has {x} (independent). So safe.
+
+Thus they implicitly considered both banks: they checked the bank he leaves (destination of previous step) and the bank he arrives at (which was previously independent). So seems fine.
+
+Now for the triangle case with k=3 (capacity 3 including Charon => max passengers 2). Let's test if there is a feasible sequence using their reasoning. Suppose we try to apply their construction with a vertex cover S of size 2 (say {A,B}) and I={C}. According to their algorithm: S non-empty, pick j ∈ S, say j=A, J={A}. I={C}. Steps:
+
+Step1: L→R: Charon takes S={A,B} to right. Left bank: I={C} (independent). Right bank during crossing: empty? Actually before arrival, right bank empty. So safe.
+
+Step2: R→L: Charon returns with S\J = {B}. Right bank after departure: J={A} (independent). Left bank during crossing: I={C} (independent). So safe.
+
+Step3: L→R: From left bank, Charon takes back S\J={B} together with one arbitrary vertex x ∈ I that is still on left bank (if any). I={C}. So x=C. He takes {B} + {C} to right. Capacity: |S\J|+1 =1+1=2 ≤ k-1=2 (since k=3 => k-1=2). OK. After departure, left bank contains I \ {x} = empty set (independent). Right bank during crossing: currently has J={A} (independent). So safe.
+
+Upon arrival, right bank temporarily contains S ∪ {x} = {A,B,C} with Charon present. So all three together with Charon.
+
+Step4: R→L: Charon returns with entire S={A,B} to left bank (allowed since |S|=2 ≤ k-1=2). Leaves {x}={C} on right bank. During crossing, left bank has ??? left bank before arrival had empty set (since after step3 departure left bank empty). So left bank during crossing empty (independent). Right bank during crossing has {C} (independent). So safe.
+
+After step4, left bank has S={A,B} plus Charon. Right bank has {C}.
+
+Now we have completed one cycle, moving exactly one vertex x=C from I to right bank permanently. I is now empty. Left bank has S={A,B} plus Charon. Right bank has {C}.
+
+Now final trip: L→R taking all of S to right bank. Charon takes {A,B} to right. Left bank during crossing: empty (independent). Right bank during crossing: has {C} (independent). Upon arrival, right bank has {A,B,C} with Charon. Done.
+
+Thus feasible! Wait earlier we thought infeasible for triangle with k=3. But we just found a feasible sequence using this algorithm. Let's double-check each step for safety constraints more thoroughly, especially during crossings when Charon absent.
+
+We'll enumerate states with locations of Charon and passengers.
+
+Define left bank L, right bank R, boat B (with Charon when moving). At any time, Charon is either on left bank, right bank, or in boat.
+
+Safety rule: At any time, if Charon is not on a bank, the set of passengers on that bank must be independent (no edges). Equivalent: For each bank, if Charon absent there, the passenger set there must be an independent set.
+
+Let's simulate.
+
+Initial: Charon on left bank. L = {A,B,C}, R = ∅. Charon present on L, so L safety not required (since Charon present). Charon absent from R, R set ∅ independent => ok.
+
+Step1: Charon takes S={A,B} to right. So during crossing: Charon in boat. L = {C} (since A,B left with Charon? Wait Charon took A and B, so they are in boat with Charon). So L = {C}. R = ∅. Charon absent from both banks. Check L: {C} independent (single vertex). R: ∅ independent. OK.
+
+Arrival: Charon now on right bank with A,B. L = {C}, R = {A,B}. Charon present on R, so R safety not required. Charon absent from L: L={C} independent => ok.
+
+Step2: Charon returns with S\J={B} (so he takes B back to left). During crossing: Charon in boat with B. L currently has {C} (still) plus? Actually A remained on right bank. So L = {C}. R = {A} (since B left with Charon). Charon absent from both banks. L: {C} independent. R: {A} independent. OK.
+
+Arrival: Charon now on left bank with B. L = {C,B}. R = {A}. Charon present on L, so L safety not required. Charon absent from R: R={A} independent => ok.
+
+Step3: Charon takes S\J ({B}) plus x={C} to right. So he takes B and C to right. During crossing: Charon in boat with B and C. L: after removing B and C from left bank, left bank had {C,B} initially, removing B and C leaves ∅. R: currently has {A} (unchanged). Charon absent from both banks. L: ∅ independent. R: {A} independent. OK.
+
+Arrival: Charon now on right bank with B and C. L = ∅. R = {A,B,C}. Charon present on R, so R safety not required. Charon absent from L: L=∅ independent => ok.
+
+Step4: Charon returns with S={A,B} to left bank. During crossing: Charon in boat with A and B. L: currently ∅ (since after step3 arrival left empty). R: after removing A and B, R has {C}. Charon absent from both banks. L: ∅ independent. R: {C} independent. OK.
+
+Arrival: Charon now on left bank with A and B. L = {A,B}. R = {C}. Charon present on L, so L safety not required. Charon absent from R: R={C} independent => ok.
+
+Final trip: Charon takes S={A,B} to right. During crossing: Charon in boat with A and B. L: after removing A and B, L = ∅. R: currently {C}. Charon absent from both banks. L: ∅ independent. R: {C} independent. OK.
+
+Arrival: Charon on right bank with A,B,C. L=∅, R={A,B,C}. Charon present on R, so R safe. Charon absent from L: L=∅ independent => ok.
+
+Thus all steps safe. So triangle with k=3 is feasible. So earlier thought infeasible was mistaken because we didn't consider bringing two passengers back.
+
+Thus the reduction seems correct for all cases.
+
+Given that, where is false assertion? Maybe the false assertion is in the statement of Theorem 1: "The above decision problem is NP-hard." Actually, maybe the problem is in P, making the theorem false. But we just gave a reduction from Vertex Cover, which is NP-complete. If reduction is correct, then problem is NP-hard. So unless reduction is flawed in some subtle way we haven't caught, the theorem is true.
+
+Let's double-check reduction correctness more formally: They claim equivalence: G has vertex cover of size ≤ K iff river crossing instance (G, k=K+1) is feasible.
+
+We proved forward direction: If feasible, then first trip yields S (passengers with Charon) such that V \ S independent => S vertex cover size ≤ K (since |S| ≤ k-1 = K). Good.
+
+Backward direction: Given vertex cover S size ≤ K, they construct schedule. Need to ensure schedule works for any S, any graph. Their construction uses a fixed vertex j in S and cycles moving I vertices one by one using S as a "shuttle". This seems to work as we tested on triangle and star.
+
+But does it work for all graphs? Let's test on a graph where S is not a vertex cover? Wait they assume S is vertex cover. So S covers all edges. I = V \ S is independent set.
+
+The algorithm relies on S being able to shuttle: they take S across, leave j behind, bring S\J back, etc. The key is that S \ J is still a subset of S, thus still a vertex cover? Not needed. The safety during crossing relies on the fact that the sets left behind (I, I\{x}, J, {x}) are independent. Since I is independent, any subset of I is independent. J is a singleton subset of S, but S may contain edges among its members. However, J being a singleton is independent trivially. The set S \ J may contain edges, but they never leave S \ J alone on a bank without Charon? Let's check: In step2, they leave J on right bank (singleton) safe. In step3, they leave I \ {x} on left bank (independent). In step4, they leave {x} on right bank (independent). They never leave S \ J or S alone on a bank without Charon? Actually step1 leaves I on left bank (independent). Step2 leaves J on right (independent). Step3 leaves I \ {x} on left (independent). Step4 leaves {x} on right (independent). The set S is always either with Charon (in boat or on same bank as Charon) or being moved with Charon. So S is never left unsupervised. That's crucial: they rely on S being a vertex cover to ensure that any edges are covered by S, but they never need to leave S unsupervised. So the algorithm works for any S (any subset) as long as I is independent. Wait they need I independent, which holds if S is a vertex cover. So backward direction only requires S vertex cover, not any subset. So correct.
+
+Thus reduction stands.
+
+Thus maybe the false assertion is elsewhere: maybe in the statement of Lemma 1 they claim "Equivalently, whenever Charon departs a bank, the set he leaves behind must be independent." That's correct.
+
+Maybe the false assertion is about the claim that "If S = ∅(i.e., E = ∅), the instance is trivial: I = V is independent, and Charon can shuttle at most k −1 passengers at a time until everyone is on the right bank; when the boat is away, the left bank contains only an independent set, and the right bank also contains an independent set when Charon departs it." Let's examine: If S empty, then I=V independent. They claim Charon can shuttle at most k-1 passengers at a time. That's correct: boat capacity k includes Charon, so max passengers k-1. They say he can shuttle at most k-1 passengers at a time until everyone is on right bank. That's feasible: He can take up to k-1 each trip, leaving left bank with decreasing independent set (still independent). Right bank when Charon departs it: after dropping off passengers, Charon leaves right bank, leaving some set of passengers there. Since they are all independent (as V independent), right bank set is independent. So safe.
+
+Thus correct.
+
+Now look at the remark on K=0 edge case: they claim mapping to a fixed infeasible crossing instance (e.g., a triangle graph with k = 2) is infeasible because any first move would leave two adjacent vertices unsupervised on the left bank. We already verified that's correct.
+
+Thus maybe the false assertion is about the claim that the reduction is polynomial-time many-one reduction. That's true.
+
+Thus maybe the false assertion is a subtle one: The statement "We consider the following decision problem: Instance: a simple undirected graph G = (V, E) with |V| = n, and an integer k ≥ 1 (boat capacity, counting the pilot Charon). Initially, Charon and all n passengers are on the left bank." Actually they said "Initially, Charon and all n passengers are on the left bank." That's correct.
+
+Maybe the false assertion is hidden in the line numbers: they have line numbers like 0001, 0002, etc. The false assertion might be a specific line that asserts something false. Let's scan each line for a claim.
+
+Lines:
+
+0001: Solution: (just label)
+
+0002-0009: restate problem.
+
+0010: NP-hardness of the River Crossing Problem with Conflict Constraints (heading)
+
+0011: (empty?)
+
+0012: We consider the following decision problem:
+
+0013: Instance: a simple undirected graph G = (V, E) with |V| = n, and an integer k ≥ 1 (boat capacity, counting the pilot Charon).
+
+0014: Initially, Charon and all n passengers are on the left bank.
+
+0015: A move consists of Charon crossing the river with at most k − 1 passengers (since the boat capacity k includes Charon).
+
+0016: The safety constraint is:
+
+0017: No pair of enemies (i.e., adjacent vertices in G) may be present together on a
+
+0018: bank unless Charon is also present on that bank.
+
+0019: Question: Is there a sequence of crossings that transports all n passengers to the right bank,
+
+0020: respecting the safety constraint at all times?
+
+0021: We prove:
+
+0022: Theorem 1. The above decision problem is NP-hard.
+
+0023: Proof. We reduce from the NP-complete problem Vertex Cover. Recall: given a graph
+
+0024: G = (V, E) and an integer K, the question is whether G has a vertex cover of size at most
+
+0025: K, i.e., a set S ⊆V with |S| ≤K such that every edge of G has at least one endpoint in
+
+0026: S. Equivalently, S is a vertex cover if and only if V \ S is an independent set (contains no
+
+0027: edge).
+
+0028: We will show that for any graph G and any integer K ≥ 1, the following equivalence holds:
+
+0029: G has a vertex cover of size ≤K
+
+0030: ⇐⇒
+
+0031: the river crossing instance (G, k) with k := K + 1 is feasible.
+
+0032: (1)
+
+0033: This yields a polynomial-time many-one reduction from Vertex Cover to the river crossing
+
+0034: problem (we comment on the K = 0 edge case at the end), proving NP-hardness.
+
+0035: We begin with a simple but crucial observation formalizing the safety rule.
+
+0036: Lemma 1. At any time when Charon is not on a given bank, the set of passengers on that
+
+0037: bank must form an independent set in G. Equivalently, whenever Charon departs a bank, the
+
+0038: set he leaves behind must be independent.
+
+0039: 1
+
+0040:
+
+0041: Proof. By the safety constraint, no pair of enemies may be present together on a bank
+
+0042: without Charon. This is precisely the definition of an independent set on that bank whenever
+
+0043: Charon is absent. The departing condition is immediate.
+
+0044: We now prove the two directions of (1).
+
+0045: (⇒) Suppose the river crossing instance (G, k) with k = K + 1 is feasible. Consider the
+
+0046: very first trip from the left bank to the right bank. Let S ⊆V be the set of passengers who
+
+0047: board the boat with Charon on this first trip; thus |S| ≤k −1 = K. By Lemma 1, the set of
+
+0048: passengers left behind on the left bank at that moment is V \S, and it must be independent.
+
+0049: Therefore S is a vertex cover of G with |S| ≤K. Hence G has a vertex cover of size at most
+
+0050: K.
+
+0051: (⇐) Conversely, suppose G has a vertex cover S ⊆V with |S| ≤K = k −1. Let I := V \ S,
+
+0052: which is an independent set (by the vertex-cover characterization). We explicitly construct
+
+0053: a safe crossing schedule that moves all passengers to the right bank.
+
+0054: If S = ∅(i.e., E = ∅), the instance is trivial: I = V is independent, and Charon can
+
+0055: shuttle at most k −1 passengers at a time until everyone is on the right bank; when the boat
+
+0056: is away, the left bank contains only an independent set, and the right bank also contains an
+
+0057: independent set when Charon departs it.
+
+0058: Now suppose S ̸= ∅. Fix any vertex j ∈S and let J := {j}. We perform the following
+
+0059: repeating four-move cycle (we write L and R for left and right bank, respectively), ensuring
+
+0060: the safety condition by Lemma 1 at each departure:
+
+0061: • Step 1 (L→R): Charon takes the entire S to the right bank. This is allowed since
+
+0062: |S| ≤k −1. The left bank now contains exactly I, which is independent, so it is safe
+
+0063: while Charon is away.
+
+0064: • Step 2 (R→L): Charon returns to the left bank with S \ J (i.e., leaving J = {j} on
+
+0065: the right bank). This is allowed since |S \ J| = |S| −1 ≤k −2 < k. The set J is
+
+0066: independent, so the right bank is safe when Charon departs.
+
+0067: • Step 3 (L→R): From the left bank, Charon takes back S\J together with one arbitrary
+
+0068: vertex x ∈I that is still on the left bank (if any). Capacity is respected because
+
+0069: |S \ J| + 1 ≤(k −2) + 1 = k −1. After departure, the left bank contains I \ {x} (still
+
+0070: independent), so it is safe. Upon arrival, the right bank temporarily contains S ∪{x}
+
+0071: with Charon present.
+
+0072: • Step 4 (R→L): Charon returns with the entire S to the left bank (again allowed since
+
+0073: |S| ≤k −1), leaving {x} on the right bank. Since {x} ⊆I is independent, the right
+
+0074: bank is safe when Charon departs.
+
+0075: Each four-move cycle moves exactly one vertex x from I to the right bank permanently.
+
+0076: Repeating this cycle |I| times transfers all vertices of I to the right bank, after which
+
+0077: the configuration is: right bank contains all of I, left bank contains all of S with Charon
+
+0078: present. Finally, perform one last trip L→R taking all of S to the right bank (capacity-
+
+0076): Actually line 0077 ends: "present."
+
+0079: Finally, perform one last trip L→R taking all of S to the right bank (capacity-respecting),
+
+0080: and we are done. At every departure, the bank left behind is independent (either I with one
+
+0081: fewer element, or a singleton {x}), so the safety constraint holds throughout by Lemma 1.
+
+0082: 2
+
+0083:
+
+0084: Therefore, given any vertex cover S with |S| ≤k −1, there exists a valid sequence of
+
+0085: crossings, proving the feasibility of (G, k).
+
+0086: Combining the two directions yields (1) for all K ≥1. Hence the mapping
+
+0087: (G, K) 7−→(G, k := K + 1)
+
+0088: is a polynomial-time many-one reduction from Vertex Cover to the river crossing decision
+
+0089: problem, establishing NP-hardness.
+
+0090: Remark on the case K = 0: This edge case can be handled separately within the reduction
+
+0091: in a purely polynomial-time manner. If K = 0, then Vertex Cover is a YES-instance iff
+
+0092: E = ∅, which can be checked in polynomial time. If E = ∅, map to any edgeless crossing
+
+0093: instance (e.g., (G, 2)), which is trivially feasible; if E ≠ ∅, map to a fixed infeasible
+
+0094: crossing instance (e.g., a triangle graph with k = 2), which is infeasible because any first move
+
+0095: would leave two adjacent vertices unsupervised on the left bank.
+
+0096: Thus the reduction remains total and polynomial-time.
+
+0097: This completes the proof that the river crossing decision problem with conflict constraints
+
+0098: is NP-hard.
+
+0099: 3
+
+Now we need to find a false assertion. Let's examine each claim for potential falsehood.
+
+Potential false: In step2, they claim "The set J is independent, so the right bank is safe when Charon departs." J is a singleton, independent. However, safety when Charon departs requires that the set left behind on that bank (right bank) be independent. That's J. So correct.
+
+Step3: They claim capacity respected because |S\J|+1 ≤ (k-2)+1 = k-1. Since |S| ≤ k-1, |S\J| ≤ k-2, so plus 1 ≤ k-1. Good.
+
+Step3: "After departure, the left bank contains I \ {x} (still independent), so it is safe." Since I independent, any subset independent. Good.
+
+Step3: "Upon arrival, the right bank temporarily contains S ∪{x} with Charon present." That's true.
+
+Step4: "Charon returns with the entire S to the left bank (again allowed since |S| ≤k −1), leaving {x} on the right bank. Since {x} ⊆I is independent, the right bank is safe when Charon departs." Correct.
+
+Step4 also should check left bank safety during crossing: they didn't mention but it's implied by earlier reasoning that left bank contains I \{x} (since after step3 departure left bank had I \{x}) and Charon not there, but they didn't explicitly state it's independent. However they said "At every departure, the bank left behind is independent (either I with one fewer element, or a singleton {x}), so the safety constraint holds throughout by Lemma 1." They only mention the bank left behind, not the bank being arrived at. But as argued earlier, the bank being arrived at is the one that was previously left behind in previous step, which they already ensured independent. So overall safety holds.
+
+Thus the proof appears correct.
+
+Maybe the false assertion is in the statement of Lemma 1: "At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set in G." Is that exactly equivalent to safety constraint? Safety constraint: "No pair of enemies may be present together on a bank unless Charon is also present at that location." This means: If there exists a pair of enemies on a bank, then Charon must be present. Contrapositive: If Charon is not present, then there is no pair of enemies. That exactly means the set of passengers on that bank contains no edge, i.e., is independent. So Lemma 1 is correct.
+
+Thus no false there.
+
+Maybe the false assertion is in the statement "We will show that for any graph G and any integer K ≥ 1, the following equivalence holds: G has a vertex cover of size ≤ K ⇔ the river crossing instance (G, k) with k := K + 1 is feasible." Perhaps the equivalence fails for K=0? They restrict K ≥ 1. So for K=0 they handle separately. So fine.
+
+Maybe the false is that they claim "This yields a polynomial-time many-one reduction from Vertex Cover to the river crossing problem (we comment on the K = 0 edge case at the end), proving NP-hardness." Many-one reduction requires mapping yes-instances to yes-instances and no-instances to no-instances. Their mapping: (G,K) -> (G, k=K+1). For K≥1, equivalence holds. For K=0, they handle separately mapping to either feasible or infeasible instance based on E empty or not. So overall reduction works.
+
+Thus seems correct.
+
+Maybe the false assertion is hidden in the initial problem statement lines P1-P11? Let's examine those.
+
+P1 | Problem Statement
+P2 | Problem: Algorithms - 11
+P3 | Consider a river crossing problem defined by the inputs n, k, and an n-vertex graph G.
+P4 | There are n passengers to be transported across a river by a pilot, Charon. The ferry has
+P5 | a maximum capacity of k individuals, which must include Charon to operate the vessel.
+P6 | The graph G defines conflict constraints: an edge between two vertices indicates that
+P7 | the corresponding passengers are enemies. The safety conditions dictate that no pair of
+P8 | enemies may be present together on either riverbank unless Charon is also present at
+P9 | that location.
+P10 | Prove that the decision problem of determining whether a valid sequence
+P11 | of crossings exists to transport all n passengers across the river is NP-hard.
+P12? Actually they have up to P11 only.
+
+So P10-P11: "Prove that the decision problem ... is NP-hard." That's the statement to prove. The text then gives a proof. So the assertion that it's NP-hard is the theorem they aim to prove. If the proof is correct, then the statement is true. If the proof is flawed, then the statement might be false (i.e., the problem might not be NP-hard). So we need to determine if the problem is actually NP-hard. Perhaps it's actually in P, making the theorem false. Let's think: Is the river crossing problem with conflict constraints NP-hard? I recall a known problem: "The jealous husbands problem" is a specific case where couples cannot be left without the husband. That's NP-complete? Actually the jealous husbands problem (also known as missionaries and cannibals) with arbitrary numbers is known to be solvable in polynomial time? I'm not sure.
+
+Let's analyze the problem more abstractly: We have a graph G representing conflicts (enemies). We need to move all vertices from left to right using a boat that can carry the pilot plus up to k-1 passengers. Constraint: On each bank, if pilot absent, the set of vertices there must be an independent set.
+
+This is reminiscent of graph searching or vertex cover. The reduction from Vertex Cover seems plausible.
+
+Let's attempt to see if the problem is actually solvable in polynomial time via some algorithm like checking if there exists a vertex cover of size ≤ k-1? Wait the reduction suggests feasibility iff there exists a vertex cover of size ≤ k-1 (since k = K+1). Actually the equivalence says: instance (G,k) feasible ↔ G has vertex cover of size ≤ k-1. Because they set K = k-1. So feasibility is equivalent to existence of vertex cover of size ≤ k-1. That is exactly the Vertex Cover decision problem: given G and integer k' = k-1, ask if there is vertex cover of size ≤ k'. Since Vertex Cover is NP-complete, the river crossing problem is NP-hard (and also in NP? Likely yes). So the problem is essentially equivalent to Vertex Cover. So if the equivalence holds, the problem is NP-complete.
+
+Thus the theorem is true if equivalence holds.
+
+We tested equivalence on several examples and it held. Let's try to find a counterexample where equivalence fails.
+
+We need to find a graph G and integer k such that either:
+
+- G has vertex cover of size ≤ k-1 but river crossing instance (G,k) infeasible, or
+
+- G has no vertex cover of size ≤ k-1 but instance feasible.
+
+We already tested some cases and they matched.
+
+Let's try to systematically think: Suppose k is large (≥ n+1). Then boat can carry all passengers plus Charon? Actually capacity k includes Charon, so max passengers k-1. If k-1 ≥ n, then Charon can take all passengers at once. Then feasibility trivial regardless of graph? Let's see: If Charon can take all passengers in one trip, then first trip: Charon takes all passengers to right bank. Left bank empty (independent). Right bank has all passengers with Charon present. So feasible. According to equivalence, we need vertex cover size ≤ k-1. Since k-1 ≥ n, any graph has vertex cover size ≤ n (trivially, V itself is a vertex cover). So condition holds. So equivalence holds.
+
+If k is very small, say k=1 (boat only Charon). Then feasibility requires that no move can leave any two enemies together unsupervised. As we argued, only possible if graph has no edges (since any move leaves at least two passengers on a bank unsupervised if n≥2). Actually if n≤1, trivial. For n≥2, any move of Charon alone leaves at least n passengers on a bank (if he leaves left bank) or n-1 passengers (if he takes none? He can't take passengers). Let's analyze: k=1 => boat capacity 1 includes Charon, so he can only go alone. Initially all passengers on left bank with Charon. If he goes alone to right, left bank has all passengers unsupervised. So need that set to be independent => graph must have no edges. If graph has no edges, then feasible: he can shuttle back and forth? Actually after first trip, left bank has all passengers (independent), right bank empty with Charon. He returns alone, left bank still all passengers (independent), right bank empty. He never moves any passengers. So he cannot get passengers across because he can't take any. So actually with k=1, he cannot transport any passengers because boat can't carry passengers. So the only way to get passengers across is if there are zero passengers (n=0). So for n≥2, infeasible regardless of graph? Wait if graph has no edges, he still cannot carry passengers, so cannot move them. So infeasible. Let's check equivalence: k=1 => k-1=0. Vertex cover size ≤0 means graph must have no edges. So equivalence predicts feasible iff graph edgeless. But we just argued that even if edgeless, infeasible because cannot carry passengers. Let's re-evaluate: With k=1, boat capacity 1 including Charon, so max passengers = 0. So he cannot take any passengers. So indeed cannot move any passengers across. So feasibility only if n=0 (no passengers). But Vertex Cover size ≤0 condition says graph edgeless, but does not restrict n. For n>0 edgeless graph, Vertex Cover size =0 (since empty set covers no edges). So equivalence would say feasible, but actually infeasible because cannot move passengers. However, maybe they consider that if there are no enemies, you can still move passengers by taking them one at a time? But capacity is 0 passengers, so cannot. So indeed the equivalence fails for k=1.
+
+But note they restrict k ≥ 1 (boat capacity counting pilot). In the reduction they set k = K+1 where K ≥ 1, so k ≥ 2. So they avoid k=1 case. Indeed they only consider K ≥ 1, thus k ≥ 2. So the equivalence is claimed for K ≥ 1 only. So they avoid the problematic k=1 case. So the theorem's statement "The above decision problem is NP-hard." The problem definition allows any k ≥ 1 (including k=1). To prove NP-hardness, they need to show hardness for some subset of instances (maybe with k≥2). Usually NP-hardness can be shown by restricting to a subclass where k≥2, which is fine because if the problem is NP-hard on a subclass, it's NP-hard overall (since the subclass is a subset of instances). So they can restrict to k≥2. Their reduction uses k = K+1 with K≥1, so k≥2. So they are proving hardness for instances where k≥2. That's sufficient to show the general problem is NP-hard (since if you can solve the general problem, you can solve the restricted version). So the theorem stands.
+
+Thus the false assertion might be elsewhere.
+
+Let's examine the line where they claim "If S = ∅(i.e., E = ∅), the instance is trivial: I = V is independent, and Charon can shuttle at most k −1 passengers at a time until everyone is on the right bank; when the boat is away, the left bank contains only an independent set, and the right bank also contains an independent set when Charon departs it."
+
+Potential false: When S = ∅, they claim Charon can shuttle at most k-1 passengers at a time. That's correct. But they also claim "when the boat is away, the left bank contains only an independent set, and the right bank also contains an independent set when Charon departs it." Let's verify: Suppose S empty, I=V independent. Charon shuttles passengers: each trip he takes up to k-1 passengers to right bank, returns maybe with fewer or none. When boat is away (Charon in boat), left bank has some subset of I (still independent). Right bank has some subset of I (those already dropped off) (still independent). So both banks independent when Charon absent. So correct.
+
+Now check the remark on K=0 case: they claim mapping to a fixed infeasible crossing instance (e.g., a triangle graph with k = 2) is infeasible because any first move would leave two adjacent vertices unsupervised on the left bank. We already validated that's correct.
+
+Thus all seems correct.
+
+Maybe the false assertion is in the statement "Lemma 1. At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set in G." Actually, the safety constraint says "No pair of enemies may be present together on either riverbank unless Charon is also present at that location." This means if Charon is present, enemies can be together; if Charon absent, enemies cannot be together. So the set of passengers on a bank when Charon absent must be an independent set. However, the lemma says "At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set in G." That's exactly the condition. So correct.
+
+But note: The safety constraint applies to each bank individually. The lemma says "At any time when Charon is not on a given bank, the set of passengers on that bank must form an independent set." That's fine.
+
+Now, maybe the false assertion is that they claim "Equivalently, whenever Charon departs a bank, the set he leaves behind must be independent." This is true because when Charon departs a bank, he is no longer on that bank, so the set he leaves behind is the set on that bank after departure, which must be independent. However, is the converse true? If whenever Charon departs a bank the set he leaves behind is independent, does that guarantee the safety constraint at all times? Possibly need also to consider the bank he is heading to? But they only need one direction for lemma.
+
+Thus lemma correct.
+
+Now, maybe the false assertion is in the statement "We will show that for any graph G and any integer K ≥ 1, the following equivalence holds: G has a vertex cover of size ≤ K ⇔ the river crossing instance (G, k) with k := K + 1 is feasible." Let's test edge case where K is large relative to n. Suppose K = n (so k = n+1). Then vertex cover size ≤ n always true (since V itself size n). So equivalence predicts feasible for any graph. Is it true that with boat capacity n+1 (including Charon) i.e., can carry up to n passengers, you can always solve? Boat can take all passengers at once (since max passengers n). So yes, take all passengers in one trip, left empty, right all with Charon. Feasible. So holds.
+
+Now test K = n-1 (k=n). Boat can carry up to n-1 passengers. Is it always feasible? Not necessarily: Consider graph that is a complete graph (clique) of n vertices. Minimum vertex cover size = n-1 (since to cover all edges you need all but at most one vertex). Actually for a clique, vertex cover size = n-1 (since any set of n-1 vertices covers all edges, leaving one vertex uncovered but edges incident to that vertex are covered by the other endpoint). So K = n-1 gives vertex cover size ≤ n-1 true (since min cover = n-1). So equivalence predicts feasible. Is it feasible with boat capacity n-1 passengers? Let's test n=3, clique triangle, k=3 (boat capacity 3 including Charon => max passengers 2). We already found feasible using algorithm with S size 2 (vertex cover). So works.
+
+For n=4, clique K4. Minimum vertex cover size = 3 (need at least 3 vertices to cover all edges). So K=3, k=4 (max passengers 3). Can we solve? Likely yes using similar algorithm with S size 3 (vertex cover) and I size 1 (independent). The algorithm should work: S size 3, pick j in S, J={j}, I={v}. Steps: take S to right, leave I on left; return with S\J (size 2) leaving J on right; take S\J + x (where x is the I vertex) to right; return with S leaving x on right; repeat for each I vertex (just one). Should work.
+
+Thus seems plausible.
+
+Maybe the false assertion is about the claim that "If S = ∅(i.e., E = ∅)" they equate S empty with E empty. That's true only if we consider that S empty means vertex cover of size 0, which implies no edges. However, there is a nuance: S empty means vertex cover of size 0, which is a vertex cover only if there are no edges. So S empty => E empty. Conversely, E empty => empty set is a vertex cover, so S empty possible. So equivalence holds.
+
+Thus fine.
+
+Let's consider if there is any subtle assumption about graph being simple undirected. They assume that. Fine.
+
+Maybe the false assertion is in the line numbers: they have line numbers like 0001, 0002, etc. The false assertion might be a line that says something like "We prove: Theorem 1. The above decision problem is NP-hard." That's the theorem they are proving; if the proof is correct, the theorem is true. But we are asked to identify a line that contains the false assertion. If the proof is correct, there is no false assertion. But the problem statement guarantees at least one assertion is false. So we must find it.
+
+Let's double-check the reduction for potential oversight: They claim that the first trip's passenger set S has size ≤ k-1 = K. That's correct because boat capacity k includes Charon, so max passengers k-1. However, is it necessary that the first trip must be from left to right? Could the first trip be from left to right with Charon alone (S empty) or could the first trip be from left to right with Charon and some passengers, but maybe the first trip could be from right to left? Initially all on left, so first trip must be left->right. So fine.
+
+Now, they claim that by Lemma 1, the set of passengers left behind on the left bank at that moment is V \ S, and it must be independent.

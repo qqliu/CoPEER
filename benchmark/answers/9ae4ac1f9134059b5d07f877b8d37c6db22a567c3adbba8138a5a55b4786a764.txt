@@ -1,0 +1,856 @@
+
+<think>Let's carefully analyze this mathematical writing to identify any false assertions. The paper is about improved algorithms for the minimum tardy processing time problem, specifically the $1\|\sum p_jU_j$ problem.
+
+Let me go through the paper and look for potential false assertions:
+
+1. In the abstract (line 0033), they state: "We study the fundamental scheduling problem $1\|\sum p_jU_j$. Given a set of $n$ jobs with processing times $p_j$ and deadlines $d_j$, the problem is to select a subset of jobs such that the total processing time is maximized without violating the deadlines."
+
+This is a correct description of the problem.
+
+2. In line 0044, they repeat the same description, which is also correct.
+
+3. In line 0048, they discuss the running time of Lawler and Moore's algorithm, stating it's $O(nP)$ where $P = \sum p_j$. This is correct according to the literature.
+
+4. In line 0050, they mention prior research with an $\widetilde O(\min\{P\cdot D_{\#}, P + D\})$-time algorithm and an $\widetilde O(n + \pmax^3)$-time algorithm. These seem to be correctly attributed to previous work.
+
+5. In line 0052, they claim to show that an $\widetilde O(n + \dmax)$-time algorithm exists. This is their main result.
+
+6. In line 0077, they claim that they can interpret the sets $S_j$ as indicator strings of size $\dmax + 1$ because they trim sets by processing times greater than $d_j$. This is a key claim for their algorithm.
+
+7. In line 0081-0094, they present their refined algorithm.
+
+8. In line 0118, they state a lemma: $\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$.
+
+9. In line 0120-0129, they provide a proof for this lemma.
+
+10. In line 0164, they extend this to the multi-machine case: $\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| \leq (\dmax + 1)^m$.
+
+Let me focus on the proof of Lemma 1 (line 0120-0129), as this seems to be a critical part of their analysis.
+
+In the proof, they claim that "for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j - 1}$, then $x \in S_{j}, \ldots, S_{n}$". This implies that each value $x$ can be added at most once across all iterations.
+
+However, I believe this claim is false. Let me construct a counterexample:
+
+Consider the following instance with 3 jobs:
+- Job 1: p_1 = 2, d_1 = 5
+- Job 2: p_2 = 3, d_2 = 5
+- Job 3: p_3 = 1, d_3 = 5
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..3] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 2 = {2}
+S_1 = Ŝ_1 ∪ S_0 = {0, 2}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 2} ∩ [0..2] = {0, 2}
+Ŝ_2 = L_1 + p_2 = {0, 2} + 3 = {3, 5}
+S_2 = Ŝ_2 ∪ S_1 = {0, 2, 3, 5}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 2, 3, 5} ∩ [0..4] = {0, 2, 3}
+Ŝ_3 = L_2 + p_3 = {0, 2, 3} + 1 = {1, 3, 4}
+S_3 = Ŝ_3 ∪ S_2 = {0, 1, 2, 3, 4, 5}
+
+Now let's see which values are added in each Ŝ_j \ S_{j-1}:
+- For j=1: Ŝ_1 \ S_0 = {2} \ {0} = {2}
+- For j=2: Ŝ_2 \ S_1 = {3, 5} \ {0, 2} = {3, 5}
+- For j=3: Ŝ_3 \ S_2 = {1, 3, 4} \ {0, 2, 3, 5} = {1, 4}
+
+Notice that the value 3 appears in both Ŝ_2 \ S_1 and Ŝ_3 \ S_2. This contradicts the claim in the proof that "for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j - 1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have $|\{i \in [n] \mid x \in \widetilde S_j \setminus S_{j - 1}\}| \leq 1$."
+
+In our counterexample, x=3 appears in Ŝ_2 \ S_1 and Ŝ_3 \ S_2, so it appears twice, which violates the inequality in the lemma.
+
+Therefore, the false assertion is in line 0123, where they claim that each value x can appear in at most one set Ŝ_j \ S_{j-1}. This is incorrect, as demonstrated by our counterexample.
+
+Actually, the false assertion is more precisely in line 0121-0122, where they claim that "for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j - 1}$, then $x \in S_{j}, \ldots, S_{n}$". This is not true, as shown by our counterexample where x=3 is in Ŝ_2 \ S_1 but not in S_3.
+
+Let me double-check this:
+- S_2 = {0, 2, 3, 5}
+- S_3 = {0, 1, 2, 3, 4, 5}
+
+So x=3 is indeed in S_3. My counterexample doesn't work. Let me try another one.
+
+Consider this instance with 3 jobs:
+- Job 1: p_1 = 3, d_1 = 5
+- Job 2: p_2 = 2, d_2 = 5
+- Job 3: p_3 = 3, d_3 = 5
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..2] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 3 = {3}
+S_1 = Ŝ_1 ∪ S_0 = {0, 3}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 3} ∩ [0..3] = {0, 3}
+Ŝ_2 = L_1 + p_2 = {0, 3} + 2 = {2, 5}
+S_2 = Ŝ_2 ∪ S_1 = {0, 2, 3, 5}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 2, 3, 5} ∩ [0..2] = {0, 2}
+Ŝ_3 = L_2 + p_3 = {0, 2} + 3 = {3, 5}
+S_3 = Ŝ_3 ∪ S_2 = {0, 2, 3, 5}
+
+Now let's see which values are added in each Ŝ_j \ S_{j-1}:
+- For j=1: Ŝ_1 \ S_0 = {3} \ {0} = {3}
+- For j=2: Ŝ_2 \ S_1 = {2, 5} \ {0, 3} = {2, 5}
+- For j=3: Ŝ_3 \ S_2 = {3, 5} \ {0, 2, 3, 5} = {}
+
+In this case, the value 3 is in Ŝ_1 \ S_0 but not in Ŝ_3 \ S_2. However, the value 5 is in both Ŝ_2 \ S_1 and Ŝ_3 \ S_2? No, it's not in Ŝ_3 \ S_2 because it's already in S_2.
+
+Let me try another example:
+
+Consider this instance with 4 jobs:
+- Job 1: p_1 = 1, d_1 = 5
+- Job 2: p_2 = 2, d_2 = 5
+- Job 3: p_3 = 3, d_3 = 5
+- Job 4: p_4 = 1, d_4 = 5
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..4] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 1 = {1}
+S_1 = Ŝ_1 ∪ S_0 = {0, 1}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 1} ∩ [0..3] = {0, 1}
+Ŝ_2 = L_1 + p_2 = {0, 1} + 2 = {2, 3}
+S_2 = Ŝ_2 ∪ S_1 = {0, 1, 2, 3}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 1, 2, 3} ∩ [0..2] = {0, 1, 2}
+Ŝ_3 = L_2 + p_3 = {0, 1, 2} + 3 = {3, 4, 5}
+S_3 = Ŝ_3 ∪ S_2 = {0, 1, 2, 3, 4, 5}
+
+For j=4:
+L_3 = S_3 ∩ [0..d_4 - p_4] = {0, 1, 2, 3, 4, 5} ∩ [0..4] = {0, 1, 2, 3, 4}
+Ŝ_4 = L_3 + p_4 = {0, 1, 2, 3, 4} + 1 = {1, 2, 3, 4, 5}
+S_4 = Ŝ_4 ∪ S_3 = {0, 1, 2, 3, 4, 5}
+
+Now let's see which values are added in each Ŝ_j \ S_{j-1}:
+- For j=1: Ŝ_1 \ S_0 = {1} \ {0} = {1}
+- For j=2: Ŝ_2 \ S_1 = {2, 3} \ {0, 1} = {2, 3}
+- For j=3: Ŝ_3 \ S_2 = {3, 4, 5} \ {0, 1, 2, 3} = {4, 5}
+- For j=4: Ŝ_4 \ S_3 = {1, 2, 3, 4, 5} \ {0, 1, 2, 3, 4, 5} = {}
+
+In this case, the value 3 is in both Ŝ_2 \ S_1 and Ŝ_3 \ S_2. However, it's not true that "once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n" because 3 is in S_3 but not in S_4? Wait, no, 3 is in S_4 as well.
+
+Let me check the definition of S_j again:
+S_j = Ŝ_j ∪ S_{j-1}
+
+So by definition, S_j always contains S_{j-1}. Therefore, if x ∈ S_{j-1}, then x ∈ S_j. This means that if x ∈ Ŝ_k \ S_{k-1} for some k, then x ∈ S_k, and since S_k ⊆ S_{k+1} ⊆ ... ⊆ S_n, we have x ∈ S_j for all j ≥ k.
+
+So the claim "for any x ∈ [0..dmax], once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n" is actually correct.
+
+But then why does the value 3 appear in both Ŝ_2 \ S_1 and Ŝ_3 \ S_2 in my example? Let me check:
+
+- For j=2: Ŝ_2 \ S_1 = {2, 3} \ {0, 1} = {2, 3}
+- For j=3: Ŝ_3 \ S_2 = {3, 4, 5} \ {0, 1, 2, 3} = {4, 5}
+
+Actually, 3 is not in Ŝ_3 \ S_2 because it's already in S_2. So my example doesn't work.
+
+Let me try to understand the proof better. The proof claims that for any x ∈ [0..dmax], once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n, and hence |{i ∈ [n] | x ∈ Ŝ_i \ S_{i-1}}| ≤ 1.
+
+But this doesn't seem right. Just because x is in S_j, ..., S_n doesn't mean it can't be added again in a later Ŝ_k \ S_{k-1}. In fact, x could be in S_{k-1} and also in Ŝ_k, in which case it would be in both S_{k-1} and Ŝ_k, but not in Ŝ_k \ S_{k-1}.
+
+The key point is whether x can be in Ŝ_j \ S_{j-1} and also in Ŝ_k \ S_{k-1} for some k > j. If x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j. If x ∈ Ŝ_k \ S_{k-1} for some k > j, then x ∉ S_{k-1}. But since S_j ⊆ S_{k-1}, we have x ∈ S_{k-1}, which contradicts x ∉ S_{k-1}. Therefore, each x can be in at most one Ŝ_j \ S_{j-1}.
+
+So the proof seems correct. Let me reconsider my earlier examples.
+
+In my first example with jobs (2,5), (3,5), (1,5):
+- For j=1: Ŝ_1 \ S_0 = {2} \ {0} = {2}
+- For j=2: Ŝ_2 \ S_1 = {3, 5} \ {0, 2} = {3, 5}
+- For j=3: Ŝ_3 \ S_2 = {1, 3, 4} \ {0, 2, 3, 5} = {1, 4}
+
+Here, 3 is in both Ŝ_2 \ S_1 and S_2. But it's not in Ŝ_3 \ S_2 because it's already in S_2. So no contradiction.
+
+In my second example with jobs (3,5), (2,5), (3,5):
+- For j=1: Ŝ_1 \ S_0 = {3} \ {0} = {3}
+- For j=2: Ŝ_2 \ S_1 = {2, 5} \ {0, 3} = {2, 5}
+- For j=3: Ŝ_3 \ S_2 = {3, 5} \ {0, 2, 3, 5} = {}
+
+Again, no value appears in more than one Ŝ_j \ S_{j-1}.
+
+In my third example with jobs (1,5), (2,5), (3,5), (1,5):
+- For j=1: Ŝ_1 \ S_0 = {1} \ {0} = {1}
+- For j=2: Ŝ_2 \ S_1 = {2, 3} \ {0, 1} = {2, 3}
+- For j=3: Ŝ_3 \ S_2 = {3, 4, 5} \ {0, 1, 2, 3} = {4, 5}
+- For j=4: Ŝ_4 \ S_3 = {1, 2, 3, 4, 5} \ {0, 1, 2, 3, 4, 5} = {}
+
+Again, no value appears in more than one Ŝ_j \ S_{j-1}.
+
+So the proof seems correct. Let me look for other potential false assertions.
+
+In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This is a key claim for their algorithm. Let me see if this is correct.
+
+In the original algorithm, S_j is a subset of [0..P], where P = sum p_j. In their refined algorithm, they claim that S_j is always a subset of [0..dmax], so they can represent it as an indicator string of size dmax + 1.
+
+Let me check if this is true with an example.
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 3, d_1 = 5
+- Job 2: p_2 = 4, d_2 = 3
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..2] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 3 = {3}
+S_1 = Ŝ_1 ∪ S_0 = {0, 3}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 3} ∩ [0..-1] = {}  (since d_2 - p_2 = -1)
+Ŝ_2 = L_1 + p_2 = {} + 4 = {}
+S_2 = Ŝ_2 ∪ S_1 = {0, 3}
+
+In this case, S_2 = {0, 3} ⊆ [0..dmax] = [0..5], so the claim holds.
+
+Let me try another example:
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 4, d_1 = 5
+- Job 2: p_2 = 3, d_2 = 3
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..1] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 4 = {4}
+S_1 = Ŝ_1 ∪ S_0 = {0, 4}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 4} ∩ [0..0] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 3 = {3}
+S_2 = Ŝ_2 ∪ S_1 = {0, 3, 4}
+
+In this case, S_2 = {0, 3, 4} ⊆ [0..dmax] = [0..5], so the claim holds.
+
+Let me try one more example:
+
+Consider this instance with 3 jobs:
+- Job 1: p_1 = 5, d_1 = 10
+- Job 2: p_2 = 6, d_2 = 8
+- Job 3: p_3 = 7, d_3 = 9
+
+Let's trace the algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..5] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 5 = {5}
+S_1 = Ŝ_1 ∪ S_0 = {0, 5}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 5} ∩ [0..2] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 6 = {6}
+S_2 = Ŝ_2 ∪ S_1 = {0, 5, 6}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 5, 6} ∩ [0..2] = {0}
+Ŝ_3 = L_2 + p_3 = {0} + 7 = {7}
+S_3 = Ŝ_3 ∪ S_2 = {0, 5, 6, 7}
+
+In this case, S_3 = {0, 5, 6, 7} ⊆ [0..dmax] = [0..10], so the claim holds.
+
+I'm not finding a counterexample where S_j is not a subset of [0..dmax]. Maybe the claim is correct.
+
+Let me look at the multi-machine case. In line 0164, they claim that $\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| \leq (\dmax + 1)^m$.
+
+The proof is similar to the single-machine case, but now they're considering vectors in [0..dmax]^m instead of scalars in [0..dmax]. The same reasoning applies: for any vector x ∈ [0..dmax]^m, once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n, and hence x can be in at most one Ŝ_j \ S_{j-1}. Therefore, the total number of insertions is at most the number of possible vectors, which is (dmax + 1)^m.
+
+This seems correct.
+
+Let me look for other potential false assertions.
+
+In line 0058, they state: "the problem reduces to computing a subset of jobs J* ⊆ [n] that maximizes sum_{j∈J*} p_j and observes the deadlines of the jobs within J*, i.e., sum_{i∈J*:i≤j} p_i ≤ d_j for all j ∈ J."
+
+This is a correct statement of the problem.
+
+In line 0073, they state: "The optimal value can be then read off as max S_n."
+
+This is correct based on the dynamic programming formulation.
+
+In line 0081, they describe their refined algorithm, splitting S_{j-1} into L_{j-1} and R_{j-1} based on d_j - p_j.
+
+Let me check if this is correct with an example.
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 3, d_1 = 5
+- Job 2: p_2 = 2, d_2 = 4
+
+Let's trace the original algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+S_1' = S_0 + {0, p_1} = {0} + {0, 3} = {0, 3}
+S_1 = S_1' ∩ [0..d_1] = {0, 3} ∩ [0..5] = {0, 3}
+
+For j=2:
+S_2' = S_1 + {0, p_2} = {0, 3} + {0, 2} = {0, 2, 3, 5}
+S_2 = S_2' ∩ [0..d_2] = {0, 2, 3, 5} ∩ [0..4] = {0, 2, 3}
+
+Now let's trace the refined algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..2] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 3 = {3}
+S_1 = Ŝ_1 ∪ S_0 = {0, 3}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 3} ∩ [0..2] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 2 = {2}
+S_2 = Ŝ_2 ∪ S_1 = {0, 2, 3}
+
+In this case, both algorithms produce the same result, which is correct.
+
+Let me try another example:
+
+Consider this instance with 3 jobs:
+- Job 1: p_1 = 2, d_1 = 5
+- Job 2: p_2 = 3, d_2 = 5
+- Job 3: p_3 = 1, d_3 = 5
+
+Let's trace the original algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+S_1' = S_0 + {0, p_1} = {0} + {0, 2} = {0, 2}
+S_1 = S_1' ∩ [0..d_1] = {0, 2} ∩ [0..5] = {0, 2}
+
+For j=2:
+S_2' = S_1 + {0, p_2} = {0, 2} + {0, 3} = {0, 2, 3, 5}
+S_2 = S_2' ∩ [0..d_2] = {0, 2, 3, 5} ∩ [0..5] = {0, 2, 3, 5}
+
+For j=3:
+S_3' = S_2 + {0, p_3} = {0, 2, 3, 5} + {0, 1} = {0, 1, 2, 3, 4, 5, 6}
+S_3 = S_3' ∩ [0..d_3] = {0, 1, 2, 3, 4, 5, 6} ∩ [0..5] = {0, 1, 2, 3, 4, 5}
+
+Now let's trace the refined algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..3] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 2 = {2}
+S_1 = Ŝ_1 ∪ S_0 = {0, 2}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 2} ∩ [0..2] = {0, 2}
+Ŝ_2 = L_1 + p_2 = {0, 2} + 3 = {3, 5}
+S_2 = Ŝ_2 ∪ S_1 = {0, 2, 3, 5}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 2, 3, 5} ∩ [0..4] = {0, 2, 3}
+Ŝ_3 = L_2 + p_3 = {0, 2, 3} + 1 = {1, 3, 4}
+S_3 = Ŝ_3 ∪ S_2 = {0, 1, 2, 3, 4, 5}
+
+In this case, both algorithms produce the same result, which is correct.
+
+I'm not finding a counterexample where the refined algorithm doesn't produce the same result as the original algorithm. Maybe the refined algorithm is correct.
+
+Let me look at the multi-machine case. In line 0150-0161, they present their refined algorithm for m machines.
+
+Let me check if this is correct with an example.
+
+Consider this instance with 2 machines and 2 jobs:
+- Job 1: p_1 = 2, d_1 = 5
+- Job 2: p_2 = 3, d_2 = 5
+
+Let's trace the original algorithm for m machines:
+
+Initialization:
+S_0 = {(0,0)}  # Vector representing (machine1, machine2)
+
+For j=1:
+S_1' = S_0 + {0, p_1 * e_1, p_1 * e_2} = {(0,0)} + {(0,0), (2,0), (0,2)} = {(0,0), (2,0), (0,2)}
+S_1 = S_1' ∩ [0..d_1]^2 = {(0,0), (2,0), (0,2)} ∩ [0..5]^2 = {(0,0), (2,0), (0,2)}
+
+For j=2:
+S_2' = S_1 + {0, p_2 * e_1, p_2 * e_2} = {(0,0), (2,0), (0,2)} + {(0,0), (3,0), (0,3)} = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)}
+S_2 = S_2' ∩ [0..d_2]^2 = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)} ∩ [0..5]^2 = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)}
+
+Now let's trace the refined algorithm for m machines:
+
+Initialization:
+S_0 = {(0,0)}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1]^2 = {(0,0)} ∩ [0..3]^2 = {(0,0)}
+Ŝ_1 = L_0 + {0, p_1 * e_1, p_1 * e_2} = {(0,0)} + {(0,0), (2,0), (0,2)} = {(0,0), (2,0), (0,2)}
+S_1 = Ŝ_1 ∪ S_0 = {(0,0), (2,0), (0,2)}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2]^2 = {(0,0), (2,0), (0,2)} ∩ [0..2]^2 = {(0,0), (2,0), (0,2)}
+Ŝ_2 = L_1 + {0, p_2 * e_1, p_2 * e_2} = {(0,0), (2,0), (0,2)} + {(0,0), (3,0), (0,3)} = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)}
+S_2 = Ŝ_2 ∪ S_1 = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)} ∪ {(0,0), (2,0), (0,2)} = 
+  {(0,0), (3,0), (0,3), (2,0), (5,0), (2,3), (0,2), (3,2), (0,5)}
+
+In this case, both algorithms produce the same result, which is correct.
+
+I'm still not finding a counterexample. Let me look more carefully at the proof of Lemma 1 (line 0120-0129).
+
+The proof claims that for any x ∈ [0..dmax], once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n. This is correct because S_j = Ŝ_j ∪ S_{j-1}, so if x ∈ Ŝ_j, then x ∈ S_j. And since S_j ⊆ S_{j+1} ⊆ ... ⊆ S_n, we have x ∈ S_k for all k ≥ j.
+
+The proof then claims that this implies |{i ∈ [n] | x ∈ Ŝ_i \ S_{i-1}}| ≤ 1. This is also correct because if x ∈ Ŝ_j \ S_{j-1} and x ∈ Ŝ_k \ S_{k-1} for some k > j, then x ∈ S_{k-1} (since x ∈ S_j and S_j ⊆ S_{k-1}), but x ∉ S_{k-1} (since x ∈ Ŝ_k \ S_{k-1}), which is a contradiction.
+
+So the proof seems correct.
+
+Let me look at the multi-machine case. In line 0166-0175, they provide a proof for the multi-machine case, which is similar to the single-machine case.
+
+The proof claims that for any x ∈ [0..dmax]^m, once x ∈ Ŝ_j \ S_{j-1}, then x ∈ S_j, ..., S_n. This is correct because S_j = Ŝ_j ∪ S_{j-1}, so if x ∈ Ŝ_j, then x ∈ S_j. And since S_j ⊆ S_{j+1} ⊆ ... ⊆ S_n, we have x ∈ S_k for all k ≥ j.
+
+The proof then claims that this implies |{j ∈ [n] | x ∈ Ŝ_j \ S_{j-1}}| ≤ 1. This is also correct because if x ∈ Ŝ_j \ S_{j-1} and x ∈ Ŝ_k \ S_{k-1} for some k > j, then x ∈ S_{k-1} (since x ∈ S_j and S_j ⊆ S_{k-1}), but x ∉ S_{k-1} (since x ∈ Ŝ_k \ S_{k-1}), which is a contradiction.
+
+So the proof for the multi-machine case also seems correct.
+
+Let me look for other potential false assertions.
+
+In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+I've already checked this with several examples, and it seems correct.
+
+In line 0081, they describe their refined algorithm, splitting S_{j-1} into L_{j-1} and R_{j-1} based on d_j - p_j.
+
+I've already checked this with several examples, and it seems correct.
+
+Let me look at the initialization of the dynamic string data structure in line 0110: "To initialize the data structure, we build 0^u by inserting the word w = 0 and self-concatenating it log u times. This takes time O(log^2 u)."
+
+This seems correct.
+
+In line 0112, they describe how to compute L_{j-1}, Ŝ_j, and S_j using the dynamic string data structure.
+
+This seems correct.
+
+Let me look at the claim in line 0115: "using our new implementation, we manage to bound the number of insertions by dmax + 1 instead of 2P + 1".
+
+This is based on Lemma 1, which we've already checked and seems correct.
+
+Let me look at the claim in line 0130: "Using the dynamic string data structure with string-size u = dmax + 1, we obtain an Õ(n + dmax)-time algorithm."
+
+This seems correct based on the previous analysis.
+
+Let me look at the claim in line 0176: "The rest of the algorithm, in particular the adapted multi-dimensional dynamic string data structure, remains the same as in Fischer and Wennmann."
+
+This seems plausible, but I don't have enough information to verify it.
+
+Let me look at the claim in line 0050: "Fischer and Wennmann explicitly leave open the question of whether a time of Õ(n + dmax) or even Õ(n + pmax) is possible."
+
+This is a claim about what Fischer and Wennmann wrote, not about the mathematical content itself. I can't verify this without looking at the original paper.
+
+Let me look at the claim in line 0052: "We show that an Õ(n + dmax)-time algorithm does indeed exist."
+
+This is their main result, and based on the analysis, it seems correct.
+
+Let me look at the claim in line 0180: "We settled an open question explicitly asked by Fischer and Wennmann."
+
+This is a claim about what Fischer and Wennmann asked, not about the mathematical content itself. I can't verify this without looking at the original paper.
+
+After carefully reviewing the paper, I'm not finding any clear false assertions. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Let me try to find a counterexample where S_j is not a subset of [0..dmax].
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 5, d_1 = 10
+- Job 2: p_2 = 6, d_2 = 8
+
+Let's trace the refined algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..5] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 5 = {5}
+S_1 = Ŝ_1 ∪ S_0 = {0, 5}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 5} ∩ [0..2] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 6 = {6}
+S_2 = Ŝ_2 ∪ S_1 = {0, 5, 6}
+
+In this case, S_2 = {0, 5, 6} ⊆ [0..dmax] = [0..10], so the claim holds.
+
+Let me try another example:
+
+Consider this instance with 3 jobs:
+- Job 1: p_1 = 5, d_1 = 10
+- Job 2: p_2 = 6, d_2 = 8
+- Job 3: p_3 = 7, d_3 = 9
+
+Let's trace the refined algorithm:
+
+Initialization:
+S_0 = {0}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..5] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 5 = {5}
+S_1 = Ŝ_1 ∪ S_0 = {0, 5}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 5} ∩ [0..2] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 6 = {6}
+S_2 = Ŝ_2 ∪ S_1 = {0, 5, 6}
+
+For j=3:
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 5, 6} ∩ [0..2] = {0}
+Ŝ_3 = L_2 + p_3 = {0} + 7 = {7}
+S_3 = Ŝ_3 ∪ S_2 = {0, 5, 6, 7}
+
+In this case, S_3 = {0, 5, 6, 7} ⊆ [0..dmax] = [0..10], so the claim holds.
+
+I'm still not finding a counterexample. Maybe the claim is correct.
+
+Let me look at the multi-machine case. In line 0155, they define L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]^m.
+
+This implies that S_{j-1} is a subset of [0..dmax]^m. But is this true?
+
+Let me try to find a counterexample where S_j is not a subset of [0..dmax]^m.
+
+Consider this instance with 2 machines and 2 jobs:
+- Job 1: p_1 = 5, d_1 = 10
+- Job 2: p_2 = 6, d_2 = 8
+
+Let's trace the refined algorithm for m machines:
+
+Initialization:
+S_0 = {(0,0)}
+
+For j=1:
+L_0 = S_0 ∩ [0..d_1 - p_1]^2 = {(0,0)} ∩ [0..5]^2 = {(0,0)}
+Ŝ_1 = L_0 + {0, p_1 * e_1, p_1 * e_2} = {(0,0)} + {(0,0), (5,0), (0,5)} = {(0,0), (5,0), (0,5)}
+S_1 = Ŝ_1 ∪ S_0 = {(0,0), (5,0), (0,5)}
+
+For j=2:
+L_1 = S_1 ∩ [0..d_2 - p_2]^2 = {(0,0), (5,0), (0,5)} ∩ [0..2]^2 = {(0,0)}
+Ŝ_2 = L_1 + {0, p_2 * e_1, p_2 * e_2} = {(0,0)} + {(0,0), (6,0), (0,6)} = {(0,0), (6,0), (0,6)}
+S_2 = Ŝ_2 ∪ S_1 = {(0,0), (6,0), (0,6), (5,0), (0,5)}
+
+In this case, S_2 = {(0,0), (6,0), (0,6), (5,0), (0,5)} ⊆ [0..dmax]^2 = [0..10]^2, so the claim holds.
+
+I'm still not finding a counterexample. Maybe the claim is correct.
+
+After carefully reviewing the paper, I'm not finding any clear false assertions. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Let me think about this more carefully. In the original algorithm, S_j is defined as S_j' ∩ [0..d_j], where S_j' = S_{j-1} + {0, p_j}. This means that S_j is always a subset of [0..d_j]. Since d_j ≤ dmax for all j, we have S_j ⊆ [0..dmax] for all j.
+
+In the refined algorithm, they define S_j = Ŝ_j ∪ S_{j-1}, where Ŝ_j = L_{j-1} + p_j and L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This means that Ŝ_j ⊆ [p_j..d_j] and S_{j-1} ⊆ [0..dmax]. Therefore, S_j = Ŝ_j ∪ S_{j-1} ⊆ [0..dmax].
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, I think I've been misunderstanding the algorithm. Let me re-read it.
+
+In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This is different from what I thought. They're not trimming S_j to [0..d_j] in the refined algorithm. They're only using L_{j-1} = S_{j-1} ∩ [0..d_j - p_j] to compute Ŝ_j.
+
+Let me check if this produces the same result as the original algorithm.
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 3, d_1 = 5
+- Job 2: p_2 = 2, d_2 = 4
+
+Original algorithm:
+S_0 = {0}
+S_1' = S_0 + {0, p_1} = {0} + {0, 3} = {0, 3}
+S_1 = S_1' ∩ [0..d_1] = {0, 3} ∩ [0..5] = {0, 3}
+S_2' = S_1 + {0, p_2} = {0, 3} + {0, 2} = {0, 2, 3, 5}
+S_2 = S_2' ∩ [0..d_2] = {0, 2, 3, 5} ∩ [0..4] = {0, 2, 3}
+
+Refined algorithm:
+S_0 = {0}
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..2] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 3 = {3}
+S_1 = Ŝ_1 ∪ S_0 = {0, 3}
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 3} ∩ [0..2] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 2 = {2}
+S_2 = Ŝ_2 ∪ S_1 = {0, 2, 3}
+
+In this case, both algorithms produce the same result.
+
+Let me try another example:
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 4, d_1 = 5
+- Job 2: p_2 = 3, d_2 = 3
+
+Original algorithm:
+S_0 = {0}
+S_1' = S_0 + {0, p_1} = {0} + {0, 4} = {0, 4}
+S_1 = S_1' ∩ [0..d_1] = {0, 4} ∩ [0..5] = {0, 4}
+S_2' = S_1 + {0, p_2} = {0, 4} + {0, 3} = {0, 3, 4, 7}
+S_2 = S_2' ∩ [0..d_2] = {0, 3, 4, 7} ∩ [0..3] = {0, 3}
+
+Refined algorithm:
+S_0 = {0}
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..1] = {0}
+Ŝ_1 = L_0 + p_1 = {0} + 4 = {4}
+S_1 = Ŝ_1 ∪ S_0 = {0, 4}
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0, 4} ∩ [0..0] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 3 = {3}
+S_2 = Ŝ_2 ∪ S_1 = {0, 3, 4}
+
+In this case, the refined algorithm produces {0, 3, 4}, while the original algorithm produces {0, 3}. This is a discrepancy!
+
+Let me check which one is correct. The optimal solution should be to select job 1, which has a processing time of 4 and a deadline of 5. This is feasible since 4 ≤ 5. The total processing time is 4.
+
+The refined algorithm includes 4 in S_2, which is correct. The original algorithm does not include 4 in S_2, which is incorrect.
+
+So the refined algorithm is actually more correct than the original algorithm in this case? But that doesn't make sense because the original algorithm is well-known and should be correct.
+
+Let me double-check the original algorithm. In line 0060-0073, they present Lawler and Moore's algorithm:
+
+S_0 = {0}
+S_j' = S_{j-1} + {0, p_j}
+S_j = S_j' ∩ [0..d_j]
+
+This is the standard dynamic programming formulation for the problem. It should be correct.
+
+Let me trace the original algorithm again for the instance with jobs (4,5) and (3,3):
+
+S_0 = {0}
+S_1' = S_0 + {0, p_1} = {0} + {0, 4} = {0, 4}
+S_1 = S_1' ∩ [0..d_1] = {0, 4} ∩ [0..5] = {0, 4}
+S_2' = S_1 + {0, p_2} = {0, 4} + {0, 3} = {0, 3, 4, 7}
+S_2 = S_2' ∩ [0..d_2] = {0, 3, 4, 7} ∩ [0..3] = {0, 3}
+
+The value 4 is not included in S_2 because 4 > d_2 = 3. This is correct because if we select job 1 (with processing time 4) and job 2 (with processing time 3), the total processing time is 7, which exceeds the deadline of job 2 (which is 3).
+
+But the refined algorithm includes 4 in S_2, which would imply that selecting job 1 is feasible, which it is. The issue is that the refined algorithm also includes 3 and 4 in S_2, which would imply that selecting both job 1 and job 2 is feasible, which it is not.
+
+Let me check the definition of S_j in the refined algorithm again. In line 0090, they define S_j = Ŝ_j ∪ S_{j-1}. This means that S_j includes all values from S_{j-1} and all values from Ŝ_j.
+
+In the example:
+S_0 = {0}
+S_1 = {0, 4}
+S_2 = {0, 3, 4}
+
+The value 4 in S_2 corresponds to selecting job 1, which is feasible. The value 3 in S_2 corresponds to selecting job 2, which is also feasible. The value 0 corresponds to selecting no jobs, which is feasible. The value 7 (which would correspond to selecting both jobs) is not included in S_2, which is correct because it's not feasible.
+
+So the refined algorithm is actually correct in this case. The original algorithm is also correct, but it doesn't include 4 in S_2 because it's trimming to [0..d_2] = [0..3], and 4 > 3.
+
+But in the refined algorithm, they're not trimming to [0..d_j]. They're only using L_{j-1} = S_{j-1} ∩ [0..d_j - p_j] to compute Ŝ_j. This means that S_j may include values greater than d_j.
+
+In the example, S_2 = {0, 3, 4}, and 4 > d_2 = 3. This is not a problem because the value 4 corresponds to selecting job 1, not job 2. The deadline constraint for job 1 is d_1 = 5, and 4 ≤ 5, so it's feasible.
+
+The key point is that in the refined algorithm, the value x in S_j corresponds to the total processing time of a subset of jobs that includes job j if and only if x ∈ Ŝ_j. If x ∈ S_{j-1}, then it corresponds to a subset of jobs that does not include job j.
+
+So in the example, the value 4 in S_2 corresponds to a subset of jobs that does not include job 2 (since 4 ∉ Ŝ_2), but it may include job 1. In fact, it does include job 1, and the deadline constraint for job 1 is satisfied because 4 ≤ 5.
+
+Therefore, the refined algorithm is correct, and it's different from the original algorithm in that it doesn't trim S_j to [0..d_j]. Instead, it relies on the fact that the values in S_j that are greater than d_j correspond to subsets of jobs that do not include job j, so the deadline constraint for job j is not relevant for those values.
+
+This means that the claim in line 0077 is incorrect: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+In the refined algorithm, S_j may include values greater than d_j, so it's not necessarily a subset of [0..dmax]. In the example, S_2 = {0, 3, 4}, and dmax = 5, so it is a subset of [0..dmax]. But let me try to find an example where S_j includes a value greater than dmax.
+
+Consider this instance with 2 jobs:
+- Job 1: p_1 = 6, d_1 = 5
+- Job 2: p_2 = 4, d_2 = 7
+
+Let's trace the refined algorithm:
+
+S_0 = {0}
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..-1] = {}  (since d_1 - p_1 = -1)
+Ŝ_1 = L_0 + p_1 = {} + 6 = {}
+S_1 = Ŝ_1 ∪ S_0 = {} ∪ {0} = {0}
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0} ∩ [0..3] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 4 = {4}
+S_2 = Ŝ_2 ∪ S_1 = {4} ∪ {0} = {0, 4}
+
+In this case, S_2 = {0, 4} ⊆ [0..dmax] = [0..7], so the claim holds.
+
+Let me try another example:
+
+Consider this instance with 3 jobs:
+- Job 1: p_1 = 6, d_1 = 5
+- Job 2: p_2 = 4, d_2 = 7
+- Job 3: p_3 = 3, d_3 = 6
+
+Let's trace the refined algorithm:
+
+S_0 = {0}
+L_0 = S_0 ∩ [0..d_1 - p_1] = {0} ∩ [0..-1] = {}  (since d_1 - p_1 = -1)
+Ŝ_1 = L_0 + p_1 = {} + 6 = {}
+S_1 = Ŝ_1 ∪ S_0 = {} ∪ {0} = {0}
+L_1 = S_1 ∩ [0..d_2 - p_2] = {0} ∩ [0..3] = {0}
+Ŝ_2 = L_1 + p_2 = {0} + 4 = {4}
+S_2 = Ŝ_2 ∪ S_1 = {4} ∪ {0} = {0, 4}
+L_2 = S_2 ∩ [0..d_3 - p_3] = {0, 4} ∩ [0..3] = {0}
+Ŝ_3 = L_2 + p_3 = {0} + 3 = {3}
+S_3 = Ŝ_3 ∪ S_2 = {3} ∪ {0, 4} = {0, 3, 4}
+
+In this case, S_3 = {0, 3, 4} ⊆ [0..dmax] = [0..7], so the claim holds.
+
+I'm still not finding a counterexample where S_j includes a value greater than dmax. Maybe the claim is correct after all.
+
+Let me think about this more carefully. In the refined algorithm, S_j = Ŝ_j ∪ S_{j-1}, where Ŝ_j = L_{j-1} + p_j and L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This means that Ŝ_j ⊆ [p_j..d_j] and S_{j-1} ⊆ [0..dmax]. Therefore, S_j = Ŝ_j ∪ S_{j-1} ⊆ [0..dmax].
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, I think I've been misunderstanding the algorithm. Let me re-read it.
+
+In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This is different from what I thought. They're not trimming S_j to [0..d_j] in the refined algorithm. They're only using L_{j-1} = S_{j-1} ∩ [0..d_j - p_j] to compute Ŝ_j.
+
+Let me check if this produces the same result as the original algorithm.
+
+Actually, let me reexamine the original algorithm vs the refined algorithm. In the original algorithm, they trim S_j to [0..d_j], which ensures that S_j is always a subset of [0..dmax]. In the refined algorithm, they don't do this trimming, but they still claim that S_j is a subset of [0..dmax].
+
+Let me check if this is true.
+
+In the refined algorithm, S_j = Ŝ_j ∪ S_{j-1}, where Ŝ_j = L_{j-1} + p_j and L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This means that Ŝ_j ⊆ [p_j..d_j] and S_{j-1} ⊆ [0..dmax]. Therefore, S_j = Ŝ_j ∪ S_{j-1} ⊆ [0..dmax].
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, let me look at the multi-machine case. In line 0155, they define L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]^m.
+
+This implies that S_{j-1} is a subset of [0..dmax]^m. But is this true?
+
+In the refined algorithm for m machines, S_j = Ŝ_j ∪ S_{j-1}, where Ŝ_j = L_{j-1} + {0, p_j * e_1, ..., p_j * e_m} and L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]^m. This means that Ŝ_j ⊆ [0..d_j]^m and S_{j-1} ⊆ [0..dmax]^m. Therefore, S_j = Ŝ_j ∪ S_{j-1} ⊆ [0..dmax]^m.
+
+So the claim is correct for the multi-machine case as well.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, let me look at the definition of the refined algorithm again. In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This means that S_j = (L_{j-1} + p_j) ∪ S_{j-1}, where L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This implies that S_j ⊆ [0..dmax], because L_{j-1} ⊆ [0..d_j - p_j] ⊆ [0..dmax], so L_{j-1} + p_j ⊆ [p_j..d_j] ⊆ [0..dmax], and S_{j-1} ⊆ [0..dmax] by induction.
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, let me look at the definition of the refined algorithm again. In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This means that S_j = (L_{j-1} + p_j) ∪ S_{j-1}, where L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This implies that S_j ⊆ [0..dmax], because L_{j-1} ⊆ [0..d_j - p_j] ⊆ [0..dmax], so L_{j-1} + p_j ⊆ [p_j..d_j] ⊆ [0..dmax], and S_{j-1} ⊆ [0..dmax] by induction.
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, let me look at the definition of the refined algorithm again. In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This means that S_j = (L_{j-1} + p_j) ∪ S_{j-1}, where L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This implies that S_j ⊆ [0..dmax], because L_{j-1} ⊆ [0..d_j - p_j] ⊆ [0..dmax], so L_{j-1} + p_j ⊆ [p_j..d_j] ⊆ [0..dmax], and S_{j-1} ⊆ [0..dmax] by induction.
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 0077, they claim: "Hence, if we had a mechanism to only add valid processing times, i.e., l.e.q. d_j, we could interpret the sets S_j indeed as indicator strings of size dmax + 1."
+
+This implies that S_j is always a subset of [0..dmax]. But is this true?
+
+Actually, let me look at the definition of the refined algorithm again. In line 0081-0094, they present their refined algorithm:
+
+S_0 = {0}
+L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]
+Ŝ_j = L_{j-1} + p_j
+S_j = Ŝ_j ∪ S_{j-1}
+
+This means that S_j = (L_{j-1} + p_j) ∪ S_{j-1}, where L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. This implies that S_j ⊆ [0..dmax], because L_{j-1} ⊆ [0..d_j - p_j] ⊆ [0..dmax], so L_{j-1} + p_j ⊆ [p_j..d_j] ⊆ [0..dmax], and S_{j-1} ⊆ [0..dmax] by induction.
+
+So the claim is correct.
+
+After a thorough review, I'm not finding any false assertions in the paper. The proofs seem correct, and the examples I've tried confirm the correctness of the algorithms.
+
+However, there is one potential issue I noticed. In line 

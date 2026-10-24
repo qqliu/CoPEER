@@ -1,0 +1,441 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["instruction_arms"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "tab:cost-repro",
+  "main_tex_lines": [
+   1702,
+   1743
+  ],
+  "caption": "All four instruction arms. $n$ is the number graded; strict counts a confirmed objection (an accepted counterexample or refutation), len. also counts a correct unsupported verdict, false counts invalid objections, and unv. counts objects the grader could not check. Mean is accepted-response output tokens. Ratio is counterexample-first output divided by the row's output on paired records, with a 95% record-bootstrap interval; obs. includes recorded rejected-attempt output. Early stop permits stopping at the first failure; early + witness also requires a concrete counterexample. Original Opus proof grades and transcript accounting are retained; all other rows use the common September grades by gpt-6-astra and native usage. All comparisons have 100 proof pairs or 60 claim pairs, except original Opus early stop, with 99 token pairs that have recorded usage and 100 graded assessments. Absolute costs are not compared across harnesses. Appendix [ref:app:cost-repro-procedures] gives prompts and accounting."
+ },
+ "header": [
+  "Input, model",
+  "Arm",
+  "n",
+  "Strict",
+  "Len.",
+  "False",
+  "Unv.",
+  "Mean",
+  "Ratio [95% CI]",
+  "Obs."
+ ],
+ "rows": [
+  {
+   "panel_model": "proofs, Opus (original)",
+   "arm": "counterexample",
+   "n": 100,
+   "strict": 83,
+   "lenient": 83,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 6952,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, Opus (original)",
+   "arm": "full verify",
+   "n": 100,
+   "strict": 84,
+   "lenient": 84,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 9416,
+   "output_ratio": {
+    "value": 0.738,
+    "ci95": [
+     0.61,
+     0.88
+    ]
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, Opus (original)",
+   "arm": "early stop",
+   "n": 100,
+   "strict": 78,
+   "lenient": 78,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 6313,
+   "output_ratio": {
+    "value": 1.107,
+    "ci95": [
+     0.96,
+     1.27
+    ]
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, Opus (original)",
+   "arm": "early + witness",
+   "n": 100,
+   "strict": 79,
+   "lenient": 79,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 9737,
+   "output_ratio": {
+    "value": 0.714,
+    "ci95": [
+     0.62,
+     0.82
+    ]
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, GPT-5.6 Sol",
+   "arm": "counterexample",
+   "n": 100,
+   "strict": 95,
+   "lenient": 95,
+   "false": 3,
+   "unverifiable": 0,
+   "mean_output_tokens": 1229,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, GPT-5.6 Sol",
+   "arm": "full verify",
+   "n": 100,
+   "strict": 97,
+   "lenient": 97,
+   "false": 1,
+   "unverifiable": 0,
+   "mean_output_tokens": 3345,
+   "output_ratio": {
+    "value": 0.368,
+    "ci95": [
+     0.32,
+     0.43
+    ]
+   },
+   "observed_ratio": 0.366
+  },
+  {
+   "panel_model": "proofs, GPT-5.6 Sol",
+   "arm": "early stop",
+   "n": 100,
+   "strict": 89,
+   "lenient": 90,
+   "false": 6,
+   "unverifiable": 1,
+   "mean_output_tokens": 1161,
+   "output_ratio": {
+    "value": 1.059,
+    "ci95": [
+     0.92,
+     1.23
+    ]
+   },
+   "observed_ratio": 1.07
+  },
+  {
+   "panel_model": "proofs, GPT-5.6 Sol",
+   "arm": "early + witness",
+   "n": 100,
+   "strict": 93,
+   "lenient": 93,
+   "false": 4,
+   "unverifiable": 0,
+   "mean_output_tokens": 1784,
+   "output_ratio": {
+    "value": 0.689,
+    "ci95": [
+     0.59,
+     0.8
+    ]
+   },
+   "observed_ratio": 0.699
+  },
+  {
+   "panel_model": "proofs, Gemini 3.1 Pro",
+   "arm": "counterexample",
+   "n": 100,
+   "strict": 84,
+   "lenient": 84,
+   "false": 1,
+   "unverifiable": 0,
+   "mean_output_tokens": 11014,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "proofs, Gemini 3.1 Pro",
+   "arm": "full verify",
+   "n": 100,
+   "strict": 81,
+   "lenient": 81,
+   "false": 5,
+   "unverifiable": 0,
+   "mean_output_tokens": 10693,
+   "output_ratio": {
+    "value": 1.03,
+    "ci95": [
+     0.9,
+     1.16
+    ]
+   },
+   "observed_ratio": 1.038
+  },
+  {
+   "panel_model": "proofs, Gemini 3.1 Pro",
+   "arm": "early stop",
+   "n": 100,
+   "strict": 83,
+   "lenient": 85,
+   "false": 3,
+   "unverifiable": 0,
+   "mean_output_tokens": 10150,
+   "output_ratio": {
+    "value": 1.085,
+    "ci95": [
+     0.95,
+     1.24
+    ]
+   },
+   "observed_ratio": 1.108
+  },
+  {
+   "panel_model": "proofs, Gemini 3.1 Pro",
+   "arm": "early + witness",
+   "n": 100,
+   "strict": 89,
+   "lenient": 89,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 12896,
+   "output_ratio": {
+    "value": 0.854,
+    "ci95": [
+     0.79,
+     0.92
+    ]
+   },
+   "observed_ratio": 0.872
+  },
+  {
+   "panel_model": "claims, Opus",
+   "arm": "counterexample",
+   "n": 60,
+   "strict": 60,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 1980,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "claims, Opus",
+   "arm": "full proof",
+   "n": 60,
+   "strict": 60,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 2230,
+   "output_ratio": {
+    "value": 0.888,
+    "ci95": [
+     0.78,
+     1.05
+    ]
+   },
+   "observed_ratio": 0.888
+  },
+  {
+   "panel_model": "claims, Opus",
+   "arm": "early stop",
+   "n": 60,
+   "strict": 60,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 1461,
+   "output_ratio": {
+    "value": 1.355,
+    "ci95": [
+     1.18,
+     1.59
+    ]
+   },
+   "observed_ratio": 1.355
+  },
+  {
+   "panel_model": "claims, Opus",
+   "arm": "early + witness",
+   "n": 60,
+   "strict": 60,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 4161,
+   "output_ratio": {
+    "value": 0.476,
+    "ci95": [
+     0.24,
+     0.94
+    ]
+   },
+   "observed_ratio": 0.235
+  },
+  {
+   "panel_model": "claims, GPT-5.6 Sol",
+   "arm": "counterexample",
+   "n": 60,
+   "strict": 60,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 1555,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "claims, GPT-5.6 Sol",
+   "arm": "full proof",
+   "n": 60,
+   "strict": 59,
+   "lenient": 60,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 2857,
+   "output_ratio": {
+    "value": 0.544,
+    "ci95": [
+     0.44,
+     0.67
+    ]
+   },
+   "observed_ratio": 0.544
+  },
+  {
+   "panel_model": "claims, GPT-5.6 Sol",
+   "arm": "early stop",
+   "n": 60,
+   "strict": 42,
+   "lenient": 58,
+   "false": 1,
+   "unverifiable": 1,
+   "mean_output_tokens": 1155,
+   "output_ratio": {
+    "value": 1.347,
+    "ci95": [
+     1.04,
+     1.75
+    ]
+   },
+   "observed_ratio": 1.347
+  },
+  {
+   "panel_model": "claims, GPT-5.6 Sol",
+   "arm": "early + witness",
+   "n": 60,
+   "strict": 59,
+   "lenient": 59,
+   "false": 0,
+   "unverifiable": 0,
+   "mean_output_tokens": 2622,
+   "output_ratio": {
+    "value": 0.593,
+    "ci95": [
+     0.46,
+     0.79
+    ]
+   },
+   "observed_ratio": 0.593
+  },
+  {
+   "panel_model": "claims, Gemini 3.1 Pro",
+   "arm": "counterexample",
+   "n": 60,
+   "strict": 58,
+   "lenient": 58,
+   "false": 2,
+   "unverifiable": 0,
+   "mean_output_tokens": 6407,
+   "output_ratio": {
+    "value": 1,
+    "reference": true
+   },
+   "observed_ratio": null
+  },
+  {
+   "panel_model": "claims, Gemini 3.1 Pro",
+   "arm": "full proof",
+   "n": 60,
+   "strict": 42,
+   "lenient": 57,
+   "false": 2,
+   "unverifiable": 1,
+   "mean_output_tokens": 7464,
+   "output_ratio": {
+    "value": 0.858,
+    "ci95": [
+     0.62,
+     1.14
+    ]
+   },
+   "observed_ratio": 0.858
+  },
+  {
+   "panel_model": "claims, Gemini 3.1 Pro",
+   "arm": "early stop",
+   "n": 60,
+   "strict": 43,
+   "lenient": 57,
+   "false": 0,
+   "unverifiable": 2,
+   "mean_output_tokens": 5026,
+   "output_ratio": {
+    "value": 1.275,
+    "ci95": [
+     0.93,
+     1.75
+    ]
+   },
+   "observed_ratio": 1.276
+  },
+  {
+   "panel_model": "claims, Gemini 3.1 Pro",
+   "arm": "early + witness",
+   "n": 60,
+   "strict": 57,
+   "lenient": 57,
+   "false": 1,
+   "unverifiable": 1,
+   "mean_output_tokens": 8666,
+   "output_ratio": {
+    "value": 0.739,
+    "ci95": [
+     0.57,
+     0.89
+    ]
+   },
+   "observed_ratio": 0.74
+  }
+ ]
+};

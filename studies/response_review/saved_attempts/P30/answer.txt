@@ -1,0 +1,169 @@
+We need to find a false assertion in the given solution. The problem: Xi geometric with mean 2, i.e., success probability p = 1/2, distribution: P(Xi = k) = (1-p)^{k-1} p = (1/2)^{k-1} * (1/2) = (1/2)^k. That's correct. Sum X has mean 2n. Chernoff bound using MGF. Let's check the MGF derivation.
+
+For geometric distribution with support k = 1,2,... with pmf (1-p)^{k-1} p, MGF: M(t) = E[e^{t X}] = p e^{t} / (1 - (1-p) e^{t}) for t < -ln(1-p). With p=1/2, (1-p)=1/2. So M(t) = (1/2) e^{t} / (1 - (1/2) e^{t}) = e^{t} / (2 - e^{t}). Indeed matches given expression: e^{t}/(2 - e^{t}) for t < ln 2 (since need e^{t}/2 < 1 => e^{t} < 2 => t < ln 2). Good.
+
+Then they said M_X(t) = (M_{X_i}(t))^n = (e^{t}/(2 - e^{t}))^n.
+
+Ok.
+
+Then Chernoff: Pr[X > a] ≤ M(t) e^{-t a} for t>0.
+
+Set a = (1+δ)2n = (1+δ)E[X].
+
+Thus bound: ≤ (e^{t}/(2 - e^{t}))^n * exp{-t (1+δ)2n} = [ e^{t}/(2 - e^{t}) * e^{-2(1+δ) t} ]^n = [ e^{t} e^{-2(1+δ) t} / (2 - e^{t}) ]^n = [ e^{t (1 - 2(1+δ))} / (2 - e^{t}) ]^n = [ e^{-t (1+2δ)} / (2 - e^{t}) ]^n.
+
+Wait compute: exponent: t - 2(1+δ) t = t (1 - 2 - 2δ) = t (-1 - 2δ) = -(1+2δ) t. So yes: bound = [ e^{-(1+2δ) t} / (2 - e^{t}) ]^n. They wrote as f(y)^n with y = e^{t}. Indeed f(y) = y^{-(1+2δ)} / (2 - y). Let's verify: y = e^{t}. Then e^{-(1+2δ) t} = y^{-(1+2δ)}. Denominator 2 - e^{t} = 2 - y. So f(y) = y^{-(1+2δ)} / (2 - y). Good.
+
+Now they attempted to simplify: they wrote f(y) = y exp{-2(1+δ) ln y} / (2 - y) = y * y^{-2(1+δ)} / (2 - y) = y^{1-2(1+δ)} / (2 - y) = y^{-(1+2δ)} / (2 - y). Yes matches. Good.
+
+Then they set derivative of ln f(y). ln f(y) = -(1+2δ) ln y - ln(2 - y). Derivative: d/dy [-(1+2δ) ln y] = -(1+2δ) * 1/y. Derivative of -ln(2 - y) = -[ -1/(2 - y)] = +1/(2 - y). So derivative = -(1+2δ)/y + 1/(2 - y). Set =0 => 1/(2 - y) = (1+2δ)/y => cross multiply: y = (1+2δ)(2 - y) => y = 2(1+2δ) - y(1+2δ) => y + y(1+2δ) = 2(1+2δ) => y[1 + (1+2δ)] = 2(1+2δ) => y (2 + 2δ) = 2(1+2δ) => y = [2(1+2δ)]/[2(1+δ)] = (1+2δ)/(1+δ). Yes.
+
+Now we need to verify that this y is indeed in (1,2) for δ>0. Compute y = (1+2δ)/(1+δ). For δ>0, numerator > denominator? Let's check: (1+2δ)/(1+δ) = 1 + δ/(1+δ). Actually compute: (1+2δ) = (1+δ) + δ. So ratio = 1 + δ/(1+δ). Since δ>0, δ/(1+δ) in (0,1). So y in (1,2). Good.
+
+Now they claim that this yields a minimum because second derivative >0. Let's check second derivative of ln f(y): d2/dy2 [-(1+2δ) ln y - ln(2 - y)] = derivative of -(1+2δ)/y + 1/(2 - y) = (1+2δ)/y^2 + 1/(2 - y)^2. Since both terms positive for y in (1,2). So indeed convex, thus unique minimum.
+
+Now compute f(y*) they derived: f(y*) = y*^{-(1+2δ)} / (2 - y*). Let's compute directly to verify their expression.
+
+Let y* = (1+2δ)/(1+δ). Compute 2 - y* = 2 - (1+2δ)/(1+δ) = [2(1+δ) - (1+2δ)]/(1+δ) = [2+2δ -1 -2δ]/(1+δ) = (1)/(1+δ). So denominator = 1/(1+δ). Good.
+
+Now numerator: y*^{-(1+2δ)} = [ (1+2δ)/(1+δ) ]^{-(1+2δ)} = [ (1+δ)/(1+2δ) ]^{(1+2δ)}.
+
+Thus f(y*) = [ (1+δ)/(1+2δ) ]^{(1+2δ)} / [ 1/(1+δ) ] = [ (1+δ)/(1+2δ) ]^{(1+2δ)} * (1+δ). So f(y*) = (1+δ) * [ (1+δ)/(1+2δ) ]^{(1+2δ)}.
+
+Simplify: = (1+δ)^{1 + (1+2δ)} / (1+2δ)^{(1+2δ)} = (1+δ)^{(2+2δ)} / (1+2δ)^{(1+2δ)}. Wait exponent: 1 + (1+2δ) = 2+2δ. Yes.
+
+Thus f(y*) = (1+δ)^{2+2δ} / (1+2δ)^{1+2δ}. That matches their final expression? They wrote: Pr ≤ ((1+δ) 2+2δ / (1+2δ) 1+2δ)! n . Actually they wrote: ((1 + δ) 2+2δ)/( (1 + 2δ) 1+2δ )! n . That is exactly ( (1+δ)^{2+2δ} / (1+2δ)^{1+2δ} )^n. Good.
+
+Thus the bound seems correct.
+
+Now we need to find a false assertion. Maybe the MGF derivation is slightly off: they wrote MXi(t) = e^{t}/(2 - e^{t}) . But check: MGF of geometric with support starting at 1: M(t) = p e^{t} / (1 - (1-p) e^{t}). With p=1/2: numerator = (1/2) e^{t}; denominator = 1 - (1/2) e^{t} = (2 - e^{t})/2. So M(t) = ((1/2) e^{t}) / ((2 - e^{t})/2) = e^{t} / (2 - e^{t}). Yes correct.
+
+Check step where they wrote "For t < ln 2 (so that et/2 < 1)" Actually condition for convergence of geometric series sum_{k=1}∞ (e^{t}/2)^k is |e^{t}/2| < 1 => e^{t} < 2 => t < ln 2. They wrote et/2 < 1, okay.
+
+Now the Chernoff bound: they used Markov inequality on e^{tX} for t>0, which is valid because e^{tX} >=0. Bound: Pr[X > a] = Pr[e^{tX} > e^{ta}] ≤ E[e^{tX}] / e^{ta}. Yes.
+
+Thus seems all correct.
+
+Potential false assertion: They claim that the mean is indeed E[Xi] = 1/p = 2. That's correct for geometric distribution counting number of trials until first success inclusive. Yes.
+
+Maybe the false assertion is that they claim "Pr[X > (1 + δ)2n] ≤ ..." is an optimized upper bound obtained by Chernoff technique. However the Chernoff bound gives an upper bound for any t>0; minimizing over t gives the best bound among those of the form exp(-t a) M(t). This is indeed the Chernoff bound. So seems fine.
+
+Maybe the false assertion is about the domain of t: they said for any 0 < t < ln 2. Actually the bound holds for any t>0 such that MGF exists, which is t < ln 2. Since they also require t>0 for Markov's inequality (they need t>0 to apply to upper tail). So t in (0, ln 2). That's correct.
+
+Maybe the false assertion is in the algebraic manipulation when they simplified f(y). Let's double-check lines 0099-0117.
+
+They wrote:
+
+et
+2 −et
+
+e 2(1+δ)t =
+et
+2 −et · e−2(1+δ)t = et exp{−2(1 + δ)t}
+2 −et
+.
+
+Wait line 0099: "et
+2 −et
+
+e 2(1+δ)t =" There's a weird formatting; maybe they meant multiply? Let's parse: They had expression inside (2): MX(t) exp{-t(1+δ)2n} = ( (et)/(2 - et) )^n * exp{-2n(1+δ)t}. Then inside the nth power they considered the factor: (et)/(2 - et) * e^{-2(1+δ)t}. They wrote:
+
+et
+2 −et
+
+e 2(1+δ)t =
+et
+2 −et · e−2(1+δ)t = et exp{−2(1 + δ)t}
+2 −et
+.
+
+Actually they probably meant: (et)/(2 - et) * e^{-2(1+δ)t} = et * e^{-2(1+δ)t} / (2 - et) = et exp{-2(1+δ)t} / (2 - et). That's correct.
+
+Then they set y = e^{t}. Then they wrote:
+
+f(y) = y exp{−2(1 + δ) ln y}
+2 −y
+=
+y
+2 −y · y^{−2(1+δ)} = y^{1−2(1+δ)}
+2 −y
+= y^{−(1+2δ)}
+2 −y
+.
+
+Check: y exp{-2(1+δ) ln y} = y * y^{-2(1+δ)} = y^{1 - 2(1+δ)} = y^{-(1+2δ)}. Yes.
+
+Thus f(y) = y^{-(1+2δ)} / (2 - y). Good.
+
+Then they differentiate ln f(y) = -(1+2δ) ln y - ln(2 - y). derivative: -(1+2δ)/y + 1/(2 - y). Set =0 => 1/(2 - y) = (1+2δ)/y. Cross multiply: y = (1+2δ)(2 - y) => y = 2(1+2δ) - y(1+2δ) => y + y(1+2δ) = 2(1+2δ) => y(1 + 1 + 2δ) = 2(1+2δ) => y(2 + 2δ) = 2(1+2δ) => y = (2(1+2δ))/(2(1+δ)) = (1+2δ)/(1+δ). Good.
+
+Now they claim that this is unique critical point in domain (1,2). Yes.
+
+Now they claim second derivative >0: d2/dy2 ln f(y) = (1+2δ)/y^2 + 1/(2 - y)^2 >0. Good.
+
+Thus the bound seems correct.
+
+Maybe false assertion is that they claim the bound is "optimized (minimal) upper bound obtained by the Chernoff technique." Actually Chernoff technique yields bound of form inf_{t>0} e^{-t a} M(t). That's the best bound of that exponential form. So correct.
+
+Maybe false assertion is about the KL divergence form: They claim Pr[X > (1+δ)2n] ≤ exp{-n D(1+δ ∥1)} where D(1+δ ∥1) is KL divergence between Bernoulli(1/(1+δ)) and Bernoulli(1/2). Let's verify. For sum of i.i.d. geometric? Actually Chernoff bound for sums of i.i.d. can be expressed via Cramér's theorem: rate function I(a) = sup_{t≥0} [t a - log M(t)]. For geometric with MGF as above, the rate function for mean > 2n? Actually we want Pr[X > (1+δ)2n] = Pr[ X/n > 2(1+δ) ]. The rate function for sample mean of geometric? The rate function for exponential family? Might be expressed as KL divergence between two distributions? Possibly not exactly as they wrote.
+
+Let's test: For geometric distribution with pmf (1/2)^k, the cumulant generating function is log M(t) = t - log(2 - e^{t}). The Legendre transform: I(x) = sup_{t≥0} [t x - (t - log(2 - e^{t}))] = sup_{t≥0} [t (x-1) + log(2 - e^{t})]. Setting derivative zero: (x-1) + (e^{t}/(2 - e^{t})) =0? Wait derivative of log(2 - e^{t}) is -e^{t}/(2 - e^{t}). Actually d/dt log(2 - e^{t}) = (-e^{t})/(2 - e^{t}). So derivative of t(x-1) + log(2 - e^{t}) is (x-1) - e^{t}/(2 - e^{t}). Set =0 => e^{t}/(2 - e^{t}) = x-1 => e^{t} = (x-1)(2 - e^{t}) => e^{t} = 2(x-1) - (x-1) e^{t} => e^{t}[1 + (x-1)] = 2(x-1) => e^{t} * x = 2(x-1) => e^{t} = 2(x-1)/x. So t* = log(2(x-1)/x). This requires 2(x-1)/x < 2? Actually need t*< ln2 for MGF existence: e^{t} < 2 => 2(x-1)/x < 2 => (x-1)/x <1 => always true for x>1. Also need e^{t}>0 => x>1. So for x>1 we have valid t*. Plug back: I(x) = t* x - log M(t*) = t* x - [t* - log(2 - e^{t*})] = t* x - t* + log(2 - e^{t*}) = t*(x-1) + log(2 - e^{t*}). Now e^{t*} = 2(x-1)/x. Then 2 - e^{t*} = 2 - 2(x-1)/x = (2x - 2(x-1))/x = (2x -2x +2)/x = 2/x. So log(2 - e^{t*}) = log(2/x) = log 2 - log x. Also t* = log(2(x-1)/x). So I(x) = (x-1) log(2(x-1)/x) + log 2 - log x. Simplify: I(x) = (x-1)[log 2 + log(x-1) - log x] + log 2 - log x = (x-1)log2 + (x-1)log(x-1) - (x-1)log x + log2 - log x = [ (x-1)+1] log2 + (x-1)log(x-1) - [ (x-1)+1] log x = x log2 + (x-1)log(x-1) - x log x. So I(x) = x log 2 + (x-1) log(x-1) - x log x.
+
+Now we want Pr[X > (1+δ)2n] = Pr[ X/n > 2(1+δ) ]. Let sample mean = X/n. So we set x = 2(1+δ). Then I(x) = x log 2 + (x-1) log(x-1) - x log x. Plug x=2(1+δ). Compute: x log 2 = 2(1+δ) log2. (x-1) = 2(1+δ)-1 = 2+2δ -1 =1+2δ. So (x-1) log(x-1) = (1+2δ) log(1+2δ). And - x log x = -2(1+δ) log[2(1+δ)]. So I = 2(1+δ) log2 + (1+2δ) log(1+2δ) - 2(1+δ)[log2 + log(1+δ)] = 2(1+δ)log2 + (1+2δ)log(1+2δ) -2(1+δ)log2 -2(1+δ)log(1+δ) = (1+2δ)log(1+2δ) - 2(1+δ)log(1+δ). So I = (1+2δ) log(1+2δ) - 2(1+δ) log(1+δ). Note that this is n times? Actually Pr[X > (1+δ)2n] ≈ exp{-n I}. So bound exponent is n * [ (1+2δ) log(1+2δ) - 2(1+δ) log(1+δ) ].
+
+Now compare with their expression: They gave bound as ((1+δ)^{2+2δ} / (1+2δ)^{1+2δ})^n. Take log: n[ (2+2δ) log(1+δ) - (1+2δ) log(1+2δ) ] = n[ 2(1+δ) log(1+δ) - (1+2δ) log(1+2δ) ] = -n[ (1+2δ) log(1+2δ) - 2(1+δ) log(1+δ) ] = -n * I. Indeed matches the rate function (negative). So their bound is exp{-n I}. Good.
+
+Thus the KL divergence form they gave: Pr[X > (1+δ)2n] ≤ exp{-n D(1+δ ∥1)} where D(1+δ ∥1) is KL divergence between Bernoulli(1/(1+δ)) and Bernoulli(1/2). Let's compute that KL divergence: D( Bernoulli(q) ∥ Bernoulli(p) ) = q log(q/p) + (1-q) log((1-q)/(1-p)). Here they say Bernoulli(1/(1+δ)) vs Bernoulli(1/2). So q = 1/(1+δ), p = 1/2. Then D = q log( q / (1/2) ) + (1-q) log( (1-q) / (1/2) ) = q log(2q) + (1-q) log(2(1-q)). Compute: q = 1/(1+δ). Then 2q = 2/(1+δ). 1-q = 1 - 1/(1+δ) = (1+δ -1)/(1+δ) = δ/(1+δ). Then 2(1-q) = 2δ/(1+δ). So D = (1/(1+δ)) log(2/(1+δ)) + (δ/(1+δ)) log(2δ/(1+δ)). Factor 1/(1+δ): D = [ log(2/(1+δ)) + δ log(2δ/(1+δ)) ] / (1+δ). Multiply numerator: = [ log 2 - log(1+δ) + δ (log 2 + log δ - log(1+δ)) ] / (1+δ) = [ log2 - log(1+δ) + δ log2 + δ log δ - δ log(1+δ) ] / (1+δ) = [ (1+δ) log2 + δ log δ - (1+δ) log(1+δ) ] / (1+δ) = log2 + [δ log δ]/(1+δ) - log(1+δ). So D = log2 - log(1+δ) + (δ/(1+δ)) log δ.
+
+Now multiply by n: n D = n[ log2 - log(1+δ) + (δ/(1+δ)) log δ ].
+
+But our exponent I = (1+2δ) log(1+2δ) - 2(1+δ) log(1+δ). Are these equal? Let's test numeric: choose δ=1. Then I = (1+2) log3 - 2*2 log2 = 3 log3 -4 log2 ≈ 3*1.0986 -4*0.6931 = 3.2958 -2.7724 =0.5234. So bound ≈ exp(-0.5234 n). Their KL divergence: D = log2 - log2 + (1/2) log1? Wait δ=1: log2 - log(1+δ)=log2 - log2 =0. plus (δ/(1+δ)) log δ = (1/2)*log1 =0. So D=0. That's not correct. So their KL divergence statement is false. Indeed they claimed D(1+δ ∥1) is KL divergence between Bernoulli(1/(1+δ)) and Bernoulli(1/2). That gives zero when δ=1? Actually Bernoulli(1/2) vs Bernoulli(1/2) yields zero, but our rate function is not zero for δ=1. So false.
+
+Thus the false assertion is the line where they express the bound as exp{-n D(1+δ ∥1)} with that KL divergence definition. Let's locate that line in the text.
+
+Search: lines 0249-0258:
+
+0249 | Pr[X > (1 + δ)2n] ≤exp
+0250 | 
+0251 | −n D(1 + δ ∥1)
+0252 | 
+0253 | ,
+0254 | where D(1+δ ∥1) is the Kullback–Leibler divergence (relative entropy) between a Bernoulli(
+0255 | 1
+0256 | 1+δ)
+0257 | distribution and a Bernoulli(1
+0258 | 2) — giving another way to recognize the same result.
+
+Thus the false assertion is in lines 0249-0258, specifically the claim that the bound equals exp{-n D(1+δ ∥1)} with that KL divergence. The exact false assertion could be line 0251: "-n D(1 + δ ∥1)" or line 0254-0258 describing the KL divergence. The problem asks: identify a line that contains the false assertion. If same assertion appears more than once, any occurrence accepted. So we can pick line 0251 (the expression) or line 0254 (the description). Probably line 0251 is the core false assertion.
+
+Thus answer: candidates: maybe 0251, 0254, 0255 etc. Provide up to three. Claim: The assertion that the Chernoff bound equals exp{-n D(1+δ ∥1)} where D is KL divergence between Bernoulli(1/(1+δ)) and Bernoulli(1/2) is false. Counterexample: take δ=1, n=1; then the bound gives exp{-D}=exp{0}=1, but actual probability Pr[X > 4] for sum of one geometric with mean 2 is Pr[X>4] = Pr[Xi>4] = (1/2)^4 = 1/16, which is <1, but the bound of 1 is trivial not false? Actually need a case where the claimed bound is violated (i.e., actual probability > bound). Bound of 1 is always >= probability, so not a violation. Need a case where the claimed bound is less than true probability. Let's test δ=0.5. Compute actual bound from correct expression: Bound = ((1+δ)^{2+2δ}/(1+2δ)^{1+2δ})^n. For δ=0.5, compute: (1.5)^{2+1}= (1.5)^3 = 3.375; denominator: (1+2*0.5)=2, exponent 1+2δ = 1+1=2 => denominator = 2^2=4. So bound per n = (3.375/4)=0.84375. For n=1, bound=0.84375. Actual probability Pr[X > (1+δ)2n] = Pr[X > 3] for geometric with mean 2: Pr[Xi >3] = sum_{k=4}∞ (1/2)^k = (1/2)^4 / (1-1/2) = (1/16)/(1/2)=1/8=0.125. So bound 0.84375 > 0.125, ok.
+
+We need case where claimed bound (using their KL divergence) is smaller than true probability. Their claimed bound is exp{-n D}. For δ=0.5, compute D: log2 - log(1.5) + (0.5/1.5) log0.5 = 0.6931 -0.4055 + (0.3333)*(-0.6931)=0.6931-0.4055-0.2310=0.0566. So exp{-D}=exp{-0.0566}=0.945. That's larger than true probability 0.125, still not violating.
+
+We need D larger than -log(true probability). For n=1, we need D > -log(P). Since P = Pr[X > (1+δ)2] = tail of geometric. Let's compute -log(P) for δ small? For δ→0, threshold →2n, probability ~? For n=1, threshold just above mean 2, probability Pr[X>2] = Pr[Xi>2] = sum_{k=3}∞ (1/2)^k = (1/2)^3/(1-1/2)=1/8 / 0.5 = 1/4 =0.25. So -log(0.25)=1.386. D for δ small? Approx δ→0: D ≈ log2 - log(1+δ) + (δ/(1+δ)) log δ ≈ log2 - (δ - δ^2/2...) + δ log δ (approx). For small δ, log2 ≈0.693, -log(1+δ)≈ -δ, δ log δ →0 negative large? Actually δ log δ →0 (since δ→0, log δ → -∞, product →0? limit 0). So D≈0.693 - δ. So D ~0.693 for small δ, far less than 1.386. So exp{-D}~0.5, which is >0.25? Actually exp{-0.693}=0.5 >0.25. So still not violating.
+
+Maybe need n>1 to amplify difference. Since bound scales as exp{-n D}, true probability decays as exp{-n I}. If D < I, then exp{-n D} > exp{-n I} (i.e., bound larger than true probability, not violating). If D > I, then exp{-n D} < exp{-n I} (bound too small, could be violated). So we need D > I. Let's test numeric: compute I and D for some δ.
+
+We already computed I = (1+2δ) log(1+2δ) - 2(1+δ) log(1+δ). D = log2 - log(1+δ) + (δ/(1+δ)) log δ.
+
+Let's test δ=2. Compute I: (1+4)=5 log5 - 2*3 log3 =5*1.6094 -3*1.0986*2? Wait 2(1+δ)=2*3=6, so I =5 log5 -6 log3 =5*1.6094 -6*1.0986 =8.047 -6.5916=1.4554. D: log2 - log3 + (2/3) log2 =0.6931 -1.0986 +0.6667*0.6931=0.6931-1.0986+0.4621=0.0566. So D=0.0566 << I. So D<I.
+
+Thus D seems always less than I? Let's test δ=0.1: I = (1+0.2)=1.2 log1.2 -2*1.1 log1.1 =1.2*0.1823 -2.2*0.0953 =0.2188 -0.2097=0.0091. D: log2 - log1.1 + (0.1/1.1) log0.1 =0.6931 -0.0953 +0.0909*(-2.3026)=0.6931-0.0953-0.2093=0.3885. So D=0.3885 > I=0.0091. So for small δ, D > I. Thus claimed bound exp{-n D} is smaller than true bound exp{-n I} (since exponent larger magnitude). So for sufficiently small δ and moderate n, the claimed bound may be too low, violating actual probability.
+
+Check n=1, δ=0.1: Claimed bound = exp{-D}=exp{-0.3885}=0.678. Actual probability Pr[X > (1+δ)2] = Pr[X > 2.2] => need X>=3? Since X integer sum of one geometric, threshold 2.2 => X>2.2 means X≥3. Probability = Pr[Xi>=3] = sum_{k=3}∞ (1/2)^k = (1/2)^3/(1-1/2)=1/8 /0.5=0.25. So actual probability 0.25 < claimed bound 0.678, so bound not violated (it's an overestimate). Wait we need bound lower than actual probability to be false (i.e., they claim ≤ bound, but actual > bound). Here actual 0.25 ≤ 0.678, so bound holds (it's not a counterexample). Need actual > bound. For bound to be too low, we need D > -log(P). Since -log(P) = -log(0.25)=1.386. D=0.3885 <1.386, so bound is not low enough.
+
+We need D > -log(P). For n=1, -log(P) = -log(Pr[Xi > 2(1+δ)]). Compute P = Pr[Xi > 2(1+δ)] = sum_{k > 2(1+δ)} (1/2)^k. Since threshold may not be integer. For simplicity, take n large so we can approximate using large deviations: true probability ≈ exp{-n I}. Their bound ≈ exp{-n D}. If D > I, then their bound is smaller than true probability for large n (since exponent more negative). So for sufficiently large n, we will have actual probability > their bound (since true probability decays slower). So we can pick e.g., δ=0.1, n=100. Then true probability ≈ exp{-100*I} with I≈0.0091 => exp{-0.91}=0.402. Their bound ≈ exp{-100*D}=exp{-38.85}=~1.5e-17, which is far smaller. So actual probability >> their bound, violating the inequality. So counterexample: δ=0.1, n sufficiently large (say n=100). Provide one sentence.
+
+Thus false assertion is the KL divergence form. Provide claim: The bound expressed as exp{-n D(1+δ ∥1)} with D as KL divergence between Bernoulli(1/(1+δ)) and Bernoulli(1/2) is incorrect. Counterexample: take δ=0.1 and n=100; then the true tail probability is about 0.4 while the claimed bound is astronomically smaller (~10^{-17}), violating the inequality.
+
+Now we need to output JSON with candidates list (up to three lines). Choose lines: 0251 (the expression), 0254 (the description), maybe 0250 (the line with exp). Provide claim and counterexample.
+
+Thus final answer.
+
+</think>
+
+{
+  "candidates": [0251, 0254, 0250],
+  "claim": "The Chernoff bound can be written as Pr[X > (1+δ)2n] ≤ exp{−n D(1+δ ∥1)} where D(1+δ ∥1) is the Kullback–Leibler divergence between a Bernoulli(1/(1+δ)) and a Bernoulli(1/2).",
+  "counterexample": "For δ = 0.1 and n = 100, the true tail probability is about 0.4 while the claimed bound is exp{−100·D} ≈ 1.5×10^{−17}, which is far smaller, violating the inequality."
+}

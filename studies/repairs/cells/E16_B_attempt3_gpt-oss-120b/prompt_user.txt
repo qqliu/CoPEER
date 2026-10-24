@@ -1,0 +1,168 @@
+# Record E16: Image of the x-axis under a shear
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E16 (proofwiki_120506__codex_expansion)
+public source: https://proofwiki.org/wiki/Angle_is_not_Invariant_under_Affine_Transformation
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Title: Angle is not Invariant under Affine Transformation
+P0002 | 
+P0003 | The [[Definition:Angle|angle]] between two [[Definition:Straight Line|(straight) lines]] does not necessarily stay the same under an [[Definition:Affine Transformation|affine transformation]].
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | In order to prove this, we can supply a counter example. Consider the transformation:
+0002 | \[ \LL : \mathbb{R}^2 \rightarrow \mathbb{R}^2 \\ \LL : \paren {x, y} \mapsto \paren{x, x + y} \]
+0003 | 
+0004 | We can check that $\LL$ is an affine transformation. Indeed, if we denote $A = \paren{x_A, y_A}$ and $B = \paren{x_B, y_B}$ two points of the [[Definition:Euclidean Plane|Euclidean plane]], then we have:
+0005 | 
+0006 | \[ \LL (A) - \LL (B) = \paren{x_A - x_B, x_A - x_B + y_A - y_B} = \paren{x_\vec{AB}, x_\vec{AB} + y_\vec{AB}}\]
+0007 | This final expression being a linear transformation of $\vec{AB}$, it follows that $\LL$ is indeed an affine transformation.
+0008 | 
+0009 | Furthermore, the [[Definition:Axis/X-Axis|$x$-axis]] represented by the equation $Ox: y=0$ is transformed into $\LL (Ox) : x + y = 0$, and the [[Definition:Axis/Y-Axis|$y$-axis]] represented by the equation $Oy: x=0$ is transformed into $\LL (Oy) : x = 0$.
+0010 | 
+0011 | Finally putting the pieces together, we see that $\angle \paren{Ox,Oy} = \frac{\pi}{2} \ne \frac{\pi}{4} = \angle \paren{\LL (Ox), \LL (Oy)}$.
+0012 | That is to say, the angle between two lines does not necessarily stay the same under an affine transformation.
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+the [[Definition:Axis/X-Axis|$x$-axis]] represented by the equation $Ox: y=0$ is transformed into $\LL (Ox) : x + y = 0$
+located at line label(s): 0009
+
+## Located defective declaration
+
+Declaration: `ProofWiki120506CodexExpansion.SourceImageClaim`
+
+```lean
+def XAxis : Set (ℝ × ℝ) := {p | p.2 = 0}
+def Claimed : Set (ℝ × ℝ) := {q | q.1 + q.2 = 0}
+def SourceImageClaim : Prop := L '' XAxis = Claimed
+```
+
+Stored proof-text line 0009 states that the x-axis Ox: y = 0 is transformed by the source's map L(x, y) = (x, x + y) (line 0002) into the line x + y = 0. As the set equality L '' XAxis = Claimed this is the located defect. Supply the defining equation of the actual image line and prove the set equality (both inclusions) for the source's fixed map; the record's endpoint is that corrected statement itself (the page's angle conclusion is not part of this record).
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/- Record proofwiki_120506__codex_expansion (E16): Mathlib file (`import Mathlib`, as the released file).
+
+Source: the ProofWiki page "Angle is not Invariant under Affine Transformation" (stored problem text P0001-P0003,
+proof text lines 0001-0012). Line 0002 defines the map L : R^2 → R^2, (x, y) ↦ (x, x + y); `L` below is that
+map as a real linear map, `XAxis` is the x-axis {(x, y) | y = 0} and `Claimed` is the line x + y = 0.
+The located claim (line 0009) is that the x-axis is transformed into the line x + y = 0: `SourceImageClaim`
+(the image of the x-axis under L equals Claimed). -/
+import Mathlib
+/-! The source shear is a genuine real linear map, hence an affine map. -/
+namespace ProofWiki120506CodexExpansion
+
+def L : (ℝ × ℝ) →ₗ[ℝ] (ℝ × ℝ) where
+  toFun p := (p.1, p.1 + p.2)
+  map_add' p q := by ext <;> dsimp <;> ring
+  map_smul' c p := by ext <;> dsimp <;> ring
+
+def XAxis : Set (ℝ × ℝ) := {p | p.2 = 0}
+def Claimed : Set (ℝ × ℝ) := {q | q.1 + q.2 = 0}
+
+/-- The located claim (stored line 0009): the image of the x-axis under `L` is the line `x + y = 0`. -/
+def SourceImageClaim : Prop := L '' XAxis = Claimed
+
+end ProofWiki120506CodexExpansion
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record proofwiki_120506__codex_expansion (E16): the point (1, 0) lies on the x-axis, its image under L is
+(1, 1), which is not on the line x + y = 0; so the image of the x-axis is not contained in that line. -/
+namespace ProofWiki120506CodexExpansion
+
+theorem unit_point_on_axis : ((1 : ℝ), (0 : ℝ)) ∈ XAxis := rfl
+
+theorem image_of_unit_point : L ((1 : ℝ), (0 : ℝ)) = ((1 : ℝ), (1 : ℝ)) := by
+  simp [L]
+
+theorem image_point_off_claimed_line : L ((1 : ℝ), (0 : ℝ)) ∉ Claimed := by
+  rw [image_of_unit_point]
+  simp [Claimed]
+
+theorem image_not_subset_claimed : ¬ (L '' XAxis ⊆ Claimed) := by
+  intro h
+  apply image_point_off_claimed_line
+  apply h
+  exact ⟨((1 : ℝ), (0 : ℝ)), unit_point_on_axis, rfl⟩
+
+theorem source_image_claim_false : ¬ SourceImageClaim := by
+  intro h
+  apply image_not_subset_claimed
+  rw [SourceImageClaim] at h
+  rw [h]
+
+end ProofWiki120506CodexExpansion
+
+#print axioms ProofWiki120506CodexExpansion.image_not_subset_claimed
+#print axioms ProofWiki120506CodexExpansion.source_image_claim_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E16: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace ProofWiki120506CodexExpansion
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The defining condition of the corrected image line, as a statement about a point `q : ℝ × ℝ` with
+coordinates `q.1`, `q.2`. The hole must be ONE linear equation `<left> = <right>` whose sides are built from
+`q.1`, `q.2`, integer literals, `+`, `-` and `*` by a literal (e.g. `3 * q.1 - 2 * q.2 = 5`); it must mention
+`q.1` or `q.2`; no `∧`/`∨`/`¬`/quantifiers, no membership, no `L`, `XAxis` or `Claimed`. -/
+def onImageLine (q : ℝ × ℝ) : Prop := «HOLE»
+
+/-- The corrected image line (shape fixed). -/
+def imageLine : Set (ℝ × ℝ) := {q | onImageLine q}
+
+/-- The corrected located statement (shape fixed): the image of the x-axis under the source's map `L` is
+exactly the line `imageLine` (both inclusions). -/
+def CorrectedImage : Prop := L '' XAxis = imageLine
+-- ===== END FIXED PART =====
+
+end ProofWiki120506CodexExpansion
+```
+
+Allowed edit: Replace the hole in `onImageLine` by ONE linear equation in q.1 and q.2 with integer-literal coefficients (terms `c * q.i`, `q.i` and literals joined by + and -; mention q.1 or q.2; no ∧/∨/¬, quantifiers, membership, division or powers; do not mention L, XAxis or Claimed); nothing else in the fixed part may change. The map L, the axis XAxis and the set equality (both inclusions, not an inclusion) are fixed. Do not redefine L, XAxis, Claimed or SourceImageClaim; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): L, XAxis, Claimed, SourceImageClaim
+
+## OBLIGATIONS (exact names and statements, inside `namespace ProofWiki120506CodexExpansion`)
+
+```lean
+theorem repair_statement : ProofWiki120506CodexExpansion.L '' ProofWiki120506CodexExpansion.XAxis = ProofWiki120506CodexExpansion.imageLine
+```
+(universal: Universal (set equality = extensional universality over the plane): the image of the x-axis under `L` is `imageLine`.)
+
+```lean
+theorem repair_nonvacuous : ∃ q : ℝ × ℝ, q ∈ ProofWiki120506CodexExpansion.imageLine ∧ q ∉ ProofWiki120506CodexExpansion.Claimed
+```
+(nonvacuity: Non-vacuity: the corrected line differs from the source's claimed line `Claimed` at some point of the corrected line.)
+
+```lean
+theorem final_theorem : ProofWiki120506CodexExpansion.L '' ProofWiki120506CodexExpansion.XAxis = ProofWiki120506CodexExpansion.imageLine
+```
+(final: The endpoint of this record is the corrected set equality itself; restate it here, e.g. `:= repair_statement`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

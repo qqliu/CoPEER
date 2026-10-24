@@ -1,0 +1,50 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "n_nonblank_text": 10,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": false
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/SE_cs_60677__a60690.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "If we use 11->88 (gain 77), then q = 3: 31->93 with a gain of 62; total gain 139. If we use 11->99 (gain 88) then q = 2: 23->92 (gain 69) has a total gain of 157. So optimal for N = 100 is\n\n    S = { 1, 99, 91, 17, 95, 92, 29, 31, 37, 41, ,,, }",
+  "explanation": "Complete the source's displayed set with the unused primes stipulated by its construction. This gives Sclaim of sum 1355. Its entries 99 and 92 use prime supports {3,11} and {2,23}; replacing them by 81,88,23 uses the same union of supports, still disjoint from the retained entries, and changes the contribution from 191 to 192. Thus the feasible set W has sum 1356>1355. All entries of both displayed sets are below 100. This proves that the claimed set is not optimal; neither the selected theorem nor this corrected annotation asserts that W is globally optimal.",
+  "flaw": "The proof claims that for N = 100 the optimal mutually-coprime set is S = {1, 99, 91, 17, 95, 92, 29, 31, 37, 41, ...} (total gain 157, obtained via 11->99 and 23->92). This is false: when resolving the q=2/q=3 conflict with 11->88, the answer only considers 31->93 (gain 62) for q=3 and forgets its own algorithm's option of adding the standalone power 3^4 = 81 (gain 81), so a strictly better feasible set exists (sum 1356 vs 1355).",
+  "problem": "set with maximum sum consisting of mutually co-prime numbers\n\n**Definitions.** Let $n$ be a natural number and $S$ be a subset of distinct natural numbers all less than $n$, and *mutually co-prime*. Then find the maximum sum the set $S$ can have.<br><br>\n**Example.** Let $n=10$, then the maximum sum $S$ can have is $30$ corresponding to $S=\\{1,5,7,8,9\\}$.\n\n**What I tried.** I tried to implement the following greedy algorithm.\n\n 1. First I divide primes $\\le n$ into $3$ lists: $list_1$ containing primes $\\le \\lfloor \\sqrt{n} \\rfloor$, $\\; list_2$ containing primes in range $\\big( \\lfloor \\sqrt(n) \\rfloor,\\lfloor \\frac{n}{2} \\rfloor \\big )$ and finally $list_3$ containing prime in the range $\\big[\\lfloor \\frac{n}{2} \\rfloor+1,n \\big ]$.\n 2. Next I define a function $largest(a,b,n)$, which returns the largest number of the form $a*b^{r}$ less than equal to $n$.\n 3. If there exist two numbers $l_1 \\in list_1$ and $l_2 \\in list_2$ such that $diff = largest(l_2,l_1,n)-( largest(1,l_1,n) + l_2 ) > 0$, I chose the pair $(l_1,l_2)$ such that $diff$ is maximised. I delete $l_1$ from $list_1$, $l_2$ from $list_2$ and append $largest(l_2,l_1,n)$ in $list_2$ and repeat step $3$. If no such pair $(l_1,l_2)$ exists such that $diff>0$, I go to step $4$.\n 4. I don't change anything in $list_3$.\n 5. In the end $ \\{1\\} \\cup \\{ l_1^r \\;  | \\;l_1 \\; \\in list_1 \\text{ and } largest(1,l_1,n)=r \\} \\cup list_2 \\cup list_3$ is my desired set $S$ and I report the sum of it's elements.\n\n\n**Running example of my algorithm.** If $n=30$,\n\n\n\n    #list_1 = {2,3,5}\n    #list_2 = {7,11,13}\n    #list_3 = {17,19,23,29}\n\n    #The first time step 3 is evaluated I get l_1 = 2 and l_2 = 7 ..\n    #.. as  diff = ( 28 - ( 16 + 7 ) ) = 5 > 0 and diff is maximised\n    # so I delete 2 from list_1 and 7 from list_2 and append 28 in list_2\n\n    #When step 3 is evaluated again no such pair (l_1,l_2) is found\n\n    #So our desired list becomes S={1,27,25,11,13,28,17,19,23,29} with sum 193.    \n\n\n    \n\n<br><br>\nBut my algorithm only seems to give correct for few simple cases only. Plus I am not able to prove/disprove or modify any of my assumptions .Now I am hopelessly stuck at the problem and I am not making any progress. But I still believe that some greedy algorithm is at work here.\n\nPS: The question is from project Euler [max-sum co-prime set][1]. I would really appreciate just some hint or new direction to think.\n\n\n  [1]: https://projecteuler.net/problem=355",
+  "source_context": "0001 | Project Euler asks you to solve the problems yourself, without help. So dont read on if you want to submit a solution for Project Euler; that would be cheating. \n0002 | \n0003 | \n0004 | Since the numbers are mutually co-prime, each prime number p is a factor of at most one element of S. On the other hand, if p is small enough then a number could have a factor $p^2$, $p^3$, $p^4$ and so on. We also know that every prime number p ≤ N is used (if p is not used as a factor of any number in the set then we just add p). And don't forget to include the number 1 in the set S :-)\n0005 | \n0006 | A number x ≤ N cannot have two prime factors greater than $N^{1/2}$. Therefore the set S contains among other numbers one number $x_p$ ≤ N which is a multiple of a prime $p > N^{1/2}$. That's a good start for finding the optimal set S. We then take the primes $q ≤ N^{1/2}$, and either multiply one of the numbers $x_p$ by a power of q, or we add a new number $x_q$ which is some power of q. \n0007 | \n0008 | In the Project Euler project with N = 200,000, there are fewer than 90 primes $q ≤ N^{1/2}$. We can take each of these primes q in turn, and either multiply one of the existing $x_p$ by a power of q, or add a new number $x_q$. We would try to do this achieving the highest possible increase in the sum. If no two q, q' achieve the highest increase in the same way, we can pick the optimal way for each. \n0009 | \n0010 | In the example N = 30, we would start with $x_p$ = 7, 11, 13, 17, 19, 23, 29. We can use q = 2 to change 7 -> 28. q = 3 -> 27, q = 5 -> 25. The gains are 21, 27, 25. Each gain is > N/2. So an optimal solution cannot include a number created by two or more of the q's - that number would be ≤ N, but we would give up two gains > N/2, so this wouldn't be optimal. So in the simple example, we multiply 7 by $2^2$ and add $3^3$ and $5^2$. \n0011 | \n0012 | With N = 100, we would have $x_p$ = 11, 13, 17, 19, 23, ... and q = 2, 3, 5, 7. q = 2: 11 -> 88 gains 77. q = 3: 11 -> 99 gains 88. q = 5: 19 -> 95 gains 76. q = 7: 13 -> 91 gains 78. Unfortunately we have a conflict; q = 2 and q = 3 would both use $x_{11}$. If we use 11->88 (gain 77), then q = 3: 31->93 with a gain of 62; total gain 139. If we use 11->99 (gain 88) then q = 2: 23->92 (gain 69) has a total gain of 157. So optimal for N = 100 is\n0013 | \n0014 |     S = { 1, 99, 91, 17, 95, 92, 29, 31, 37, 41, ,,, }\n0015 | \n0016 | So here is the algorithm: Start with $x_p$ = primes > $N^{1/2}$. Find the primes $q ≤ N^{1/2}$. For each q, find the maximum gain that can be achieved using q: Either $q^k$ by adding the number $q^k$, or $p * (q^k - 1)$ by multiplying $x_p$ by $q^k$. If each optimal gain is achieved in a different way, and each gain is ≥ N/2, then we found the optimal solution. \n0017 | \n0018 | Otherwise, we choose one set of q's that use the same $x_p$. For each of these q's: We assume that this q uses $x_p$, find the optimal solution under the restriction that no other q uses this $x_p$, and choose which q using $x_p$ gives the best total. \n0019 | \n0020 | If there is a case where the two smallest gains add up to less than N, ask someone for a more complex solution :-)",
+  "witness": "Complete the source set by retaining its unused primes: Sclaim={1,17,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,91,92,95,97,99}. Its sum is1355. Replace99 and92 by81,88 and23 to obtain W={1,17,23,29,31,37,41,43,47,53,59,61,67,71,73,79,81,83,88,89,91,95,97}, of sum1356. The composite prime supports are disjoint and the remaining entries are unused primes or1, so both lists are pairwise coprime and all entries are below100. Therefore the source set is not optimal. The selected declaration proves feasibility and this strict improvement; it does not assert global optimality of W."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_FOR_CORRECTED_VERSION",
+ "record_id": "SE_cs_60677__a60690",
+ "scope_metadata": {
+  "source_kind": "asserted numerical optimum in a StackExchange answer",
+  "target_scope": "Optimality of the displayed N=100 coprime set, with tail reconstructed from its algorithm."
+ },
+ "selected_declarations": [
+  {
+   "axioms": [
+    "propext"
+   ],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "SE_cs_60677_a60690.asserted_optimum_is_not_optimal",
+   "native_candidate_axioms": [],
+   "type": "SE_cs_60677_a60690.Feasible SE_cs_60677_a60690.W ∧\n  SE_cs_60677_a60690.Feasible SE_cs_60677_a60690.Sclaim ∧\n    SE_cs_60677_a60690.W.sum = 1356 ∧\n      SE_cs_60677_a60690.Sclaim.sum = 1355 ∧ SE_cs_60677_a60690.Sclaim.sum < SE_cs_60677_a60690.W.sum",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/SE_cs_60677__a60690.json",
+ "source_group": "stackexchange",
+ "supporting_evidence": []
+}

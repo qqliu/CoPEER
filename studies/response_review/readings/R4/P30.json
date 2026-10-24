@@ -1,0 +1,31 @@
+{
+ "schema": "copeer-B-reading/v1",
+ "packet_id": "P30",
+ "reader_id": "R4",
+ "utc_start": "2026-09-25T19:11:00Z",
+ "utc_end": "2026-09-25T19:13:01Z",
+ "minutes": 8,
+ "J1_line_asserts_challenged_proposition": {
+  "value": "YES",
+  "justification": "The response challenges \"Pr[X > (1+delta)2n] <= exp{-n D(1+delta || 1)} where D(1+delta || 1) is the Kullback-Leibler divergence between a Bernoulli(1/(1+delta)) and a Bernoulli(1/2)\". First-choice line 251 carries the exponent \"-n D(1 + delta ||1)\" of the display opened at line 249 (\"Pr[X > (1 + delta)2n] <= exp\") and closed at 253, with D defined immediately after at lines 254-258 as exactly that divergence. Read with the lines it belongs to, as the broken-up layout of this source requires, line 251 asserts the challenged inequality; the source moreover claims it is equivalent (\"Equivalently, one may express the bound as\") to its own final bound of lines 235-246. Assumptions in force: the X_i are i.i.d. geometric with p = 1/2 on {1,2,...} (lines 3-11), X their sum with mean 2n, delta > 0 arbitrary (line 246)."
+ },
+ "J2_evidence_specified": {
+  "value": "SPECIFIED",
+  "justification": "The witness fixes both free parameters and gives both sides: \"For delta = 0.1 and n = 100, the true tail probability is about 0.4 while the claimed bound is exp{-100*D} ~ 1.5x10^{-17}, which is far smaller, violating the inequality.\" Nothing further is needed to test the asserted inequality, although one of the two numbers is misreported (see J3)."
+ },
+ "J3_evidence_check": {
+  "value": "VERIFIED_VALID_EXACT",
+  "justification": "Checked at exactly the supplied (delta, n), script kept. With delta = 1/10 and n = 100 the threshold is (1+delta)2n = 220 exactly, and q = 1/(1+delta) = 10/11 gives D = q log(2q) + (1-q) log(2(1-q)) = 0.388511, so the claimed bound is exp(-100 D) = 1.34e-17 (the response's 1.5e-17). The true probability is computable exactly: X is the number of tosses up to the 100th head, so X > 220 is the event that the first 220 tosses contain at most 99 heads, i.e. Pr[X > 220] = (sum_{j=0}^{99} C(220,j)) / 2^220, which the script evaluates as an exact rational equal to 0.078335. Since 0.0783 > 1.34e-17 -- a gap of some sixteen orders of magnitude, far outside any floating-point concern about D (even the crude bound D > 0.38 gives exp(-100 D) < 1e-16) -- the inequality asserted at line 251 is false at the supplied witness, which satisfies every assumption in force (delta > 0, n a positive integer). One correction to the response's arithmetic, which does not affect the verdict: its 'true tail probability about 0.4' is not the true probability but the source's own rate approximation exp(-n I) = 0.4024 with I = (1+2delta)log(1+2delta) - 2(1+delta)log(1+delta) = 0.009103; the exact tail is 0.0783. Either number refutes the line. The script also records the diagnostic the response reasoned to: D and I differ (here D = 0.3885 >> I = 0.0091), and at delta = 1 the asserted D is identically 0 (Bernoulli(1/2) against Bernoulli(1/2)) while the source's own rate is 0.5232, so the KL restatement is simply not the same quantity as the bound it claims to restate.",
+  "artifacts": [
+   "readings/R4/scripts/P30_check.py"
+  ],
+  "lean_attempts": 0,
+  "tooling_failure": false
+ },
+ "J4_consequence_overreach": {
+  "value": "NO",
+  "justification": "The response's consequence is narrowly and correctly scoped: having checked the pmf, the MGF e^t/(2-e^t) for t < ln 2, the Markov step, the optimisation y* = (1+2delta)/(1+delta), the convexity argument and the final closed form -- concluding \"Thus their bound is exp{-n I}. Good.\" -- it attributes the falsity only to the KL-divergence restatement at the end. It does not claim the derived Chernoff bound, the MGF or the optimisation is wrong. No overreach."
+ },
+ "confidence": "HIGH",
+ "notes": "For a second reader: the located claim is a parting 'equivalently' remark, not a step the derivation rests on, and the response says so; the earlier bound of lines 235-246 is correct (I verified its rate against the Legendre transform of the geometric cumulant generating function in the course of checking). Two things worth carrying into adjudication: (1) the response misstates the true tail probability (0.4 is exp(-nI), the exact value is 0.0783) while its bound value 1.5e-17 is right, so the witness is sound but one of its two numbers is wrong; (2) the falsity is delta-dependent -- at delta = 1 the asserted D is 0 and the bound becomes the vacuous 'Pr <= 1', so a reader who tested only delta = 1 would see no violation. The witness delta = 0.1 with n = 100 is in the region D > I where the claim is actually violated."
+}

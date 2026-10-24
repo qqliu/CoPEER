@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noai, noimageai, noarchive">
+<title>Code, data and reproduction · Co-PEER</title>
+<meta name="description" content="What the public repository contains, how to verify it, how to replay the benchmark and the studies, and how this website is built from it.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="index.html">Co-<span>PEER</span></a>
+    <ul class="navlinks">
+      <li><a href="index.html#example">Example</a></li>
+      <li><a href="bugbank.html">BugBank</a></li>
+      <li><a href="benchmark.html">Benchmark</a></li>
+      <li><a href="index.html#studies">Studies</a></li>
+      <li><a href="mathematics.html">Mathematics</a></li>
+      <li><a href="reproduce.html" aria-current="page">Reproduce</a></li>
+      <li><a href="index.html#paper">Paper</a></li>
+    </ul>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero wrap">
+  <p class="kicker">Code, data and reproduction</p>
+  <h1>Everything behind the numbers</h1>
+  <p class="lead">The public repository holds the paper, this website and the released evidence: the dossiers, their numbered sources and Lean certificates, the human-review records, the localization benchmark with its saved answers, the instruction, repair and retrieval studies, the executable checkers, and the Lean sources of the mathematical follow-ups. Saved-result replays recompute the reported quantities without making model calls.</p>
+  <p class="small" id="r-repo"></p>
+</header>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Repository map</p><h2>Where things are</h2></div>
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Path</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td><code>paper/</code></td><td>The manuscript PDF, the arXiv source bundle and its extracted source, the figure files and the plotting source of the Schur objective.</td></tr>
+        <tr><td><code>docs/</code></td><td>This website: static HTML, CSS and JavaScript; <code>docs/data/</code> holds the tables extracted from the paper source and the explorer data built from the release, each with a manifest.</td></tr>
+        <tr><td><code>bugbank/</code></td><td>The 284 objection dossiers (<code>dossiers/&lt;record-id&gt;.json</code>), their numbered source passages (<code>sources/</code>) and Lean certificates (<code>certificates/</code>); the human-approved core (<code>core/membership.json</code>, checked by <code>core/verify.py</code>); the deidentified human-review rounds (<code>bugbank/reviews/</code>); the source annotations and count tables (<code>annotations/</code>); review-continuity records, recovered source documents (<code>support/</code>) and the pinned Lean environment with the certificate inventory (<code>lean/</code>).</td></tr>
+        <tr><td><code>benchmark/</code></td><td>Inputs, saved answers and their selection records, scoring and bootstrap code, model settings and results; <code>core/</code> replays the core scores from the saved answers in <code>benchmark/answers/</code>.</td></tr>
+        <tr><td><code>studies/</code></td><td>The instruction study (prompts, grades, token use), the 16 repair tasks, proof development (50 paired tasks per model), open-problem retrieval, the review of saved responses, the 604 executable checks with their program bindings, the criticism bounds, and the audit tests with their fixtures and clean controls.</td></tr>
+        <tr><td><code>mathematics/</code></td><td>Lean sources for the cycle, Schur and projective-cube theorems (<code>theorems/</code>), the further certified families (<code>extensions/</code>), the thirteen explanation packages (<code>explanations/</code>), supporting formal files (<code>supporting/</code>), the discovery records with their checkers (<code>discoveries/</code>) and the recorded build receipts (<code>builds/</code>).</td></tr>
+        <tr><td><code>tools/</code></td><td>The file verifier (<code>verify.py</code>), the manifest updater and the scripts that build this website's data.</td></tr>
+        <tr><td><code>MANIFEST.json</code>, <code>ARTIFACTS.md</code>, <code>NOTICE.md</code>, <code>THIRD_PARTY_NOTICES.md</code></td><td>Hashes of every distributed file; the paper-to-artifact guide; the terms of use (no crawling for, and no training of, machine-learning models); third-party source notices.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Verify and replay</p><h2>Commands, from the repository root</h2><p>Python 3 with its standard library is enough for the verifier and the saved-result replays. Lean compilation additionally requires the pinned toolchain described in <code>bugbank/lean/README.md</code>.</p></div>
+    <h3>Integrity of the distributed files</h3>
+    <pre class="wrap">python3 -B tools/verify.py --strict</pre>
+    <h3>The human-approved core and its benchmark scores</h3>
+    <pre class="wrap">python3 -B bugbank/core/verify.py --release .
+python3 -B benchmark/core/replay.py --release . --membership bugbank/core/membership.json --output /tmp/core_scores.json --with-intervals</pre>
+    <p class="small">The replay reparses the saved selections, checks the exact answer files, recomputes Hit@1 and Hit@3 for every reporting view and compares them with <code>benchmark/core/expected_scores.json</code>, the same file this website reads. Without <code>--with-intervals</code> the script deliberately skips the clustered bootstrap and the interval comparisons (a counts-only replay); with the flag it recomputes the 95% intervals as well.</p>
+    <h3>Review evidence and the formal inventory</h3>
+    <pre class="wrap">python3 -B bugbank/reviews/reproduce.py --check
+python3 -B bugbank/lean/replay.py --check-inventory</pre>
+    <h3>The studies</h3>
+    <p class="small">Each study directory under <code>studies/</code> has its own README with inputs, analysis code, saved results and the replay command: <code>studies/instructions/</code> (the four-arm instruction study and the 60-statement panel), <code>studies/executable_checks/</code> (the 604 executable tasks; count replay), <code>studies/repairs/</code> (16 Lean repair tasks; fresh checking needs Lean 4.30 and bubblewrap), <code>studies/proof_development/</code> (50 paired tasks per model with the 661-entry retrieval snapshot), <code>studies/open_problem_retrieval/</code> (the five cohorts of paired targets), <code>studies/response_review/</code> (the LLM review of saved responses, Experiment B), <code>studies/criticism_endpoints/</code> (the criticism and paired-comparison bounds computed from that panel), <code>studies/audit_tests/</code> (the six-fixture check of the publication and scoring procedure).</p>
+    <h3>The archived 191-text evaluation</h3>
+    <pre class="wrap">python3 -B benchmark/code/reproduce.py --output /tmp/copeer-benchmark-results.json   # the earlier 191-text evaluation; not the current 100-input benchmark</pre>
+    <h3>This website</h3>
+    <pre class="wrap">python3 tools/extract_paper_tables.py paper/source/main.tex docs/data   # tables from the paper source
+python3 -B tools/build_site_data.py                                       # explorer and exercise data from the release
+python3 -B tools/build_example_record.py                                   # the front-page record
+node tests/run_checks.mjs                                                  # data and mathematics checks (also docs/tests.html)
+python3 -B tools/check_site.py                                             # links, fragments, scripts, no addresses</pre>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Lean</p><h2>Certificates and toolchains</h2><p>Corpus certificates compile under Lean 4.30.0; the mathematical follow-ups record their toolchains per file (core Lean 4.30.0 and 4.34.0; the layered-boundary results use Lean 4.30.0 with Mathlib). Axiom audits record, for every selected declaration, the axioms used; the explorer shows them per record. No certificate uses <code>sorryAx</code>; native reduction is flagged where a declaration relies on it.</p></div>
+    <h3>Related resources</h3>
+    <p class="small">What selected mathematical criticism resources evaluate and what supports their references (Table 24 of the paper). Counts refer to different units.</p>
+    <div class="table-wrap"><table class="data" id="r-resources"><thead><tr><th>Resource and scale</th><th>Evaluation target</th><th>Reference evidence and human review</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><p class="kicker">Website data provenance</p><h2>How each number on this site is traced</h2></div>
+    <p>Tables shown on the site are parsed from the LaTeX source of the paper (commit <code>cb9312a</code>) by <code>tools/extract_paper_tables.py</code>; each generated file records the table label, the line range in <code>main.tex</code> and the caption, and <code>docs/data/MANIFEST.md</code> lists their hashes. The explorer and the exercise read the released evidence through <code>tools/build_site_data.py</code>, which joins the current review layer to each record by id and asserts that the released core scores equal the paper's Table 16. The laboratories compute live from <code>assets/js/math/labs.js</code>; <a href="tests.html">the self-checks page</a> compares them with the paper's statements and with independently generated fixtures.</p>
+    <div class="table-wrap" id="r-manifest"></div>
+  </div>
+</section>
+</main>
+
+<footer class="footer"><div class="wrap"><p><a href="index.html">Back to the project page</a>.</p></div></footer>
+
+<script src="assets/js/config.js"></script>
+<script src="data/related_resources.js"></script>
+<script src="assets/katex/katex.min.js"></script>
+<script src="assets/katex/contrib/auto-render.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+document.addEventListener('copeer:ready', function () {
+  var C = window.COPEER, D = window.COPEER_DATA || {}, cfg = window.COPEER_CONFIG || {};
+  var r = document.getElementById('r-repo');
+  if (cfg.repoUrl) { r.appendChild(document.createTextNode('Repository: ')); r.appendChild(C.h('a', { href: cfg.repoUrl, rel: 'noopener', text: cfg.repoUrl })); }
+  else r.textContent = 'The public repository link is added here when the repository is published; until then the paper\'s data-availability statement points to the anonymized review copy.';
+  var rs = D.related_resources;
+  if (rs) { var tb = document.querySelector('#r-resources tbody'); rs.rows.forEach(function (row) { var tr = C.h('tr', {}); ['resource_and_scale', 'evaluation_target', 'reference_evidence'].forEach(function (k) { var td = C.h('td', { class: 'text' }); td.innerHTML = C.texToHtml(row[k]); tr.appendChild(td); }); tb.appendChild(tr); }); C.renderMath(document.getElementById('r-resources')); }
+  var m = document.getElementById('r-manifest');
+  m.appendChild(C.h('p', { class: 'small' }, [C.h('a', { href: 'data/MANIFEST.md', text: 'docs/data/MANIFEST.md' }), ': one row per extracted file with its table label, the line range in main.tex and the SHA-256 of the file.']));
+});
+</script>
+</body>
+</html>

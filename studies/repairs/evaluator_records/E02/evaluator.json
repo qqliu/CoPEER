@@ -1,0 +1,166 @@
+{
+  "record_id": "E02",
+  "census_record_id": "SE_cs_1200__a1206",
+  "namespace": "SE_cs_1200_a1206_Census",
+  "environment": "core (compiled in the shared Lean 4.30.0 + Mathlib project; the packet imports nothing)",
+  "template_file": "template.lean",
+  "template_hole": {
+    "marker": "«HOLE»",
+    "hole_name": "?post",
+    "declaration": "postC",
+    "kind": "postcondition",
+    "type": "Store → Bool",
+    "description": "the corrected postcondition of {pre} A[A[0]-1] := A[0] {postC}"
+  },
+  "allowed_edits": {
+    "repair_object": "a corrected postcondition post' : Store → Bool and a kernel-checked proof of ∀ s, pre s = true → holds post' (stepR1 s) = true (and, for the strongest-postcondition endpoint, ∀ t, post' t = true ↔ ∃ s, pre s = true ∧ stepR1 s = some t)",
+    "may_change": "only the postcondition: the two literal cell values in the template `decide (s.length ≥ 2) && decide (getI s 0 = c) && decide (getI s 1 = d)`, or any Bool predicate on Store",
+    "must_preserve": [
+      "pre (the source precondition)",
+      "the command and its semantics: stepR1/writeAt/setI/getI unchanged (index and right-hand side evaluated in the pre-state; out-of-range write is an error)",
+      "total correctness (holds ... = true, so the write must succeed)"
+    ],
+    "hypotheses_not_strengthenable": "pre may not be strengthened; no extra hypothesis on s",
+    "nonvacuity": "post' must be satisfiable by the post-state of the witness store [2,3] (i.e. post' [2,2] = true) and must not be the constant true predicate",
+    "not_allowed": "changing the command (e.g. A[A[0]-1] := A[0]-1), changing pre, or a postcondition true of every store"
+  },
+  "hole_syntax": {
+    "regex": null,
+    "forbidden_tokens": [
+      "stepR1",
+      "stepR2",
+      "stepR3",
+      "writeAt",
+      "holds",
+      "resultIs",
+      "pre",
+      "post",
+      "postC",
+      "sorry"
+    ],
+    "max_lines": 1,
+    "note": "a Bool predicate on the store not referring to the command or to pre/post (harness validator has no hole-grammar check; check_record.sh applies this)",
+    "allowed_identifiers": [
+      "decide"
+    ]
+  },
+  "hidden_reference_names": [
+    "SE_cs_1200_a1206_Census.postActual",
+    "SE_cs_1200_a1206_Census.repair",
+    "SE_cs_1200_a1206_Census.exact",
+    "SE_cs_1200_a1206_Census.repair_is_strongest",
+    "SE_cs_1200_a1206_Census.family",
+    "SE_cs_1200_a1206_Census.family_all",
+    "SE_cs_1200_a1206_Census.exact_wp",
+    "SE_cs_1200_a1206_Census.no_single_write_reaches_post",
+    "SE_cs_1200_a1206_Census.stepAlt",
+    "SE_cs_1200_a1206_Census.claim_refuted"
+  ],
+  "reference_repair": "postActual (line 41): length ≥ 2 ∧ A[0] = 2 ∧ A[1] = 2; repair (231); exact (243): postActual t ↔ ∃ s, pre s ∧ stepR1 s = some t; repair_is_strongest (258)",
+  "endpoint_type": "changed_statement",
+  "endpoint_statement_name": "final_theorem",
+  "has_final_theorem": true,
+  "endpoint_statement": "changed_statement: postC is the strongest postcondition: ∀ t, postC t = true ↔ ∃ s, pre s = true ∧ stepR1 s = some t (= exact, line 243, with the submitted postC)",
+  "obligations": [
+    {
+      "name": "repair_statement",
+      "role": "universal"
+    },
+    {
+      "name": "repair_nonvacuous",
+      "role": "nonvacuity"
+    },
+    {
+      "name": "final_theorem",
+      "role": "final"
+    }
+  ],
+  "test_instances": [
+    {
+      "store": "[2, 2]"
+    },
+    {
+      "store": "[2, 2, 0]"
+    },
+    {
+      "store": "[2, 2, 7, 7]"
+    },
+    {
+      "store": "[1, 1]"
+    },
+    {
+      "store": "[2, 3]"
+    },
+    {
+      "store": "[2]"
+    },
+    {
+      "store": "[]"
+    },
+    {
+      "store": "[3, 2]"
+    },
+    {
+      "store": "[2, 2, 5]"
+    },
+    {
+      "store": "[0, 2]"
+    },
+    {
+      "store": "[2, 2, -1, 3]"
+    },
+    {
+      "store": "[2, 1]"
+    }
+  ],
+  "test_instances_source": "reference postActual evaluated by decide",
+  "library_shortcut_names": [],
+  "reserved_names": [
+    "Store",
+    "getI",
+    "setI",
+    "writeAt",
+    "pre",
+    "post",
+    "stepR1",
+    "stepR2",
+    "stepR3",
+    "holds",
+    "resultIs",
+    "HoareTriple"
+  ],
+  "source_exposed_repair": {
+    "exposed": false,
+    "where": "stored answer line 0029 states the correct METHOD (substitute on the array itself, `A ← A[i ← E]`, evaluate `A[0]`) but never states the actual post-state (`A[0] = 2 ∧ A[1] = 2`); the located triple's postcondition is not corrected in the source",
+    "consequence": "corrected-postcondition discovery remains hidden; the method hint is original-source information and stays"
+  },
+  "unresolved_status": "math-NO: the human reviewer's mathematical NO on this record is unresolved; the mechanically encoded corrected-postcondition task may be measured separately, but source-valid success cannot be inferred from compilation",
+  "harness_files": {
+    "task_json": "../packets/E02/task.json",
+    "evaluator_dir": "../harness/evaluator/E02/"
+  },
+  "task": {
+    "title": "Array assignment: the postcondition of A[A[0]-1] := A[0]",
+    "located_defect": {
+      "declaration": "SE_cs_1200_a1206_Census.HoareTriple",
+      "lean_text": "def HoareTriple : Prop := ∀ s : Store, pre s = true → holds post (stepR1 s) = true\n-- pre s = (s.length ≥ 2 ∧ A[0] = 2 ∧ A[1] = 3), post s = (s.length ≥ 2 ∧ A[0] = 1 ∧ A[1] = 1)",
+      "description": "The source (stored source line 0029) discusses the assignment A[A[0]-1] := A[0] under the precondition A[0] = 2 ∧ A[1] = 3 and names A[0] = 1 ∧ A[1] = 1 as the correct postcondition. The Hoare triple {pre} A[A[0]-1] := A[0] {post} with that postcondition, under the operational reading stepR1 (index and right-hand side evaluated in the pre-state, out-of-range write is an error), is the located defect. Supply the corrected postcondition, prove the corrected triple from every store satisfying pre, and prove that it is the strongest postcondition (final_theorem)."
+    },
+    "allowed_edit": "Replace the hole in `postC` by a Bool predicate on the store (canonical form: decide (s.length ≥ 2) && decide (getI s 0 = c) && decide (getI s 1 = d) with integer literals c, d), not referring to the command or to pre/post; nothing else in the fixed part may change. The precondition pre, the command and its semantics (stepR1, writeAt, setI, getI) and total correctness are fixed; pre may not be strengthened. Do not redefine Store, getI, setI, writeAt, pre, post, stepR1, stepR2, stepR3, holds, resultIs or HoareTriple; no instances, notations, macros, axioms or exports.",
+    "forbidden_tokens_extra": [],
+    "challenged_passage": "0029 consider the assignment $A[A[0]-1] := A[0]$ under the precondition $A[0] = 2 \\wedge A[1] = 3$: you cannot make a simple substitution to obtain the correct postcondition $A[0] = 1 \\wedge A[1] = 1$"
+  },
+  "notes": [
+    "Declaration names must not contain an apostrophe (validate.py's #print axioms parser cannot read them): the template uses postC.",
+    "Judgement call: the changed-statement endpoint is fixed as the strongest-postcondition characterisation (the original's `exact`, line 243), stated with the submitted postC; a mere valid postcondition (e.g. `true`) is excluded by nonvacuity and by this endpoint.",
+    "Nonvacuity is existential (leak-free): the actual post-state [2,2] appears only in AGREE.lean.",
+    "unresolved_status math-NO copied from the contract: the human reviewer's mathematical NO is unresolved; success here is mechanical (the encoded triple), not source-valid, per the brief."
+  ],
+  "errata": [
+    {
+      "utc": "2026-09-23T04:03:42Z",
+      "field": "hole_syntax.allowed_identifiers",
+      "change": "added ['decide']: library identifiers the reference and template already use in the hole; required by the fix_r4 hole-identifier rule (every hole identifier must be a binder, a fixed-part/defs_only name, a reserved fixed-text identifier, or listed here); no change to the grammar's meaning"
+    }
+  ]
+}

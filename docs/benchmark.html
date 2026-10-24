@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noai, noimageai, noarchive">
+<title>Certified-claim localization · Co-PEER</title>
+<meta name="description" content="The certified-claim localization benchmark: protocol, complete results for 13 model configurations, execution settings, and an exercise on the released inputs.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="index.html">Co-<span>PEER</span></a>
+    <ul class="navlinks">
+      <li><a href="index.html#example">Example</a></li>
+      <li><a href="index.html#evidence">Evidence</a></li>
+      <li><a href="bugbank.html">BugBank</a></li>
+      <li><a href="benchmark.html" aria-current="page">Benchmark</a></li>
+      <li><a href="index.html#studies">Studies</a></li>
+      <li><a href="mathematics.html">Mathematics</a></li>
+      <li><a href="index.html#paper">Paper</a></li>
+    </ul>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero wrap">
+  <p class="kicker">Certified-claim localization</p>
+  <h1>Can a critic point to the line that is wrong?</h1>
+  <p class="lead">A critic receives the numbered source text and a request for up to three candidate lines, ranked by preference, with a brief explanation. The prompt says that the text contains an error and withholds the dossier's counterexample and certificate. A <em>reference line</em> is one of the input's accepted error lines, backed by a core dossier: Hit@1 counts a reference line as the first choice, Hit@3 a reference line among the first three. Responses that break the response or execution rules count as misses.</p>
+  <div class="actions"><a class="btn btn-primary" href="#exercise">Try the task yourself</a><a class="btn" href="#results">Complete results</a><a class="btn" href="#settings">Models and settings</a></div>
+</header>
+
+<section class="section" id="protocol">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Protocol</p>
+      <h2>Inputs, scoring and uncertainty</h2>
+      <p>The primary evaluation uses 100 texts from the human-approved core, each with at least ten nonblank source lines, grouped into 92 problem clusters; a supplementary evaluation adds 31 shorter texts, 131 scorable inputs in all. Every attempt has a 16,000-token output allowance and a 600-second wall limit. A response is scored on its parsed line numbers only: an invalid slot counts as a miss, inputs that exceed the recorded context limit receive a setup refusal and count as misses, and the one-line text baselines have no top-three result. Confidence intervals use 10,000 bootstrap resamples of problem clusters, keeping related texts together.</p>
+      <div class="note scope"><p>The score measures reference-line selection on texts known to contain an error. It is not general proof-verification accuracy and not a false-accusation rate; a separate LLM review of saved responses found that some responses that select a reference line do not supply a valid objection, while some that miss it do. Human approval covers every core dossier; exact current line labels were reviewed separately on smaller samples (79 of the 147 core records carry an exact current human review of the line label in the release).</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="results">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Complete results</p>
+      <h2>Thirteen configurations, fourteen reporting views</h2>
+      <p>The paper's main table lists 12 configurations; the complete table adds the two Haiku 4.5 reporting views (the retained notice and the continuation, two scopes of one lane that share calls), giving 14 views across 13 configurations. The scores below come from the released replay (<code>benchmark/core/replay.py</code>) and equal the paper's Table 16; the site's build step checks that equality.</p>
+    </div>
+    <div class="controls">
+      <span class="segmented" id="b-metric" role="group" aria-label="Metric"><button type="button" data-value="hit1" aria-pressed="true">Hit@1</button><button type="button" data-value="hit3" aria-pressed="false">Hit@3</button></span>
+      <span class="segmented" id="b-pop" role="group" aria-label="Population"><button type="button" data-value="primary" aria-pressed="true">100 primary inputs</button><button type="button" data-value="supplementary" aria-pressed="false">131 scorable inputs</button></span>
+    </div>
+    <div id="b-chart"></div>
+    <p class="caption" id="b-caption"></p>
+    <div class="table-wrap">
+      <table class="data" id="b-table">
+        <thead><tr><th data-sort="text">Reporting view</th><th class="num" data-sort="num">Hit@1 primary (%) [95% CI]</th><th class="num" data-sort="num">Hit@3 primary (%) [95% CI]</th><th class="num" data-sort="num">Hit@1 all 131 (%)</th><th class="num" data-sort="num">Hit@3 all 131 (%)</th><th class="num" data-sort="num">Recorded total tokens</th><th class="num" data-sort="num">Recorded output tokens</th><th>Rule misses by cause (primary)</th></tr></thead>
+        <tbody id="b-rows"></tbody>
+      </table>
+    </div>
+    <h3>Simple text rules on the 100 primary inputs</h3>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Rule</th><th class="num">Hit@1 (%)</th><th class="num">95% CI</th></tr></thead><tbody id="b-baselines"></tbody></table></div>
+    <p class="small">The best of the four simple text rules is the TF-IDF centroid line at 18.0%; the random-line expectation is 6.7%. One-line rules have no top-three result. Token columns are the paper's Table 16 values (recorded usage for the selected primary attempts, lower bounds where logging is incomplete); the two Haiku views share calls, so their costs are not additive.</p>
+  </div>
+</section>
+
+<section class="section" id="exercise">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Exercise</p>
+      <h2>Find the error yourself</h2>
+      <p>Read a released benchmark input, choose up to three lines in order of preference, and score your selection against the current reference lines; then see the held-out counterexample and how every evaluated configuration did on that input. A random primary input is drawn each time; the front page's worked example is marked as a tutorial because its answer is already shown there.</p>
+    </div>
+    <div class="controls">
+      <label>Input <select id="e-input"></select></label>
+      <button class="btn btn-small" type="button" id="e-random">Random primary input</button>
+    </div>
+    <p class="note" id="e-tutorial" hidden>This input is the worked tutorial from the front page (Figure 1 of the paper); its reference line is shown there, so it does not count as a fresh attempt.</p>
+    <div class="grid-2 split-7-5">
+      <div>
+        <div class="lines-box"><ol class="proof-lines" id="e-lines" aria-label="Numbered source text; select up to three lines"></ol></div>
+      </div>
+      <div>
+        <div class="panel elevated sticky-panel">
+          <p id="e-picks" class="small">No lines chosen yet.</p>
+          <div class="controls"><button class="btn btn-primary" type="button" id="e-score-btn">Score my selection</button><button class="btn" type="button" id="e-clear">Clear</button></div>
+          <p class="small" id="e-status" aria-live="polite"></p>
+          <div id="e-score" class="readout" aria-live="polite"></div>
+        </div>
+        <div id="e-reveal" hidden></div>
+      </div>
+    </div>
+    <p class="small">Line numbers are those the critics saw; contact strings, if any, are omitted in this display only. Direct links: <code>benchmark.html#input=&lt;record id&gt;</code>.</p>
+  </div>
+</section>
+
+<section class="section" id="settings">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Models and settings</p>
+      <h2>Saved execution settings</h2>
+      <p>Every attempt has a 16,000-token output allowance and a 600-second wall limit, with interface-specific enforcement; local generation uses vLLM 0.29.0 and seed 20260921. Hosted configurations are the preserved experiment identifiers; local labels link to their exact checkpoint repositories.</p>
+    </div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Model</th><th class="num">Context tokens</th><th>Generation setting</th><th>Configured execution interface</th></tr></thead><tbody id="b-settings"></tbody></table></div>
+    <details><summary>Local model configurations and exact checkpoint repositories (Table 17)</summary><div class="table-wrap"><table class="data"><thead><tr><th>Model label</th><th>Repository</th></tr></thead><tbody id="b-models"></tbody></table></div></details>
+    <h3>First-choice misses</h3>
+    <p class="small">The paper examines a random sample of 30 of Sonnet 5's 58 readable first-choice misses in the earlier 191-input evaluation (seed 20260921), with LLM reviewers classifying each miss; the released records preserve the original classifications, later adjudications and the disagreements. A separate LLM review of 24 paired texts (Experiment B) assessed whether responses supplied a valid objection: Gemini 3.1 Pro had 20 reference matches and 20 of 24 valid objections, Nemotron 3 Super 18 matches and 19 of 24 valid objections, with valid objections among both matches and misses.</p>
+  </div>
+</section>
+</main>
+
+<footer class="footer"><div class="wrap"><p>Scores from <code>benchmark/core/expected_scores.json</code>; selections from <code>benchmark/selections.jsonl</code> and <code>outcomes_derived.jsonl</code>; settings from the paper's Tables 17 and 18. <a href="index.html">Back to the project page</a>.</p></div></footer>
+
+<script src="assets/js/config.js"></script>
+<script src="data/views.js"></script>
+<script src="data/localization_full.js"></script>
+<script src="data/benchmark_inputs.js"></script>
+<script src="data/execution_settings.js"></script>
+<script src="data/local_models.js"></script>
+<script src="assets/katex/katex.min.js"></script>
+<script src="assets/katex/contrib/auto-render.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/components/benchmark_page.js"></script>
+</body>
+</html>

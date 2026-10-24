@@ -1,0 +1,62 @@
+{
+  "record_id": "tcs_karp_rabin_collision_detection",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 3,
+  "parent_sha256": "c7bd0ebcd5025b26c4ebd82c488a5aa3876378412b180c5606b7c733de1a8447",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "For p not dividing the base b, collision detection is exactly repeated-state detection on mismatch-only normalized prefix sums. Moreover, every collision has a witness containing at most p mismatching aligned positions, although its length may exceed p.",
+      "claim_sha256": "82d2e2203ee224fe7092b841135a5633e6171bee4235c8c86e8a2084a0df8333",
+      "verdict": "VERIFIED",
+      "evidence": "For displacement d and 0<=r<e<=n-d, multiplying A_d(e)-A_d(r) by b^e is valid because b is invertible modulo p and gives exactly F(r,e-r)-F(r+d,e-r). Equality of states is therefore equivalent to equal fingerprints, while an actual mismatch in [r,e) is equivalent to unequal contents. A_d changes only at mismatch positions q_j, so every relevant endpoint state is represented by B_0=0 or B_j=A_d(q_j+1). Conversely, B_a=B_c with a<c yields a colliding pair on [0,q_c+1) if a=0, or [q_a+1,q_c+1) otherwise, containing exactly c-a mismatches. If there are at least p mismatches, B_0,...,B_p contain p+1 values in a p-element field and hence repeat with at most p intervening mismatches. If there are fewer than p mismatches, every possible witness already has fewer than p.",
+      "witness": "A repeated pair B_a=B_c constructs the two unequal colliding substrings at displacement d using endpoints r=0 when a=0 and r=q_a+1 otherwise, and e=q_c+1; the witness contains c-a<=p mismatches.",
+      "search_method": "Independent algebraic derivation from the fingerprint definition, followed by exhaustive exact-integer comparison of all aligned intervals and mismatch-boundary states for bases 2 through 4, primes 2,3,5,7, and the tested lengths.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-revision/plain/iter_3/audit_exact_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "In the word-RAM model with p=n^{O(1)}, there is an exact deterministic algorithm running in O(n log n+n+min{D,M,n min(n,p)}) time, where D is the number of distinct substring contents and M is the number of unequal unordered character-position pairs. Consequently the requested O(n log n) bound holds when p=O(log n), D=O(n log n), or M=O(n log n).",
+      "claim_sha256": "32108689663e756964a554cbe2b4dd6ad9aa4ab7255abedb4869d979657fa134",
+      "verdict": "VERIFIED",
+      "evidence": "Deterministic suffix-array/LCP/RMQ preprocessing supplies constant-time LCE queries in O(n log n). For each displacement d, LCE jumps visit only mismatches. Encountering p mismatches permits immediate acceptance by claim 0; otherwise the algorithm records all mismatch-boundary states and detects equality after radix sorting by (d,state). The record count is Q<=(n-1)+sum_d min(m_d,p). Each unequal unordered position pair contributes to exactly one m_d, so sum_d m_d=M=(n^2-sum_c n_c^2)/2. Also sum_d min(m_d,p)<=sum_d min(n-d,p)=O(n min(n,p)), proving Q=O(n+min{M,n min(n,p)}). The keys are word-sized because p=n^{O(1)}, so constant-pass radix sorting costs O(n+Q). Independently, the compact suffix tree has total edge-length D and one locus per distinct substring content. Walking those edge labels computes all D fingerprints, and sorting (length,fingerprint) detects exactly whether two different contents collide. This route costs O(n log n+n+D). D and M are computable during preprocessing, so choosing the cheaper route yields the stated minimum. Substituting any of p=O(log n), D=O(n log n), or M=O(n log n) gives O(n log n).",
+      "witness": "An accepting certificate is either p mismatches at one displacement, which forces a repeated field state, or two sorted records with the same (d,state); the latter reconstructs unequal equal-length substrings. In the D route, two distinct contents with the same (length,fingerprint) are the certificate.",
+      "search_method": "Proved the state-count and unequal-pair identities combinatorially, audited both algorithmic routes and their word-RAM sorting costs, and exhaustively compared their decision characterizations with brute force on 8,898 invertible-base instances using exact arithmetic.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-revision/plain/iter_3/audit_exact_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The target has a complete O(n log n) exact solution in the noninvertible case p divides b.",
+      "claim_sha256": "fbde28b5d4d7e41d2063b94848e677a9ac5db957f007dc48c8fa13dcc178a3f6",
+      "verdict": "VERIFIED",
+      "evidence": "Since p is prime and p divides b, b is zero modulo p, so every nonempty most-significant-first fingerprint equals its last character modulo p. For endpoints e<f in the same residue class, all aligned substrings ending there are equal exactly when R_e=s[e]...s[0] is a prefix of R_f. If this prefix condition fails first at offset t, the length-(t+1) substrings are unequal but have equal fingerprints. Ordering endpoints increasingly orders the lengths of R_e; therefore, if every consecutive pair in a residue class satisfies the prefix relation, transitivity gives it for every pair, while any consecutive failure supplies a collision. LCP support on the reversed string tests each relation in constant time after O(n log n) preprocessing, and sorting/grouping endpoints by residue stays within O(n log n). Reversing the argument handles the opposite coefficient orientation.",
+      "witness": "For consecutive same-residue endpoints e<f whose reversed prefixes first differ at offset t, the length-(t+1) substrings ending at e and f are a concrete unequal colliding pair.",
+      "search_method": "Independent endpoint characterization and transitivity proof, plus exhaustive exact-integer comparison against brute force for 2,966 noninvertible-base instances and both coefficient orientations.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-revision/plain/iter_3/audit_exact_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Collisions cannot occur at length L when b^L<=p, but checking only power-of-two lengths, only lexicographically adjacent contents, or relying on monotonicity in the length is insufficient.",
+      "claim_sha256": "39292b2c4efd6b89cfe8d0173ff8e2ef93c1a6ff3a30a57d699e54c82ee15eaf",
+      "verdict": "VERIFIED",
+      "evidence": "Canonical length-L base-b words are distinct integers in [0,b^L-1]. When b^L<=p, the nonzero difference of two such integers has absolute value below p and cannot be divisible by p. For b=2, p=5, and S=000101, exact fingerprint arrays for lengths 1 through 6 are respectively [0,0,0,1,0,1], [0,0,1,2,1], [0,1,2,0], [1,2,0], [2,0], and [0]. The only unequal-content collision occurs at length 3, between 000 and 101. Thus lengths 1,2,4 are collision-free, collision existence is nonmonotone across lengths, and the colliding contents are nonadjacent in the length-3 lexicographic order 000,001,010,101.",
+      "witness": "b=2, p=5, S=000101. The length-3 substrings 000 and 101 have integer values 0 and 5 and fingerprint 0 modulo 5, while every other length is collision-free and the two contents are separated lexicographically by 001 and 010.",
+      "search_method": "Direct injectivity proof and exact-integer enumeration of the stated binary example, supplemented by exhaustive threshold checks throughout all 11,864 tested base/string/prime instances.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-revision/plain/iter_3/audit_exact_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target asks for a worst-case linear or O(n log n) detector for an arbitrary supplied string and prime, with a declared small false-rejection probability permitted. The draft completely and exactly handles p dividing b and proves useful structural and adaptive results when p does not divide b. However, its invertible-base running time contains min{D,M,n min(n,p)}, which can be quadratic, and the O(n log n) conclusion is established only under the stated restrictions p=O(log n), D=O(n log n), or M=O(n log n). The final writeup explicitly identifies the remaining general invertible-base case as unresolved and does not claim that probabilistic rejection closes it. These are material but incomplete advances, so VALID_PARTIAL_PROGRESS is appropriate. The draft's claimed_resolution of PARTIAL is therefore ACCURATE, neither overstated nor understated.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the authorized source JSON and iteration-3 draft JSON; used no web, retrieval database, treatment receipt, prior run, verification report, or other solution.",
+    "Read the exact target and source open-problem passage independently of the draft's claimed_resolution and self_assessment.",
+    "Re-derived the normalized-state identity, mismatch-boundary equivalence, bounded-witness argument, record-count bounds, unequal-pair identity, distinct-substring route, and noninvertible endpoint characterization.",
+    "Persisted and ran /tmp/open_frontier_paired_v2/tcs_karp_rabin_collision_detection/audit-revision/plain/iter_3/audit_exact_checker.py using integer arithmetic only.",
+    "The checker passed 8,898 invertible-base instances and 2,966 noninvertible-base instances over bases 2,3,4 and primes 2,3,5,7, including brute-force decision comparisons, counting identities, bounded witnesses, both noninvertible coefficient orientations, injectivity thresholds, periodic-content bounds, and the stated binary example."
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "record_id": "fun2026_wst_log_worstcase_updates",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 3,
+  "parent_sha256": "93aca2b5225196fd6cef19146b56bedc890d890d2dfaf1d7ff1df32126264a8c",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The constructive branch of the recorded target is equivalent to exhibiting a reachable-state class C of one-key binary trees that contains the empty state, consists entirely of WSTs, is closed under dictionary insertion and deletion, and has deterministic search and complete update algorithms taking O(log(n+2)) worst-case time; the target does not require accepting every arbitrary Definition-1 WST as an initial state.",
+      "claim_sha256": "0135c533ce9a54d7d000b137169dc172965e29bcc31759f0ca2acf8307a0e654",
+      "verdict": "VERIFIED",
+      "evidence": "The recorded constructive target existentially asks for a WST data structure. Taking the states reachable from its empty initialization proves necessity of such a class. Conversely, initialization at the empty member, correctness and closure of the dictionary operations, the WST invariant, and the stated bounds make C itself such a data structure. Neither the recorded target nor Definition 1 universally quantifies over externally supplied WST representations.",
+      "witness": "The class consisting of the empty tree and all reachable representations of any conforming implementation witnesses the forward direction; C with its stipulated algorithms witnesses the reverse direction.",
+      "search_method": "Direct quantifier analysis of the recorded target and Definition 1, followed by proving both implications of the reformulation.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 1,
+      "claim": "Every valid 2–3 search tree has an explicit one-key-per-binary-node encoding E that is a WST; whenever a two-key macro-node occurs, E is not a strict BST.",
+      "claim_sha256": "bda849773733159e0c1204c251d91ffe4799f1bd3f0c3b210a08293ec0671490",
+      "verdict": "VERIFIED",
+      "evidence": "Induction on macro-height is complete. For [a], C0<a<C1 implies the required C0<C1 split. For [a<b], the continuation b has children C0,C1, while the root a has left subtree {b}∪C0∪C1 and right subtree C2; interval order gives both WST splits. A continuation b>a placed as a's left child violates strict BST order. The checker independently validated 1,886 valid 2–3 shapes through macro-height two.",
+      "witness": "Encode [a] as a(E(C0),E(C1)) and [a<b] as a(left=b(E(C0),E(C1)), right=E(C2)); the leaf [1<2] becomes root 1 with left child 2.",
+      "search_method": "Structural induction, followed by exact enumeration of valid macro-shapes and their binary encodings.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The macro-node boundaries and search branches of E are recognizable in O(1) time per macro level using only keys and child pointers.",
+      "claim_sha256": "8b07e7a371c75361fabf7aebbc11f2450b10943f4627c32e046883296326acaf",
+      "verdict": "VERIFIED",
+      "evidence": "At a macro-root a, a null left pointer denotes a one-key leaf. Otherwise a one-key node points into C0, whose root key is below a, whereas a two-key node points to its continuation b>a. Thus one null test and one comparison distinguish the cases. The child intervals are then available as (a.left,a.right) or (b.left,b.right,a.right), and at most two further key comparisons route the query. The checker decoded every tested encoding exactly and found every present and tested absent key correctly.",
+      "witness": "The sign of key(a.left)−a is negative for a one-key internal macro-node and positive for a two-key continuation; equality is excluded by distinct keys.",
+      "search_method": "Exhaustive case analysis of macro arity and exact encode/decode/search testing.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Standard 2–3-tree insertion transfers to E and preserves the encoded class with O(1) work at every visited macro level, including every split and root-growth case.",
+      "claim_sha256": "66fdfac7df849906d25dc2119b3bc85da3a8dc16874665a91cb10c75f3a4ea7f",
+      "verdict": "VERIFIED",
+      "evidence": "The standard cases are exhaustive: a one-key leaf absorbs; a three-key leaf splits and promotes its median; a one-key parent absorbs a promotion; a two-key parent, for each of the left, middle, and right arrival positions, splits its three ordered keys and four child intervals around the median; and a root promotion creates a new root. Each case changes only constantly many macro keys and pointers. Re-encoding those one or two affected macros is therefore constant work and preserves validity and the WST invariant. Exact testing covered 35,280 insertion transitions through seven distinct keys.",
+      "witness": "For an overflow x<y<z with children C0<C1<C2<C3, replace it by [x](C0,C1), promote y, and retain [z](C2,C3); the same local ordered form covers every promotion position.",
+      "search_method": "Exhaustive symbolic split-position analysis plus exact insertion-sequence enumeration.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Standard 2–3-tree deletion transfers to E and preserves the encoded class with O(1) work at every visited macro level, including internal replacement, every borrow and merge orientation, and root contraction.",
+      "claim_sha256": "9627b5aa2689a6f0d48282bc06403d724f4cf79ea572c2b95f906bc67478175f",
+      "verdict": "VERIFIED",
+      "evidence": "Replacing an internal key by the predecessor from its immediately lower interval preserves interval order and reduces deletion to a leaf. A two-key leaf loses a key directly. A zero-key child either borrows the adjacent boundary key through its parent from a two-key sibling, transferring the boundary child when internal, or merges with a one-key sibling and the intervening separator. Left and right edge children and both choices adjacent to a middle child exhaust the orientations. A merge propagates at most one underflow; an empty root contracts. Every rewrite has constant size. The checker validated 798 deletion transitions over a 201-state deletion closure, including resulting encodings and dictionary contents.",
+      "witness": "An underflow between separator s and a rich right sibling [u<v] becomes [s] while u replaces s and the sibling becomes [v]; with a one-key sibling [u], the underflow, s, and [u] merge into [s<u]. The left-hand forms are symmetric.",
+      "search_method": "Complete borrow/merge orientation analysis plus exact deletion-closure enumeration.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 5,
+      "claim": "An encoded 2–3 tree with n keys has binary height O(log(n+2)), and its search, insertion, deletion, and all associated rebalancing take deterministic O(log(n+2)) worst-case time.",
+      "claim_sha256": "9ccf6db2c475470173a360e0c2cbee4ec203b18ae40a604bb39adcae555ae8c3",
+      "verdict": "VERIFIED",
+      "evidence": "For macro-height H, the minimum key count obeys N(0)=1 and N(H)=1+2N(H−1)=2^(H+1)−1, so H=O(log(n+2)). A macro contributes at most two binary nodes along a path, giving binary height at most 2H+1. Search uses constant work per level; insertion propagates at most one split per level; deletion uses at most a search, one predecessor descent, and one underflow repair per ancestor. All choices and bounds are deterministic and worst-case.",
+      "witness": "The all-one-key perfect 2–3 tree attains the minimum-size recurrence; a path through only two-key continuations attains the two-physical-nodes-per-macro upper bound.",
+      "search_method": "Exact recurrence solution, path accounting, and finite height/update invariant checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 6,
+      "claim": "The encoded 2–3 reachable-state class satisfies the structural reformulation and therefore fully resolves the recorded target, with reachable states that are genuinely WST rather than strict BST states.",
+      "claim_sha256": "fb9436f4fa0e22f480e82297e8ac3ae318aa0f1c1b441d5a51f02ad06a03e5d6",
+      "verdict": "VERIFIED",
+      "evidence": "Claims 1–5 establish every required component: one-key binary WST representations, tag-free search, update closure, complete balancing, and deterministic worst-case logarithmic cost. Starting with the empty 2–3 tree supplies initialization. Inserting 1 and then 2 reaches [1<2], encoded as root 1 with left child 2, so the construction is not merely a strict-BST special case. This suffices for the exact existential target.",
+      "witness": "C={empty}∪{E(T): T is a valid 2–3 search tree}; the update sequence insert(1), insert(2) reaches a WST that violates strict BST order.",
+      "search_method": "Composition of the independently checked invariant, decoder, update, and complexity lemmas against the target quantifiers.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 7,
+      "claim": "Independently, under the recorded definition an AVL search tree is a WST supporting every insertion and deletion, including rebalancing, in deterministic O(log(n+2)) worst-case time.",
+      "claim_sha256": "9a3bb3cdbbd049ba4b73a10be6f88cd1fdc7ff4e81e48357b14ccfba6466e656",
+      "verdict": "VERIFIED",
+      "evidence": "Strict BST order implies every left-subtree key is below every right-subtree key, exactly Definition 1. Standard AVL rotations preserve strict order, and insertion or deletion repairs at most one constant-size imbalance per visited ancestor. The minimum-node recurrence M(h)=1+M(h−1)+M(h−2) is exponential, hence height and complete update time are O(log(n+2)) worst-case.",
+      "witness": "The class of ordinary AVL trees, viewed through Definition 1, is the claimed independent witness.",
+      "search_method": "Direct invariant implication, AVL height recurrence, and per-ancestor repair accounting.",
+      "checker_path": "none"
+    },
+    {
+      "idx": 8,
+      "claim": "The encoded class is a proper subclass of all balanced WSTs, but coverage of arbitrary externally supplied WST states is a strictly stronger requirement than the recorded target and does not weaken the full resolution.",
+      "claim_sha256": "7d13484ef703b88f386bf904512b6530185fe5f2a61e959949565d00d40e154c",
+      "verdict": "VERIFIED",
+      "evidence": "Root 2 with left leaf 3 and right leaf 4 is balanced and satisfies Definition 1 because 3<4. It cannot be a valid encoding: treating 3>2 as a continuation produces a two-key macro with only C2 nonempty, while treating the root as one-key violates its ordered C0 interval. Thus containment is proper. The exact target asks for a data structure and does not state a universal conversion or initialization promise for every Definition-1 tree.",
+      "witness": "The three-node tree 2(left=3,right=4) is a balanced WST rejected by the valid-macro decoder.",
+      "search_method": "Concrete parse obstruction plus direct comparison with the recorded target's quantifiers.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 9,
+      "claim": "For a WST in the standard right-rotation configuration z(left=y(A,B), right=D), the unmodified rotation is a WST exactly when A is empty or every key of A is smaller than key(z); symmetrically, a left rotation at z is safe exactly when D is empty or key(z) is smaller than every key of D.",
+      "claim_sha256": "e20141aadad9a90bbad8fa51b9daf28f4489ac3603b5450ecf568a69957c7d0c",
+      "verdict": "VERIFIED",
+      "evidence": "After a right rotation, the new z split B<D is inherited. At new root y, A<B and A<D are inherited from the original WST, leaving precisely A<key(z) as the sole new obligation; it is vacuous exactly when A is empty. Mirroring leaves precisely key(z)<D. Exhaustive checking of all labeled WSTs through six nodes validated 22,999 applicable rotations in each direction.",
+      "witness": "The symbolic before/after configurations show that every post-rotation cross-subtree comparison except A<z, or its mirror z<D, already follows from an original split.",
+      "search_method": "Necessary-and-sufficient symbolic split comparison and exhaustive finite labeled-tree testing.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 10,
+      "claim": "There is a three-node WST on which an ordinary right rotation destroys the WST invariant.",
+      "claim_sha256": "6afe1ec9fe0695e7f32760d199f0d78384c721bf181e1cc01fb14c167d01f865",
+      "verdict": "VERIFIED",
+      "evidence": "The chain root 1, left child 3, and that child's left child 2 is initially a WST because each relevant right subtree is empty. Rotation makes 3 the root with left leaf 2 and right leaf 1, requiring 2<1, which is false.",
+      "witness": "1(left=3(left=2)) rotates to 3(left=2,right=1).",
+      "search_method": "Direct evaluation of Definition 1 before and after the rotation, also asserted by the exact checker.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 11,
+      "claim": "A three-node WST shows more strongly that permuting only the two pivot keys cannot universally repair a right rotation; a repair retaining the rotated topology may have to touch the transferred subtree.",
+      "claim_sha256": "f6b73aa259f0fc664d99cfac218c2eea4eda620efe5a74ddbad08fec531fd93e",
+      "verdict": "VERIFIED",
+      "evidence": "For root z=1, left child y=2, and A leaf 3, the pre-state is a WST. After rotation, A remains the left leaf and the right leaf receives either 1 or 2 under either pivot assignment. The new root split would require 3<1 or 3<2, both false. A valid labeling of that topology exists, but it moves A's key, proving the stated necessity possibility.",
+      "witness": "1(left=2(left=3)) is the pre-state; both pivot-only poststates fail, whereas post-topology root 1 with leaves 2 and 3 is a WST and necessarily changes the transferred leaf's key.",
+      "search_method": "Exhaustion of the two pivot permutations and direct invariant checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 12,
+      "claim": "The maximum key of a nonempty WST subtree lies among the node keys on the path that follows a nonempty right child and otherwise the left child; in a perfect height-h WST, the h+1 node keys on the right spine can be mutually order-unconstrained by the WST invariant.",
+      "claim_sha256": "4e4968847c0ad917cb76ed12b29f5096a2e3c577cfa1bf585c0c297c9721e15d",
+      "verdict": "VERIFIED",
+      "evidence": "If a right subtree exists, every left key is below every right key, so only the current node or the right subtree can contain the maximum. If it does not, only the current node or left subtree can; induction proves the path assertion. In a perfect tree, assign successive off-spine left blocks to increasing disjoint low intervals and all spine-node keys to a common higher interval. Every split is then invariant under any permutation of the spine keys, because an ancestor's own key is excluded and all later spine keys remain on one side. The checker validated the maximum-path property on 41,342 labeled WSTs and all 873 spine permutations through height five.",
+      "witness": "For each spine depth d, place its perfect off-spine block below every key in the recursively constructed right subtree; freely permute the h+1 larger spine keys.",
+      "search_method": "Induction on subtree height, explicit interval construction, and exact exhaustive finite testing.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 13,
+      "claim": "In the unaugmented comparison model with only keys and child pointers, for every h>=1 there is an n=2^(h+2)−1 WST at an AVL left-left imbalance for which testing the ordinary rotation, and any key-permutation repair retaining the rotated topology, requires Ω(h)=Ω(log n) comparisons in the worst case.",
+      "claim_sha256": "5ac2f064b21fe9fee9c75c310002e956bc321705819f55406365f6d719c26eed",
+      "verdict": "VERIFIED",
+      "evidence": "Take perfect A of height h and perfect B,D of height h−1 in z(left=y(A,B),right=D). The exact size is (2^(h+1)−1)+2(2^h−1)+2=2^(h+2)−1, and z's child heights differ by two while y has the left-heavy orientation. The h+1 candidate-path keys of A can be pairwise incomparable under the WST partial order. Rotation legality is A<key(z), so a comparison adversary can retain an untested candidate as a possible violator until Ω(h) comparisons occur. For repair, let m=|A|, make both pivot keys lower than A and place B,D in compatible higher intervals. After rotation each root child has m nodes. Regardless of the root key, the WST root split forces the left child to contain the m smallest remaining keys; consequently at most two A keys are outside it and max(A) must be among them. Starting with h+1 incomparable maximum candidates, each comparison eliminates at most one, so reducing the possible set to two costs at least h−1=Ω(h). Since n=2^(h+2)−1, h=Θ(log n). The checker validated the size identities, spine permutations, and 498 exact rank-partition instances.",
+      "witness": "The family A perfect height h, B,D perfect height h−1, with freely permutable maximum candidates on A's right spine and ordered off-spine blocks, supplies the comparison adversary.",
+      "search_method": "Symbolic height/count calculation, comparison-decision adversary, necessary rank partition after rotation, and exact finite sanity checks.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/fun2026_wst_log_worstcase_updates/audit/bugbank/attempt_3/audit_fun2026_wst_attempt3_exact.py"
+    },
+    {
+      "idx": 14,
+      "claim": "The rotation lower bound is a precise limitation on one primitive and neither obstructs the encoded 2–3 construction nor weakens the full target resolution.",
+      "claim_sha256": "6f4b0faf99d5bd4c903eeeaa2d9a797a34428ca6ca311963055f088802f3a4c5",
+      "verdict": "VERIFIED",
+      "evidence": "Claim 13 concerns general-WST, fixed-topology rotation testing or key repair. The encoded 2–3 algorithms use locally decoded split, promotion, borrow, merge, root-growth, and root-contraction rewrites and never invoke that primitive. Moreover, an Ω(log n) bound for one rotation repair is not itself an obstruction to an O(log n) update with only constantly many repairs. Thus there is no reduction from this restricted lower bound to failure of the verified construction.",
+      "witness": "The insertion and deletion algorithms of claims 3 and 4 constitute an explicit update route that bypasses universal binary rotation repair.",
+      "search_method": "Scope and dependency analysis between the lower-bound primitive and the constructive algorithms.",
+      "checker_path": "none"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "FULLY_RESOLVES_TARGET",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact recorded target is existential: it asks for a WST data structure with complete worst-case-logarithmic updates, not an updater accepting every externally supplied Definition-1 tree. The class of encodings of valid 2–3 trees is made solely of one-key binary WSTs, is initialized empty, is closed under correct dictionary insertion and deletion, needs no persistent tags or augmented node fields, and has deterministic O(log(n+2)) search and update bounds including all balancing. It also reaches non-BST states. This establishes the entire constructive branch; the auxiliary rotation lower bound is not needed for completeness.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json as evidence inputs; used no web, retrieval material, receipt, other arm, prior solution, or revision prompt.",
+    "Verified SHA-256(/evidence/parent.json)=93aca2b5225196fd6cef19146b56bedc890d890d2dfaf1d7ff1df32126264a8c.",
+    "Verified SHA-256(/evidence/source.json)=043db7853880ae96731effa5d16a2bdeae2a3e6bf7dc0c2ae949cb118e26743a.",
+    "Independently analyzed the recorded target quantifiers, Definition 1, the source update model, and every constructive and lower-bound claim.",
+    "Created and ran /work/audit_fun2026_wst_attempt3_exact.py using only finite tuples, distinct integers, child-pointer shapes, and exact integer arithmetic.",
+    "The checker passed 1,886 valid encoded 2–3 shapes, 35,280 insertion transitions, 798 deletion transitions over a 201-state closure, 41,342 labeled WSTs through six nodes, 22,999 rotations in each direction, 873 perfect-spine permutations, and 498 repair rank partitions.",
+    "SHA-256(/work/audit_fun2026_wst_attempt3_exact.py)=f153eefc7a5c5782213add3aed98331546e35b0e0074369cfb236b781da03613."
+  ]
+}

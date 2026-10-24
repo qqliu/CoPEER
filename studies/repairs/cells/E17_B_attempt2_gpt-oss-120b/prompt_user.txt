@@ -1,0 +1,156 @@
+# Record E17: Algebraic identity inside a prime-divisor argument
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E17 (g3ref-pnv-102)
+public source: none: reference-derived proof text (g3refs, ProofNet-style problem pnv-102), not a discussion-site post
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Show that any prime divisor of $x^{4}-x^{2}+1$ is congruent to 1 modulo 12 .
+P0002 | 
+P0003 | DEFINITIONS / CONVENTIONS:
+P0004 | x is an integer. A prime divisor means a (positive) prime number p dividing x^4 - x^2 + 1.
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | \newcommand{\legendre}[2]{\genfrac{(}{)}{}{}{#1}{#2}}
+0002 | $\bullet$ As $a^6 +1 = (a^2+1)(a^4-a^2+1)$, $p\mid a^4 - a^2+1$ implies $p \mid a^6 + 1$, so $\legendre{-1}{p} = 1$ and $p\equiv 1 \pmod 4$.
+0003 | 
+0004 | $\bullet$ $p \mid 4a^4 - 4 a^2 +4 = (2a-1)^2 + 3$, so $\legendre{-3}{p} = 1$.
+0005 | 
+0006 | As $-3 \equiv 1 \pmod 4$, $\legendre{-3}{p} = \legendre{p}{3}$, so $\legendre{p}{3} = 1$, thus $p \equiv 1 \pmod 3$.
+0007 | 
+0008 | $4 \mid p-1$ and $3 \mid p-1$, thus $12 \mid p-1$ : $$p \equiv 1 \pmod {12}.$$
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+$p \mid 4a^4 - 4 a^2 +4 = (2a-1)^2 + 3$
+located at line label(s): 0004
+
+## Located defective declaration
+
+Declaration: `G3refPnv102.SourceIdentity / SourceIdentityInContext`
+
+```lean
+def lhs (a : ℤ) : ℤ := 4 * a ^ 4 - 4 * a ^ 2 + 4
+def rhs (a : ℤ) : ℤ := (2 * a - 1) ^ 2 + 3
+def SourceIdentity : Prop := ∀ a : ℤ, lhs a = rhs a
+def SourceIdentityInContext : Prop :=
+  ∀ (a : ℤ) (p : ℕ), Nat.Prime p → (p : ℤ) ∣ a ^ 4 - a ^ 2 + 1 → lhs a = rhs a
+```
+
+Stored proof-text line 0004 asserts, inside the step `p | 4a^4 - 4a^2 + 4 = (2a-1)^2 + 3, so (-3/p) = 1`, the algebraic identity 4a^4 - 4a^2 + 4 = (2a - 1)^2 + 3. Read for every integer a (SourceIdentity) and in the source's context (SourceIdentityInContext) this is the located defect. Supply the corrected right-hand side in the frozen form (α * a ^ e + β) ^ 2 + γ and prove the identity for every integer a; then prove the located sentence's divisibility conclusion (every prime p dividing a^4 - a^2 + 1 divides the corrected right-hand side). The ambient theorem of the problem (SourceGoal) is not part of this record.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/- Record g3ref-pnv-102 (E17): Mathlib file (`import Mathlib`, as the released file).
+
+Source: a reference-derived proof text for the problem "Show that any prime divisor of x^4 - x^2 + 1 is
+congruent to 1 modulo 12" (stored problem text P0001-P0004, proof text lines 0001-0008). Line 0004 asserts,
+for an integer a and a prime p dividing a^4 - a^2 + 1, that p | 4a^4 - 4a^2 + 4 = (2a - 1)^2 + 3.
+`lhs a` and `rhs a` are the two sides of that identity. `SourceIdentity` reads the identity for every
+integer a; `SourceIdentityInContext` reads it in the source's context (a prime p dividing a^4 - a^2 + 1).
+`SourceGoal` is the source's stated goal (P0001), recorded for reference only.
+Primality and divisibility are Mathlib's standard predicates. -/
+import Mathlib
+
+namespace G3refPnv102
+def lhs (a : ℤ) : ℤ := 4 * a ^ 4 - 4 * a ^ 2 + 4
+def rhs (a : ℤ) : ℤ := (2 * a - 1) ^ 2 + 3
+
+/-- The located identity (stored line 0004) read for every integer `a`. -/
+def SourceIdentity : Prop := ∀ a : ℤ, lhs a = rhs a
+
+/-- The located identity in the source's context: `a` an integer, `p` a prime dividing `a^4 - a^2 + 1`. -/
+def SourceIdentityInContext : Prop :=
+  ∀ (a : ℤ) (p : ℕ), Nat.Prime p → (p : ℤ) ∣ a ^ 4 - a ^ 2 + 1 → lhs a = rhs a
+
+/-- The source's stated goal (problem text P0001): every prime divisor of `x^4 - x^2 + 1` is `1 mod 12`.
+Recorded for reference only. -/
+def SourceGoal : Prop := ∀ (x : ℤ) (p : ℕ), Nat.Prime p → (p : ℤ) ∣ x ^ 4 - x ^ 2 + 1 → p % 12 = 1
+end G3refPnv102
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record g3ref-pnv-102 (E17): the identity of stored line 0004 fails at a = 2 (52 vs 12), inside the
+source's own context (p = 13 is prime and divides 2^4 - 2^2 + 1 = 13). -/
+namespace G3refPnv102
+
+theorem lhs_at_two : lhs 2 = 52 := by norm_num [lhs]
+theorem rhs_at_two : rhs 2 = 12 := by norm_num [rhs]
+theorem identity_fails_at_two : lhs 2 ≠ rhs 2 := by norm_num [lhs, rhs]
+theorem thirteen_prime : Nat.Prime 13 := by norm_num
+theorem thirteen_divides_context_at_two : ((13 : ℕ) : ℤ) ∣ (2 : ℤ) ^ 4 - 2 ^ 2 + 1 := by norm_num
+
+theorem source_identity_false : ¬ SourceIdentity := fun h => identity_fails_at_two (h 2)
+
+theorem source_identity_in_context_false : ¬ SourceIdentityInContext :=
+  fun h => identity_fails_at_two (h 2 13 thirteen_prime thirteen_divides_context_at_two)
+
+end G3refPnv102
+
+#print axioms G3refPnv102.identity_fails_at_two
+#print axioms G3refPnv102.source_identity_false
+#print axioms G3refPnv102.source_identity_in_context_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E17: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace G3refPnv102
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected right-hand side of the identity of stored line 0004. The hole must have the frozen form
+`(α * a ^ e + β) ^ 2 + γ` with integer literals `α ≠ 0`, `e ≥ 1`, `β`, `γ` (a square of a binomial in `a` plus a
+constant; e.g. `(3 * a ^ 5 - 7) ^ 2 + 11`): no `lhs`/`rhs`, no other shape. -/
+def rhsC (a : ℤ) : ℤ := «HOLE»
+
+/-- The corrected located identity (shape fixed): for every integer `a`. -/
+def CorrectedIdentity : Prop := ∀ a : ℤ, lhs a = rhsC a
+-- ===== END FIXED PART =====
+
+end G3refPnv102
+```
+
+Allowed edit: Replace the hole in `rhsC` by one expression of the exact form (α * a ^ e + β) ^ 2 + γ with integer literals α ≠ 0, e ≥ 1, β, γ, spelled in exactly that order: the literal α before `a ^ e`, then the sign and absolute value of β inside the parentheses, then `) ^ 2`, then the sign and absolute value of γ. A negative α is written with a leading minus and a negative β or γ with a binary minus, e.g. `(-3 * a ^ 5 + 7) ^ 2 - 11`; other spellings (`a ^ e * α`, `+ -7`, `(-7)`, extra parentheses, an expanded polynomial) are rejected by the frozen grammar even when the identity is true. Nothing else in the fixed part may change. lhs (the source's left-hand side), quantification over every integer a and the shape square-plus-constant are fixed; no hypothesis on a may be added. Do not redefine lhs, rhs, SourceIdentity, SourceIdentityInContext or SourceGoal; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): lhs, rhs, SourceIdentity, SourceIdentityInContext, SourceGoal
+
+## OBLIGATIONS (exact names and statements, inside `namespace G3refPnv102`)
+
+```lean
+theorem repair_statement : ∀ a : ℤ, G3refPnv102.lhs a = G3refPnv102.rhsC a
+```
+(universal: Universal: the corrected identity for every integer `a`.)
+
+```lean
+theorem repair_nonvacuous : ∃ a : ℤ, G3refPnv102.rhsC a ≠ G3refPnv102.rhs a
+```
+(nonvacuity: Non-vacuity: the corrected right-hand side differs from the source's `rhs` at some integer.)
+
+```lean
+theorem final_theorem : ∀ (a : ℤ) (p : ℕ), Nat.Prime p → (p : ℤ) ∣ a ^ 4 - a ^ 2 + 1 → (p : ℤ) ∣ G3refPnv102.rhsC a
+```
+(final: The endpoint of this record: the located sentence's divisibility conclusion with the corrected right-hand side: every prime `p` dividing `a ^ 4 - a ^ 2 + 1` divides `rhsC a`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Produce the content of SUBMISSION.lean as specified in the instructions, check it with `lean_check`, fix errors within the budget, and finish with your final message: the SUBMISSION.lean content in one ```lean code block followed by the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.

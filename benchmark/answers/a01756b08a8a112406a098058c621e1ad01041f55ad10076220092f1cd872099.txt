@@ -1,0 +1,24 @@
+analysisWe need find false assertion. Let's analyze the proof lines.
+
+Original problem: 119 residents, 120 apartments. Overpopulated if at least 15. Each day inhabitants of an overpopulated apartment have a quarrel and each goes off to a different apartment.
+
+We want to show process will eventually finish. Book solution uses monovariant S = sum over apartments of binomial(a_i,2). They claim that S decreases each day. But is that true? Let's examine.
+
+Suppose an overpopulated apartment has a_1 >=15. Residents move to distinct apartments. After move, each target apartment gets +1 person. The S change: For each target apartment i_j, the binomial increases by a_{i_j} (since new person adds a_{i_j} new pairs). For the source apartment, binomial decreases from binomial(a_1,2) to binomial(0,2)=0. So net change = sum over j of a_{i_j} - binomial(a_1,2). They claim this is positive? Wait they claim positive? Let's read: They say the quantity is changed by an amount of a_{i1}+...+a_{i_{a1}} - a1(a1-1)/2 which is positive as a_{i1}+... <= 119-a1 <=104 and a1(a1-1)/2 >=105. That yields negative? Wait compute: Suppose a1=15. Then a1(a1-1)/2 = 105. The sum of a_{ij} <= 119-15 =104. So sum - 105 <= -1, negative. So the change is negative. But they say it's positive? Let's read: "which is positive as ... <=104 and ... >=105" That seems contradictory: If sum <=104 and subtract 105, result <= -1. So negative. They might have sign reversed: Actually change is sum - binomial(a1,2). Since binomial is larger, change negative. So S decreases. They say "positive as ...". That's wrong. But maybe they mis-specified direction. The assertion "which is positive as ..." is false: The amount is negative, not positive. But the claim "Hence the quantity is decreasing during this process" is correct. But the line "which is positive as ..." is false.
+
+Let's find the line number. In text, line 10-11: 
+010 | ... change by amount of a_{i1}+...+a_{i_{a1}} - a1(a1-1)/2 which is positive as ... <=104 ... >=105
+
+So the false assertion is that the change is positive. The correct is negative. So we can provide counterexample: Suppose a1=15, all other apartments empty. Then sum of a_{ij} <=104? Actually if all others empty, sum=0. Then change = 0-105 = -105 negative. So S decreases. So counterexample shows false assertion.
+
+Alternatively, maybe the false assertion is earlier: They say "If all a_i, then the process is completed and we are done." Not sure.
+
+But the false assertion is that the change is positive. So candidate line: 10 or 11. The claim: "which is positive as ... <=104 ... >=105" is false. Provide counterexample: a1=15, all others empty.
+
+Also check extension part: They claim maximum number of days is 14. Let's verify if 14 is correct? They produce example with 14 days. Is it possible to have 14 days? They start with a1=15, a2=14,... a14=2, a15=...=0. Let's simulate? Overpopulated apartments: at day1, a1=15. After quarrel, each person moves to distinct apartments. They say they go to first 15 other apartments by number after each fight. But we need to check if process can last 14 days. Might be correct. So not false.
+
+Thus the false assertion is the claim that change is positive. Provide counterexample: a1=15, all others empty. Then sum of a_{ij} =0, binomial(a1,2)=105, change negative.
+
+Thus produce JSON with candidate line "10" (or "11"). Provide claim: "the quantity is changed by an amount of ... which is positive as ...". Provide counterexample: a1=15, all other apartments empty.
+
+Let's produce output.assistantfinal{"candidates": ["10"], "claim": "the change in $S$ after an overpopulated apartment splits up is positive as $a_{i_1}+a_{i_2}+\cdots+a_{i_{a_1}}\le 104$ and $\frac{a_1(a_1-1)}{2}\ge 105$", "counterexample": "Take $a_1=15$ and $a_2=\dots=a_{120}=0$. Then $a_{i_1}+ \dots + a_{i_{a_1}}=0$ and $\frac{a_1(a_1-1)}{2}=105$, so the change is $0-105=-105<0$, contradicting the claim."}

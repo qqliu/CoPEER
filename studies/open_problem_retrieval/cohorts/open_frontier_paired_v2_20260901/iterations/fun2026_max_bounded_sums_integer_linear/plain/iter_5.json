@@ -1,0 +1,58 @@
+{
+  "record_id": "fun2026_max_bounded_sums_integer_linear",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "60bc8cb496e1d7480bc82cf650b0d27e2233e830b1e380815dc3916db7b7aac7",
+  "audit_sha256": "310a156b5268b8cfc9167e762db9e35a0d4a12d92acafbed3412131b1483d1bb",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "An alleged optimum has a linear-time verifiable certificate, even for arbitrary signed entries.",
+      "proof_sketch": "Let q=min(m,n), and let F_l be the maximum sum of an l by l square. Adopt L=0 when no positive length is feasible. Build the two-dimensional prefix-sum table in O(mn) time. A certificate for optimum L consists of: (i) for every l>L, coordinates of one l-square having sum greater than k; and (ii) no additional data for L. Verification checks all (m-L+1)(n-L+1) L-squares have sum at most k (vacuous for L=0), and checks the supplied witness for each l>L. Every sum is obtained from four prefix entries. Thus verification costs O(mn+q)=O(mn) arithmetic/word operations. The first condition proves L feasible, while the witnesses prove every larger length infeasible, so the characterization is exact."
+    },
+    {
+      "claim": "There is an exact output-sensitive search algorithm whose worst-case time is O(mn min(m,n)).",
+      "proof_sketch": "After prefix-sum preprocessing, inspect lengths q,q-1,...,1. For each l, scan its square placements until finding a sum greater than k; retain that placement as the infeasibility witness. Return the first l for which the entire scan finds no violation, or 0 if every length has a witness. Correctness follows directly from descending order. If m>=n=q, the optimum is L, and d=q-L, the number of tested placements is at most sum_{t=0}^d (m-n+t+1)(t+1), hence the total time is O(mn+(m-n+1)(d+1)^2+(d+1)^3). This is O(mnq) in the worst case and O(mn) whenever d=O(1). When L=0, the displayed sum includes one harmless extra t=q term. The algorithm also constructs the certificate in the preceding claim."
+    },
+    {
+      "claim": "Feasibility can alternate at every side length, and the natural no-revisit greedy extension is incorrect.",
+      "proof_sketch": "For any n, take an n by n matrix whose first row is 1,-1,1,-1,... and whose other rows are zero, with k=0. For even l, every length-l interval of the first row sums to zero, so every l-square has sum zero. For odd l, intervals in that row sum to either 1 or -1, squares below it sum to zero, and the interval beginning in the first column sums to one. Hence F_l=0 for even l and F_l=1 for odd l, so feasibility alternates at every consecutive length. Separately, with k=1 and matrix [[2,1,1],[-3,1,1]], the side-2 sums scanned left to right are 1 and 4. A no-revisit scan accepts the first, decreases to side 1 only at the second, and can miss the earlier entry 2. It may return 1, although F_2=4 and F_1=2, so the correct answer is 0."
+    },
+    {
+      "claim": "The O(mn) endpoint is achievable for two nontrivial signed separable classes: multiplicative rank one and additive separability.",
+      "proof_sketch": "Suppose first that A_ij=u_i v_j. For each l, let X_l be all length-l window sums of u and Y_l those of v. Every l-square sum is xy with x in X_l and y in Y_l. Its maximum is attained among the four products formed from min X_l, max X_l, min Y_l, and max Y_l. One-dimensional prefix sums compute these extrema in O(m+n) time per l. Over q lengths this is O(q(m+n))<=2mn. Rank one can be recognized in O(mn): choose a nonzero pivot p=A_rc and check p A_ij=A_ic A_rj everywhere; the all-zero case is immediate. Using the pivot representation, evaluate each of the four corner products divided exactly by p and then take their maximum, which also handles p<0. If A_ij=u_i+v_j, an l-square sum is l(X+Y), so F_l=l(max X_l+max Y_l), with the same time bound. Additive separability is recognized by checking A_ij=A_i1+A_1j-A_11."
+    },
+    {
+      "claim": "A thresholded max-plus-convolution scan embeds exactly into matrices supported on one row.",
+      "proof_sketch": "Given integer vectors x,y of length N, define c_t=max_{i+j=t}(x_i+y_j). Put W=max(1,max|x_i|,max|y_j|), C=2W+1, H=C+W+1, and B=4N. Define a prefix sequence p_0,...,p_B as follows: p_s=H for 0<=s<=2N-2, p_s=-H for 2N+2<=s<=B, and set the three intervening values arbitrarily. Overwrite p_i=-x_i and p_{B-j}=y_j+C. Form a B by B matrix whose first row is p_{s+1}-p_s and whose other rows are zero. For l=B-t, 0<=t<=2N-2, a first-row window starting at s telescopes to p_{s+B-t}-p_s. Setting i=s and j=t-s gives C+x_i+y_j for valid convolution indices. If i or j is invalid, the corresponding H or -H value makes the window negative; every valid value is at least one. Squares below the first row sum to zero. Thus F_{B-t}=C+c_t exactly. At threshold C+K, the largest feasible encoded length corresponds to the least t with c_t<=K."
+    },
+    {
+      "claim": "If integer bit lengths are unbounded and bit operations are charged, an O(mn) bound independent of bit length is impossible.",
+      "proof_sketch": "For a 1 by 1 matrix, the answer is determined by comparing its entry a with k. In an explicit-binary bit-cost model, fix a=k=2^(B-1). For every lower position r, replacing a by 2^(B-1)+2^r changes the correct answer while changing only that bit. Correctness on the equality input therefore requires ruling out all B-1 alternatives, giving Omega(B) worst-case bit cost. Hence no uniform O(mn)=O(1) bit-time bound exists even in this base case. This is only the generic input-length obstruction: it does not rule out O(mn) arithmetic/word operations and therefore does not settle the substantive bounded-word endpoint."
+    }
+  ],
+  "final_writeup": "Let q=min(m,n) and F_l denote the maximum sum among all l by l squares. I did not obtain either a general O(mn) word-RAM algorithm or a standard fine-grained lower bound excluding one, so the main endpoint remains unresolved.\n\nThe strongest general result is a linear verifier. A proposed answer L is correct exactly when every L-square has sum at most k and, for each l>L, one supplied l-square has sum greater than k. A two-dimensional prefix table verifies all of this in O(mn) arithmetic/word operations. This also yields a simple exact descending search taking O(mnq) worst-case time, with a sharper output-sensitive bound when L is close to q.\n\nSigned matrices present a genuine structural obstruction: feasibility need not be monotone and can alternate for every consecutive side length. The matrix with first row 1,-1,1,-1,... and all remaining entries zero has F_l=1 for odd l and F_l=0 for even l. Thus binary search, monotone pruning, and the paper's no-revisit reasoning cannot extend directly. A separate 2 by 3 example shows that merely decreasing the current length and continuing the scan can miss a violation at an earlier position.\n\nThere are nevertheless nontrivial signed special cases attaining the endpoint. Multiplicatively rank-one matrices and additively separable matrices can both be recognized and solved in O(mn) exact arithmetic. Their square sums separate into products or sums of one-dimensional window sums, whose extrema over all lengths require q(m+n)<=2mn work.\n\nFinally, the one-row construction shows that high-side-length maxima can encode max-plus-convolution coefficients exactly. It isolates a concrete convolutional core that a general solution must handle, although it does not itself preclude O(mn), since the constructed dense matrix has Theta(N^2) cells.\n\nUnder literal bit complexity, unbounded integers already make an O(mn) bound independent of bit length impossible for a 1 by 1 input. This generic input-reading obstruction is not an endpoint lower bound for the usual bounded-word/unit-cost formulation. Accordingly, the target has only been partially addressed, and the substantive endpoint remains open.",
+  "audit_feedback_acted_on": [
+    "The audit contains no REFUTED or UNRESOLVED claim items: all six inherited claims were VERIFIED, so claimed_resolution, every claim and proof_sketch, and final_writeup were preserved exactly.",
+    "Acted on target_verdict VALID_PARTIAL_PROGRESS by retaining the verified partial advances while preserving the explicit conclusion that neither requested general endpoint has been established.",
+    "Acted on claimed_resolution_verdict ACCURATE by retaining claimed_resolution PARTIAL.",
+    "Preserved the audit-required distinction between the generic unbounded-bit input-length obstruction and a lower bound for the substantive bounded-word or unit-cost endpoint."
+  ],
+  "checks_performed": [
+    "Verified the exact parent SHA-256 60bc8cb496e1d7480bc82cf650b0d27e2233e830b1e380815dc3916db7b7aac7 and audit SHA-256 310a156b5268b8cfc9167e762db9e35a0d4a12d92acafbed3412131b1483d1bb.",
+    "Consulted only the designated source, exact parent, and independent audit; used no web, retrieval database, retrieval result, treatment receipt, external memory, prior frontier output, other solution, or verification report.",
+    "Adversarially re-derived the certificate characterization and descending-search bound, including L=0, L=q, signed values, and both rectangular orientations.",
+    "Adversarially checked the alternating family, the no-revisit counterexample, both separable-class formulas and recognition identities, every valid and invalid endpoint case in the one-row max-plus construction, and the scope of the explicit-binary bit lower bound.",
+    "Ran the self-authored exact_checks.py using arbitrary-precision integers and no floating-point decisions: 106485 general matrix/threshold cases, 48050 separable cases, 1379 convolution-vector pairs with two middle-prefix assignments each, and 2016 bit alternatives all passed.",
+    "Confirmed all six parent claim hashes against the audit; final_writeup has 325 whitespace-delimited words and the largest proof_sketch has 141, below the stated limits.",
+    "Rechecked target coverage against the source: neither a general O(mn) bounded-word algorithm nor a matching standard-assumption impossibility result is proved, so PARTIAL remains exact and no material proof-state correction is warranted."
+  ],
+  "self_assessment": "CONFIDENT"
+}

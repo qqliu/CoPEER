@@ -1,0 +1,53 @@
+{
+  "record_id": "fun2026_recursive_maze_linear",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 5,
+  "parent_sha256": "62c40ae9d8cba33fedf16705935e5cee058658d189704084c7e9ee5f8e29a227",
+  "audit_sha256": "b48a292898b43332b4d7608863a2df0b8855140cc0bb03a1c8ab3bf724a6b617",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "Reachability is exactly a sparse unary congruence-closure query.",
+      "proof_sketch": "Write a dual edge as (o,X,t), suppressing its pin: o is its origin, t its target, and X its box. Let θ be the least equivalence relation on wires satisfying t θ t' and edges (o,X,t),(o',X,t') imply o θ o'. Equivalently, after quotienting by θ, each box X induces a well-defined partial unary map [t]↦[o]. Every same-stack maze path proves one such equality, while the folding rule proves the converse inductively; hence θ is precisely the paper's wormhole equivalence. The maze is exitable exactly when the starting wire is θ-equivalent to a wire incident with an outer pin. Pin identifiers do not otherwise affect this fixed point."
+    },
+    {
+      "claim": "There is a deterministic O(B+(W+E) log(W+E))-time, O(W+E+B)-space algorithm, eliminating the dense W·B initialization.",
+      "proof_sketch": "Maintain explicit wire classes. For every current class C, keep a finite map D_C whose key X stores one edge (o,X,t) with t∈C. Initially, radix-sort edges by (t,X); retain one per key and queue the origins of every duplicate. When a queued pair lies in distinct classes, merge those classes and meld their maps. Every common map key X queues the two stored origins and discards one entry. Thus every queue event is charged to a discarded original edge, so there are at most E events. All performed merges are forced by the closure rule. At termination, every pair of same-X edges with equivalent targets has equivalent origins, so the resulting partition is stable; being obtained only through forced merges, it is the least stable partition.\n\nUse smaller-to-larger linked member lists, giving O(W log W) total relabeling. Store maps in deterministic split/join weight-balanced search trees. Melding trees of sizes m≤n, while reporting equal keys, costs O(m log(n/m+1)). Across all melds this is O(E log(E+1)): a surviving entry is charged by the logarithm of the growth of its containing map, which telescopes, while a deleted entry receives at most O(log E) once. The trees are destructive and reuse their entry nodes, so space stays linear."
+    },
+    {
+      "claim": "Both outcomes have certificates of size O(W+E) verifiable deterministically in O(W+E+B) time.",
+      "proof_sketch": "For a negative certificate, supply a class number P(v) for every wire. Radix-sort all edges (o,X,t) by (X,P(t)) and verify that every group has one value P(o). This says P is a stable congruence. Since the least congruence refines every stable congruence, if P separates the start from every outer-pin wire, exit is impossible. Conversely, the least congruence itself supplies such a certificate for every negative instance.\n\nFor a positive certificate, supply a chronological binary merge forest with at most W−1 internal nodes. Each internal node has two earlier child components, two original same-box edges, and an earlier forest node q. Verify that the two edge origins lie in the two child subtrees and both targets lie below q. DFS entry/exit intervals make each containment test constant-time. Inductively, q certifies that the targets were already equivalent, so the folding rule justifies merging the children. A final root containing both the start and an outer-pin wire certifies exit. Any successful folding sequence yields such a forest, establishing completeness."
+    },
+    {
+      "claim": "The target O(W+E+B) bound holds for graded dual graphs: graphs admitting an integer rank ρ with ρ(o)=ρ(t)+1 for every edge (o,X,t).",
+      "proof_sketch": "Derived equivalences never cross ranks. Process ranks increasingly. Once rank r−1 is finalized, group every edge whose origin has rank r by (X,class(t)); within each group connect all origins by a star, then compute ordinary connected components among rank-r wires. These are exactly the final classes at rank r: every required merge uses equivalent targets at rank r−1, and no later rule can merge rank-r wires because every rule's origin has rank one above its target. Grouping is linear without a W·B table: bucket a rank's edges by X using a B-entry timestamp array, then use a W-entry timestamp array keyed by target-class identifiers inside each touched X bucket. Every edge and wire is processed O(1) times, yielding O(W+E+B) time and space. If ρ is not supplied, DFS assigns and checks the difference constraints in every weak component in O(W+E) time; componentwise normalization gives an O(W)-sized rank range."
+    },
+    {
+      "claim": "Repeated global fixed-point rescanning can require Θ(W) changing rounds even with one box and E=Θ(W).",
+      "proof_sketch": "For n≥0, use vertices z,a_0,b_0,…,a_n,b_n and one box X. Add a_0→X z and b_0→X z; for 1≤k≤n add a_k→X a_{k−1} and b_k→X b_{k−1}. Starting from singleton classes, the first synchronous round merges only a_0,b_0; round k+1 merges only a_k,b_k. Induction also shows no cross-level pair ever merges. Thus W=2n+3, E=2n+2, but n+1 changing rounds are necessary. Conversely, every changing round strictly reduces the number of equivalence classes, so there are at most W−1 changing rounds. Distinct pin labels realize all edges in a valid one-box dual maze. Consequently an algorithm that radix-sorts or scans all E edges every round takes Θ(n²) on this family; this is a limitation of that strategy, not a general lower bound."
+    }
+  ],
+  "final_writeup": "I did not obtain the requested unrestricted linear-time algorithm. The remaining obstacle is dynamic sparse map melding: when two wire classes merge, one must discover all box labels occurring in both target-class maps. The deterministic construction above performs exactly the necessary work but has a logarithmic total overhead.\n\nFormally, for dual edges (o,X,t), compute the least equivalence θ closed under\n\n  t θ t' and (o,X,t),(o',X,t') ⇒ o θ o'.\n\nExit reachability is the query of whether the start class contains an outer-pin wire. This formulation cleanly separates correctness from data-structure complexity.\n\nA rigorous general algorithm maintains one map D_C per current class C, keyed by boxes. A key collision gives exactly one forced wire merge; retaining one edge and deleting the other bounds all generated collision events by E. At quiescence the partition is stable, while soundness of every performed merge shows it is the least stable partition. Deterministic join-based balanced maps and explicit smaller-to-larger class lists give O(B+(W+E) log(W+E)) time and linear space. This removes any W·B allocation or initialization and uses neither randomization nor uninitialized memory.\n\nThere is also a useful certificate characterization. A stable partition separating start from all exits is a complete negative certificate and is checkable by two-key radix sorting. A positive certificate is a chronological binary forest of justified folds. Each fold cites two same-box edges whose targets lie in an already-created component. Subtree intervals verify every justification in constant time after one DFS. Thus positive and negative instances both have source-linear certificates and source-linear deterministic verifiers, although this does not itself find the certificate deterministically in linear time.\n\nFinally, full linear time is achieved when edges respect consecutive ranks. Increasing-rank dynamic programming finalizes one rank at a time; timestamp arrays group sparse edges without constructing the product of wires and boxes. The explicit one-box chain family shows why simply repeating a global linear grouping pass cannot settle the unrestricted problem: only one new level of equivalence appears per round.\n\nAccordingly, the strongest resolution here is partial: a source-sparse deterministic logarithmic-overhead algorithm, linear verification on both outcomes, a nontrivial exact linear special case, and a sharp counterexample to synchronous rescanning.",
+  "audit_feedback_acted_on": [
+    "The audit contained no REFUTED or UNRESOLVED items and verified all five claims, so no claim or proof sketch was repaired, narrowed, replaced, or removed.",
+    "The VALID_PARTIAL_PROGRESS target judgment was acted on by preserving the explicit limitation that the unrestricted deterministic O(W+E+B)-time algorithm remains unproved.",
+    "The ACCURATE claimed-resolution judgment was acted on by retaining claimed_resolution as PARTIAL.",
+    "All closure-controlled fields were copied exactly from the parent because native adversarial self-critique found no material correction requiring a proof-state change."
+  ],
+  "checks_performed": [
+    "Verified the authorized parent SHA-256 as 62c40ae9d8cba33fedf16705935e5cee058658d189704084c7e9ee5f8e29a227 and the authorized audit SHA-256 as b48a292898b43332b4d7608863a2df0b8855140cc0bb03a1c8ab3bf724a6b617.",
+    "Read only the authorized source JSON, exact parent JSON, and independent audit JSON; used no web, retrieval database, retrieval result, treatment receipt, external memory, prior frontier output, other solution, or verification report.",
+    "Performed native adversarial self-critique of the congruence characterization, collision-event accounting and deterministic map-meld bound, both certificate directions, graded-rank induction, rescanning construction, and unrestricted target boundary; found no material defect.",
+    "Confirmed that every audited claim is VERIFIED, confirmed_refutations is empty, target_verdict is VALID_PARTIAL_PROGRESS, and claimed_resolution_verdict is ACCURATE.",
+    "Confirmed proof_sketch word counts of 107, 204, 167, 148, and 116, and a final_writeup word count of 356.",
+    "Confirmed that claimed_resolution, all five claims and proof sketches, and final_writeup are preserved exactly from iteration 4."
+  ],
+  "self_assessment": "CONFIDENT"
+}

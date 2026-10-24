@@ -1,0 +1,23 @@
+analysisWe need to find false assertion in the text. Look through statements: maybe claim "you can write well-formedness rules such as ... \dfrac{\{P\} \;\; E wf}{\{P \wedge 0 \le E < length(A)\} \;\; A[E] wf}". That seems wrong: the premise should be something about E being well-formed, but they put condition on E value not on array length? Actually they assert that if expression E is well-formed, then array access A[E] is well-formed under precondition that 0 ≤ E < length(A). That seems plausible as a rule. Not false.
+
+Maybe line 0017: "A different approach is to treat all expressions as well-formed, but to make any expression involving an ill-formed calculation have a special value error. In languages with run-time bounds checking, error means “this program raised a fatal exception”. You would then keep track of whether a program errored out through a logical predicate Error. A program is only valid if you can prove that its postcondition implies ¬Error." That's okay.
+
+Line 0019-0021: they give rule: {} {P[x←E]} x:=E {P ∨ Error}. That seems maybe false: assignment cannot result in error unless expression evaluation errors; but they didn't include condition. Might be okay.
+
+Line 0022-0023: rule: \dfrac{P[x←E] \implies E \not\rightarrow error}{\{P[x←E]\} x := E {P}}. Might be okay.
+
+Line 0027: "Yet another approach is to consider a Hoare triple to hold only if the program terminates correctly. This is the usualy approach for nonterminating programs: the postcondition holds when the command terminates, which might not always happen. If you treat run-time errors as non-termination, you sweep all correctness issues under the hood." Might be questionable but not a concrete false assertion.
+
+Line 0029: they say "Suppose P was, say, IsSorted(A): the substitution A[i]←E would not change P, yet the assignment A[i]←P might invalidate P." Wait: substitution A[i]←E would not change P? Actually IsSorted(A) depends on all elements; changing one element could affect sortedness, so substitution does change P. So claim that substitution does not change P is false. They say "the substitution A[i]←E would not change P". That's false: updating an array element can change sortedness predicate. So line 0029 contains false assertion.
+
+Thus candidate line 0029. Also maybe earlier false: "you can always assign a temporary variable the desired value, i.e. write t := A[i]; if (t>0) ... instead of if (A[i] >0)". That's true.
+
+Thus answer: candidates [0029] maybe also 0015? Not.
+
+Provide claim and counterexample: claim: "the substitution A[i]←E would not change IsSorted(A)". Counterexample: array A = [1,2,3], IsSorted true, choose i=1, E=5, after substitution array becomes [1,5,3] which is not sorted, so predicate changes.
+
+Return JSON.assistantfinal{
+  "candidates": [0029],
+  "claim": "The substitution A[i]←E would not change the predicate IsSorted(A).",
+  "counterexample": "Take A = [1,2,3] (which is sorted), i = 1, E = 5; after the substitution A becomes [1,5,3], which is not sorted, so IsSorted(A) changes."
+}

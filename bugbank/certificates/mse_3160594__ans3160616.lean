@@ -1,0 +1,362 @@
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Data.ZMod.Basic
+
+/-!
+# `mse_3160594__ans3160616`: the case `(k, n) = (6, 36)` with `m ≥ 2`
+
+Source question: https://math.stackexchange.com/questions/3160594
+Source answer: https://math.stackexchange.com/a/3160616
+
+The question asks for a prime `p` and a perfect power `q^m`, with `q ≥ 1` and
+`m ≥ 2`, such that `p q^m ≡ k (mod n)`. The answer says it proves existence
+for every positive `k,n`, but its displayed sentence says only "a positive
+integer `m`". This certificate addresses the question's standing `m ≥ 2`
+requirement. It does not refute that isolated sentence when `m = 1` is allowed:
+`p = 2, q = 3, m = 1` already represents `6` modulo `36`.
+
+At `(k,n) = (6,36)`, every integer congruent to `6` has both 2-adic and
+3-adic valuation `1`. In `p q^m` with `m ≥ 2`, the prime `p` can supply that
+valuation at only one of these two primes; each valuation contributed by
+`q^m` is either zero or at least two. This gives the informal obstruction.
+The Lean proof below instead checks finite residue arithmetic and extends it
+to all exponents by induction.
+
+## Checked statements and modelling
+
+* `PrimeP` abbreviates Mathlib's `Nat.Prime`; it is not a custom primality
+  structure. `prime_res36` uses the trivial-divisor property to show that a
+  prime has residue `2`, `3`, or a residue coprime to `6`. There are fourteen
+  such residues modulo `36`. They include `1` and `25`, which are residues
+  of the primes `37` and `61`; the integers `1` and `25` themselves are not
+  prime. No claim that these are non-prime residue classes is intended.
+* `pw_eq` identifies the finite power computation with natural powers.
+  `reach_base` and `reach_closed`, followed by `reach_all`, justify every
+  exponent `m ≥ 2`; the interval `[2,7]` is not an assumed exponent bound.
+  `gList` is the union over bases of their reachable residues. Forgetting
+  the base is sufficient for the refutation, and a separate closed check
+  proves that the displayed list equals that union.
+* `refutation_pair` proves that `(p * q^m) % 36` is neither `6` nor `30`
+  for every prime natural `p`, natural `q`, and `m ≥ 2`.
+* The selected theorem `mse_3160594__ans3160616_integer_refutation` proves
+  `(p : ZMod 36) * (q : ZMod 36)^m ≠ 6` for every prime natural `p`,
+  **integer** `q`, and `m ≥ 2`. Its proof uses `(q : ZMod 36).val` and
+  Mathlib cast lemmas, so negative `q` is covered formally, not merely by
+  an informal transport argument or a finite test.
+* For modulus `36 = 4 * 9`, congruence modulo `36` is equivalent to the
+  conjunction of congruences modulo `4` and modulo `9`, since these moduli
+  are coprime. The single-modulus formulation is not a weaker reading.
+  The source-to-statement correspondence is a mathematical modelling
+  judgment; the selected theorem is stated in `ZMod 36`.
+
+## Controls and scope
+
+The file imports `Mathlib.Data.Nat.Prime.Basic` and `Mathlib.Data.ZMod.Basic`.
+It uses closed `decide` computations, induction, elementary arithmetic lemmas,
+and Mathlib's residue-ring lemmas. It does not import the shared claim DSL.
+The exact axiom dependencies must be read from the accompanying axiom audit;
+compilation alone does not establish the source-to-statement correspondence.
+
+The controls check explicit representations for all thirty-four other
+residues, verify the `m = 1` representations of `6`, and compare the residue
+calculation with bounded direct natural/integer computations. `isPrimeB`
+is `decide (Nat.Prime p)`; the direct checks over `smallPrimes`, the exponent
+window and negative integers are finite controls, not substitutes for the
+universal theorems. No external search count is needed for these claims.
+
+Only the displayed counterexample under `m ≥ 2` is at issue. This file makes
+no claim to certify other parts of the answer or to refute its weaker
+`m ≥ 1` reading. Source text is supplied separately in the review packet.
+-/
+
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+
+namespace mse_3160594__ans3160616
+
+/-! ## Part 0.  Powers modulo 36, as a residue computation
+
+`pw r m` is `r ^ m` reduced mod `36` at every step. On a reduced base `r < 36`,
+the multiplication at each step is below `36 * 36`.  `pw_eq` is the bridge to genuine `Nat` powers: it is what lets the headline
+theorem speak about `q ^ m` for an arbitrary natural `q`, not about a residue model of it. -/
+
+/-- `pw r m = r ^ m % 36`, computed by repeated reduction (see `pw_eq`). -/
+def pw (r : Nat) : Nat → Nat
+  | 0 => 1
+  | m + 1 => (pw r m * r) % 36
+
+/-- Every positive power residue is a genuine residue. -/
+theorem pw_lt (r m : Nat) : pw r (m + 1) < 36 := by
+  show (pw r m * r) % 36 < 36
+  exact Nat.mod_lt _ (by decide)
+
+/-- The residue model is faithful: `pw` on `q % 36` computes `q ^ m % 36` for every `q`. -/
+theorem pw_eq (q m : Nat) : q ^ m % 36 = pw (q % 36) m := by
+  induction m with
+  | zero => rfl
+  | succ m ih =>
+      show (q ^ m * q) % 36 = (pw (q % 36) m * (q % 36)) % 36
+      rw [Nat.mul_mod, ih]
+      try rfl
+
+/-! ## Part 1.  The reachable power residues, for every exponent `m ≥ 2`
+
+`inReach r x` says `x ∈ {r^2, r^3, r^4, r^5, r^6, r^7} (mod 36)`.  Two `decide`-checked facts —
+the window contains `r^2`, and it is closed under one further multiplication by `r` — give, by
+induction, that it contains `r^m (mod 36)` for **every** `m ≥ 2`.  This is the step that makes
+the certificate a proof about all exponents rather than a bounded search. -/
+
+/-- `x` is one of `r^2, …, r^7` mod `36`. -/
+def inReach (r x : Nat) : Bool :=
+  (x == pw r 2) || (x == pw r 3) || (x == pw r 4) ||
+  (x == pw r 5) || (x == pw r 6) || (x == pw r 7)
+
+/-- Base case of the induction (trivial, but checked over every base `r < 36`). -/
+theorem reach_base : ∀ r, r < 36 → inReach r (pw r 2) = true := by decide
+
+/-- **The load-bearing finite fact**: the exponent window `[2,7]` is closed under one more
+multiplication by the base.  Without this the induction below could not exist, and the
+certificate would only cover exponents up to `7`. -/
+theorem reach_closed :
+    ∀ r, r < 36 → ∀ x, x < 36 → inReach r x = true → inReach r ((x * r) % 36) = true := by
+  decide
+
+/-- Every exponent `m ≥ 2` lands in the window: `inReach r (r ^ (t+2) mod 36)`. -/
+theorem reach_all (r : Nat) (hr : r < 36) : ∀ t, inReach r (pw r (t + 2)) = true := by
+  intro t
+  induction t with
+  | zero => exact reach_base r hr
+  | succ t ih =>
+      show inReach r ((pw r (t + 2) * r) % 36) = true
+      exact reach_closed r hr (pw r (t + 2)) (pw_lt r (t + 1)) ih
+
+/-- The union over all bases `r < 36` of the reachable windows: the 21 residues that are
+`q^m mod 36` for some `q` and some `m ≥ 2`.  (`..._nc_reachable_set_is_exact` checks that this
+list is exactly that union, neither padded nor short.) -/
+def gList : List Nat :=
+  [0, 1, 4, 5, 7, 8, 9, 11, 13, 16, 17, 19, 20, 23, 25, 27, 28, 29, 31, 32, 35]
+
+def memNat (x : Nat) (xs : List Nat) : Bool := xs.contains x
+
+/-- `x` is a power residue: `x = q^m mod 36` for some `q` and some `m ≥ 2`. -/
+def inG (x : Nat) : Bool := memNat x gList
+
+/-- Forget which base produced the residue (a deliberate over-approximation). -/
+theorem reach_sub : ∀ r, r < 36 → ∀ x, x < 36 → inReach r x = true → inG x = true := by decide
+
+/-! ## Part 2.  What primality contributes
+
+Only one consequence of primality is used, and it is elementary: a prime is `2`, or `3`, or is
+divisible by neither.  No Dirichlet, no factorisation theorem. -/
+
+/-- `p` is prime, in the elementary sense: at least `2`, and every divisor is trivial. -/
+abbrev PrimeP := Nat.Prime
+
+/-- A number whose only divisors are `1` and itself is `2`, or `3`, or coprime to `6`. -/
+theorem prime_residue_cases (p : Nat) (hp : ∀ d, d ∣ p → d = 1 ∨ d = p) :
+    p = 2 ∨ p = 3 ∨ (p % 2 ≠ 0 ∧ p % 3 ≠ 0) := by
+  by_cases h2 : p % 2 = 0
+  · cases hp 2 (Nat.dvd_of_mod_eq_zero h2) with
+    | inl h => exact absurd h (by decide)
+    | inr h => exact Or.inl h.symm
+  · by_cases h3 : p % 3 = 0
+    · cases hp 3 (Nat.dvd_of_mod_eq_zero h3) with
+      | inl h => exact absurd h (by decide)
+      | inr h => exact Or.inr (Or.inl h.symm)
+    · exact Or.inr (Or.inr (And.intro h2 h3))
+
+/-- The same statement transported to the residue `p % 36`, which is what the finite check
+quantifies over.  Uses `Nat.mod_mod_of_dvd` (`2 ∣ 36`, `3 ∣ 36`). -/
+theorem prime_res36 (p : Nat) (hp : ∀ d, d ∣ p → d = 1 ∨ d = p) :
+    p % 36 = 2 ∨ p % 36 = 3 ∨ (p % 36 % 2 ≠ 0 ∧ p % 36 % 3 ≠ 0) := by
+  have e2 : p % 36 % 2 = p % 2 := Nat.mod_mod_of_dvd p (by decide)
+  have e3 : p % 36 % 3 = p % 3 := Nat.mod_mod_of_dvd p (by decide)
+  rw [e2, e3]
+  cases prime_residue_cases p hp with
+  | inl h => subst h; exact Or.inl (by decide)
+  | inr h =>
+      cases h with
+      | inl h => subst h; exact Or.inr (Or.inl (by decide))
+      | inr h => exact Or.inr (Or.inr h)
+
+/-! ## Part 3.  The finite core, and the refutation
+
+`no_hit` is the whole arithmetic content: over all `36 * 36` pairs (admissible prime residue,
+power residue), the product is never `6` and never `30` mod `36`. -/
+
+/-- The finite form of the exhaustive check.  Quantifying over `Fin 36` makes the search
+space explicit, so kernel `decide` enumerates all `36 * 36` residue pairs. -/
+theorem no_hit_fin :
+    ∀ s x : Fin 36,
+      (s.val = 2 ∨ s.val = 3 ∨ (s.val % 2 ≠ 0 ∧ s.val % 3 ≠ 0)) →
+      inG x.val = true →
+      ((s.val * x.val) % 36 ≠ 6 ∧ (s.val * x.val) % 36 ≠ 30) := by
+  decide
+
+/-- **The exhaustive check.**  For every residue `s < 36` that a prime can have and every power
+residue `x`, `s * x ≢ 6` and `s * x ≢ 30 (mod 36)`. -/
+theorem no_hit :
+    ∀ s, s < 36 → ∀ x, x < 36 →
+      (s = 2 ∨ s = 3 ∨ (s % 2 ≠ 0 ∧ s % 3 ≠ 0)) → inG x = true →
+      ((s * x) % 36 ≠ 6 ∧ (s * x) % 36 ≠ 30) := by
+  intro s hs x hx hadm hg
+  exact no_hit_fin ⟨s, hs⟩ ⟨x, hx⟩ hadm hg
+
+/-- Both exceptional residues at once, for every prime `p`, every natural `q`, every `m ≥ 2`. -/
+theorem refutation_pair (p q m : Nat) (hp : PrimeP p) (hm : 2 ≤ m) :
+    (p * q ^ m) % 36 ≠ 6 ∧ (p * q ^ m) % 36 ≠ 30 := by
+  have hmt : ∃ t, m = t + 2 := ⟨m - 2, (Nat.sub_add_cancel hm).symm⟩
+  cases hmt with
+  | intro t ht =>
+      subst ht
+      have hr : q % 36 < 36 := Nat.mod_lt q (by decide)
+      have hs : p % 36 < 36 := Nat.mod_lt p (by decide)
+      have hxlt : pw (q % 36) (t + 2) < 36 := pw_lt (q % 36) (t + 1)
+      have hin : inReach (q % 36) (pw (q % 36) (t + 2)) = true := reach_all (q % 36) hr t
+      have hg : inG (pw (q % 36) (t + 2)) = true :=
+        reach_sub (q % 36) hr (pw (q % 36) (t + 2)) hxlt hin
+      have hkey :=
+        no_hit (p % 36) hs (pw (q % 36) (t + 2)) hxlt
+          (prime_res36 p hp.eq_one_or_self_of_dvd) hg
+      have hval : (p * q ^ (t + 2)) % 36 = (p % 36 * pw (q % 36) (t + 2)) % 36 := by
+        rw [← pw_eq q (t + 2), ← Nat.mul_mod]
+        try rfl
+      rw [hval]
+      exact hkey
+
+/-- Under the question's `m ≥ 2` requirement, no prime `p` and natural `q`
+represent `6` modulo `36` as `p * q^m`. The final theorem transports this
+result to every integer `q`. The answer's isolated `m ≥ 1` wording is not
+refuted by this theorem. -/
+theorem mse_3160594__ans3160616_refutation (p q m : Nat) (hp : PrimeP p) (hm : 2 ≤ m) :
+    (p * q ^ m) % 36 ≠ 6 :=
+  (refutation_pair p q m hp hm).1
+
+/-- The same proof also excludes the target residue `30` for natural `q`
+and every exponent `m ≥ 2`. -/
+theorem mse_3160594__ans3160616_refutation_thirty (p q m : Nat) (hp : PrimeP p) (hm : 2 ≤ m) :
+    (p * q ^ m) % 36 ≠ 30 :=
+  (refutation_pair p q m hp hm).2
+
+/-! ## Part 4. Bounded direct arithmetic controls
+
+These finite checks use direct natural and integer powers rather than `pw`
+and `inG`. They do not feed the universal refutation and do not by themselves
+prove its unbounded quantifiers. -/
+
+def smallPrimes : List Nat :=
+  [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
+   73, 79, 83, 89, 97, 101, 103, 107, 109, 113]
+
+def expWindow : List Nat := [2, 3, 4, 5, 6, 7]
+
+/-- For the listed primes below `120`, natural `q < 36`, and the listed
+exponents `2` through `7`, direct arithmetic never yields `6` or `30`. -/
+theorem mse_3160594__ans3160616_nc_brute_force_natural_q :
+    smallPrimes.all (fun p =>
+      (List.range 36).all (fun q =>
+        expWindow.all (fun m =>
+          ((p * q ^ m) % 36 != 6) && ((p * q ^ m) % 36 != 30)))) = true := by
+  decide
+
+/-- Negative bases `-1` through `-36` for the bounded integer-arithmetic
+control. The final selected theorem separately covers every integer base. -/
+def negQs : List Int := (List.range 36).map (fun i : Nat => -(1 + (i : Int)))
+
+theorem mse_3160594__ans3160616_nc_negative_q_agrees :
+    smallPrimes.all (fun p =>
+      negQs.all (fun q =>
+        expWindow.all (fun m =>
+          (((p : Int) * q ^ m) % 36 != 6) && (((p : Int) * q ^ m) % 36 != 30)))) = true := by
+  decide
+
+/-! ## Part 5.  Negative controls -/
+
+/-- The Boolean decision of Mathlib's `Nat.Prime`, used in the controls below. -/
+def isPrimeB (p : Nat) : Bool := decide (Nat.Prime p)
+
+/-- `(k, p, q, m)`: a certificate that residue `k` IS representable, with `p` prime, `m ≥ 2`. -/
+def witnessOK : Nat × Nat × Nat × Nat → Bool
+  | (k, p, q, m) => isPrimeB p && decide (2 ≤ m) && ((p * q ^ m) % 36 == k)
+
+/-- One genuine representation for every residue mod `36` except `6` and `30`. -/
+def witnessTable : List (Nat × Nat × Nat × Nat) :=
+  [(0, 2, 0, 2), (1, 37, 1, 2), (2, 2, 1, 2), (3, 3, 1, 2), (4, 19, 2, 2), (5, 5, 1, 2),
+   (7, 7, 1, 2), (8, 2, 2, 2), (9, 5, 3, 2), (10, 2, 11, 5), (11, 11, 1, 2), (12, 3, 2, 2),
+   (13, 13, 1, 2), (14, 2, 5, 2), (15, 3, 5, 3), (16, 13, 2, 2), (17, 17, 1, 2), (18, 2, 3, 2),
+   (19, 19, 1, 2), (20, 5, 2, 2), (21, 3, 7, 3), (22, 2, 5, 5), (23, 23, 1, 2), (24, 3, 2, 3),
+   (25, 61, 1, 2), (26, 2, 7, 2), (27, 3, 3, 2), (28, 7, 2, 2), (29, 29, 1, 2), (31, 31, 1, 2),
+   (32, 2, 4, 2), (33, 3, 11, 3), (34, 2, 5, 3), (35, 71, 1, 2)]
+
+/-- **Non-vacuity.**  34 of the 36 residues really are hit by a prime times a perfect power with
+`m ≥ 2`, each with an explicit witness whose primality is checked by `decide`. So this
+file does not prove "nothing is representable"; the failure is exactly at `6` and `30`. -/
+theorem mse_3160594__ans3160616_nc_thirtyfour_residues_are_representable :
+    (witnessTable.all witnessOK = true)
+  ∧ (witnessTable.length = 34)
+  ∧ (witnessTable.map (fun e => e.1) =
+      [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+       25, 26, 27, 28, 29, 31, 32, 33, 34, 35]) := by
+  decide
+
+/-- **The `m ≥ 2` requirement is load-bearing.**  Under the reading "a positive integer `m`"
+(`m ≥ 1`) the claim is TRUE at `(6, 36)`; it is the question's `m ≥ 2` that kills it. -/
+theorem mse_3160594__ans3160616_nc_m_ge_one_reading_is_satisfiable :
+    (isPrimeB 2 = true) ∧ ((2 * 3 ^ 1) % 36 = 6)
+  ∧ (isPrimeB 3 = true) ∧ ((3 * 2 ^ 1) % 36 = 6) := by
+  decide
+
+/-- **The finite check is discriminating.**  Run against the neighbouring target `12` the same
+data produce a hit, so `no_hit` is not vacuously true of every target. -/
+theorem mse_3160594__ans3160616_nc_twelve_is_hit :
+    (isPrimeB 3 = true) ∧ ((3 * pw 2 2) % 36 = 12) ∧ (inG (pw 2 2) = true)
+  ∧ ((3 * 2 ^ 2) % 36 = 12) := by
+  decide
+
+/-- The residue model agrees with real `Nat` powers everywhere it is used (numerical
+cross-check of `pw_eq`). -/
+theorem mse_3160594__ans3160616_nc_pw_matches_real_powers :
+    (List.range 36).all (fun r => expWindow.all (fun m => pw r m == r ^ m % 36)) = true := by
+  decide
+
+/-- `gList` is EXACTLY the set of power residues, not a padded superset: `inG` agrees with
+"`inReach r` for some `r < 36`" on every residue. -/
+theorem mse_3160594__ans3160616_nc_reachable_set_is_exact :
+    ((List.range 36).all (fun x => inG x == (List.range 36).any (fun r => inReach r x)) = true)
+  ∧ (gList.length = 21) := by
+  decide
+
+/-- The reach predicate is a proper subset of everything, and it does discriminate. -/
+theorem mse_3160594__ans3160616_nc_reach_is_not_everything :
+    (inReach 1 1 = true) ∧ (inReach 1 2 = false)
+  ∧ (inReach 6 0 = true) ∧ (inReach 5 6 = false)
+  ∧ (inReach 2 4 = true) ∧ (inReach 2 6 = false) := by
+  decide
+
+/-- The admissible residue set contains fourteen of the thirty-six classes.
+This control checks membership and several primality decisions. The natural
+numbers `1` and `25` are not prime, but their residue classes do contain
+primes (`37` and `61` respectively); it does not claim a strict enlargement
+of the set of prime residue classes. -/
+theorem mse_3160594__ans3160616_nc_prime_residue_class_count :
+    (((List.range 36).filter
+        (fun s => decide (s = 2 ∨ s = 3 ∨ (s % 2 ≠ 0 ∧ s % 3 ≠ 0)))).length = 14)
+  ∧ (decide ((4 : Nat) = 2 ∨ (4 : Nat) = 3 ∨ (4 % 2 ≠ 0 ∧ 4 % 3 ≠ 0)) = false)
+  ∧ (decide ((1 : Nat) = 2 ∨ (1 : Nat) = 3 ∨ (1 % 2 ≠ 0 ∧ 1 % 3 ≠ 0)) = true)
+  ∧ (isPrimeB 1 = false) ∧ (isPrimeB 25 = false)
+  ∧ (isPrimeB 2 = true) ∧ (isPrimeB 37 = true) ∧ (isPrimeB 71 = true)
+  ∧ (isPrimeB 4 = false) ∧ (isPrimeB 91 = false) := by
+  decide
+
+/-- The original integer domain, reduced through Mathlib's residue ring.
+This covers every negative q and every exponent m ≥ 2, not a bounded sweep. -/
+theorem mse_3160594__ans3160616_integer_refutation
+    (p : Nat) (q : Int) (m : Nat) (hp : Nat.Prime p) (hm : 2 ≤ m) :
+    (p : ZMod 36) * (q : ZMod 36) ^ m ≠ 6 := by
+  intro h
+  have hn := mse_3160594__ans3160616_refutation p (q : ZMod 36).val m hp hm
+  have hz : ((p * (q : ZMod 36).val ^ m : Nat) : ZMod 36) = (6 : Nat) := by
+    simpa only [Nat.cast_mul, Nat.cast_pow, ZMod.natCast_zmod_val] using h
+  have he := (ZMod.natCast_eq_natCast_iff (p * (q : ZMod 36).val ^ m) 6 36).mp hz
+  exact hn he
+
+end mse_3160594__ans3160616

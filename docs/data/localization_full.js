@@ -1,0 +1,330 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["localization_full"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "tab:ccl-primary-results",
+  "main_tex_lines": [
+   2710,
+   2737
+  ],
+  "caption": "Current primary results on 100 inputs from 92 problem clusters. Hit@3 counts a reference match among the first three candidate slots; the one-line baselines have no top-three result. The token columns report recorded usage for the selected primary attempts and are lower bounds where logging is incomplete. The public score file identifies complete totals and missing usage for each configuration."
+ },
+ "columns": [
+  "Critic or baseline",
+  "Hit@1 (%) [95% CI]",
+  "Hit@3 (%) [95% CI]",
+  "Recorded total tokens",
+  "Recorded output tokens"
+ ],
+ "rows": [
+  {
+   "name": "Haiku 4.5 (retained notice)",
+   "hit1": {
+    "value": 31.0,
+    "ci95": [
+     22.7,
+     39.8
+    ]
+   },
+   "hit3": {
+    "value": 40.0,
+    "ci95": [
+     30.9,
+     49.0
+    ]
+   },
+   "recorded_total_tokens": 632500,
+   "recorded_output_tokens": 393211,
+   "kind": "model"
+  },
+  {
+   "name": "Sonnet 5",
+   "hit1": {
+    "value": 61.0,
+    "ci95": [
+     52.0,
+     69.6
+    ]
+   },
+   "hit3": {
+    "value": 76.0,
+    "ci95": [
+     67.7,
+     83.7
+    ]
+   },
+   "recorded_total_tokens": 697281,
+   "recorded_output_tokens": 218376,
+   "kind": "model"
+  },
+  {
+   "name": "Opus 5.5",
+   "hit1": {
+    "value": 68.0,
+    "ci95": [
+     59.8,
+     76.2
+    ]
+   },
+   "hit3": {
+    "value": 85.0,
+    "ci95": [
+     78.6,
+     91.0
+    ]
+   },
+   "recorded_total_tokens": 510187,
+   "recorded_output_tokens": 78546,
+   "kind": "model"
+  },
+  {
+   "name": "DeepSeek R1 Qwen",
+   "hit1": {
+    "value": 22.0,
+    "ci95": [
+     14.4,
+     30.1
+    ]
+   },
+   "hit3": {
+    "value": 28.0,
+    "ci95": [
+     20.0,
+     36.4
+    ]
+   },
+   "recorded_total_tokens": 428199,
+   "recorded_output_tokens": 215305,
+   "kind": "model"
+  },
+  {
+   "name": "Gemma 3 27B",
+   "hit1": {
+    "value": 26.0,
+    "ci95": [
+     18.3,
+     33.7
+    ]
+   },
+   "hit3": {
+    "value": 44.0,
+    "ci95": [
+     35.7,
+     52.1
+    ]
+   },
+   "recorded_total_tokens": 340082,
+   "recorded_output_tokens": 17552,
+   "kind": "model"
+  },
+  {
+   "name": "GLM 4.5 Air",
+   "hit1": {
+    "value": 10.0,
+    "ci95": [
+     4.9,
+     16.0
+    ]
+   },
+   "hit3": {
+    "value": 11.0,
+    "ci95": [
+     5.8,
+     17.2
+    ]
+   },
+   "recorded_total_tokens": 1658280,
+   "recorded_output_tokens": 1357252,
+   "kind": "model"
+  },
+  {
+   "name": "GPT-OSS 120B",
+   "hit1": {
+    "value": 49.0,
+    "ci95": [
+     39.6,
+     58.3
+    ]
+   },
+   "hit3": {
+    "value": 60.0,
+    "ci95": [
+     51.0,
+     69.0
+    ]
+   },
+   "recorded_total_tokens": 450420,
+   "recorded_output_tokens": 150198,
+   "kind": "model"
+  },
+  {
+   "name": "GPT-OSS 20B",
+   "hit1": {
+    "value": 43.0,
+    "ci95": [
+     34.3,
+     52.0
+    ]
+   },
+   "hit3": {
+    "value": 47.0,
+    "ci95": [
+     37.8,
+     56.6
+    ]
+   },
+   "recorded_total_tokens": 708462,
+   "recorded_output_tokens": 408240,
+   "kind": "model"
+  },
+  {
+   "name": "Kimi Linear",
+   "hit1": {
+    "value": 14.0,
+    "ci95": [
+     7.2,
+     21.4
+    ]
+   },
+   "hit3": {
+    "value": 27.0,
+    "ci95": [
+     19.0,
+     35.7
+    ]
+   },
+   "recorded_total_tokens": 241035,
+   "recorded_output_tokens": 46849,
+   "kind": "model"
+  },
+  {
+   "name": "Nemotron 3.5 Lightning",
+   "hit1": {
+    "value": 27.0,
+    "ci95": [
+     19.0,
+     35.6
+    ]
+   },
+   "hit3": {
+    "value": 27.0,
+    "ci95": [
+     18.8,
+     35.4
+    ]
+   },
+   "recorded_total_tokens": 1676079,
+   "recorded_output_tokens": 1361911,
+   "kind": "model"
+  },
+  {
+   "name": "Nemotron 3 Super",
+   "hit1": {
+    "value": 48.0,
+    "ci95": [
+     40.2,
+     56.1
+    ]
+   },
+   "hit3": {
+    "value": 48.0,
+    "ci95": [
+     40.2,
+     56.0
+    ]
+   },
+   "recorded_total_tokens": 740935,
+   "recorded_output_tokens": 426767,
+   "kind": "model"
+  },
+  {
+   "name": "Gemini 3.1 Pro",
+   "hit1": {
+    "value": 73.0,
+    "ci95": [
+     65.1,
+     80.6
+    ]
+   },
+   "hit3": {
+    "value": 85.0,
+    "ci95": [
+     78.2,
+     91.2
+    ]
+   },
+   "recorded_total_tokens": 1446420,
+   "recorded_output_tokens": 556279,
+   "kind": "model"
+  },
+  {
+   "name": "GPT-5.6 Luna",
+   "hit1": {
+    "value": 63.0,
+    "ci95": [
+     54.6,
+     71.1
+    ]
+   },
+   "hit3": {
+    "value": 74.0,
+    "ci95": [
+     66.7,
+     80.8
+    ]
+   },
+   "recorded_total_tokens": 390142,
+   "recorded_output_tokens": 98876,
+   "kind": "model"
+  },
+  {
+   "name": "Haiku 4.5 (continuation)",
+   "hit1": {
+    "value": 56.0,
+    "ci95": [
+     46.9,
+     65.1
+    ]
+   },
+   "hit3": {
+    "value": 69.0,
+    "ci95": [
+     61.2,
+     76.5
+    ]
+   },
+   "recorded_total_tokens": 1053443,
+   "recorded_output_tokens": 658433,
+   "kind": "model"
+  },
+  {
+   "name": "TF–IDF centroid",
+   "hit1": {
+    "value": 18.0,
+    "ci95": [
+     11.0,
+     25.3
+    ]
+   },
+   "hit3": null,
+   "recorded_total_tokens": null,
+   "recorded_output_tokens": null,
+   "kind": "baseline"
+  },
+  {
+   "name": "Random line",
+   "hit1": {
+    "value": 6.7,
+    "ci95": [
+     5.7,
+     7.8
+    ]
+   },
+   "hit3": null,
+   "recorded_total_tokens": null,
+   "recorded_output_tokens": null,
+   "kind": "baseline"
+  }
+ ]
+};

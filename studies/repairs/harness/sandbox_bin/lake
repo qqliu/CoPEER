@@ -1,0 +1,68 @@
+#!/bin/bash
+# Gatekeeper `lake` for the repair-track solver sandbox (first entry on PATH inside bubblewrap).
+# The ONLY accepted form is:   lake env lean <file>.lean
+# with one relative .lean file inside the sandbox root (REPAIR_SANDBOX_ROOT), no options, no '..',
+# no absolute paths, nothing under .lake/.  Everything else is refused with exit 126 and a message.
+#
+# Kernel-check accounting (protected counter): every accepted invocation is appended to REPAIR_KERNEL_LOG
+# (UTC timestamp, file, sha256 of the file) BEFORE it runs. The launcher binds a host directory at /opt/repair_gate
+# and points REPAIR_KERNEL_LOG there: outside the sandbox root, so neither the solver's file tools (confined to the
+# working directory) nor its Bash (this grammar) can reach the log. When REPAIR_MAX_KERNEL_CHECKS is set, the
+# gatekeeper refuses the (MAX+1)-th accepted call itself: the compile never runs. The count-then-append runs under an
+# exclusive flock(2) on the log, so concurrent invocations (Claude Code executes several tool calls of one assistant
+# message at once) serialise and the cap holds for calls that arrive together, not only for sequential ones.
+#
+# Worker isolation: unless REPAIR_WORKER_ISOLATION=0, the compile runs in a NESTED bubblewrap namespace with no
+# network, a tmpfs HOME containing only ~/.elan, and the sandbox root read-only: the Lean process never sees
+# ~/.claude (login material), the gate log or the node install.
+set -u
+refuse() { echo "repair-sandbox: refused: $1" >&2; echo "repair-sandbox: the only allowed command is: lake env lean <file>.lean" >&2; exit 126; }
+ROOT="${REPAIR_SANDBOX_ROOT:-}"
+[ -n "$ROOT" ] || refuse "REPAIR_SANDBOX_ROOT is unset"
+[ "$#" -eq 3 ] || refuse "expected exactly three arguments: env lean <file>.lean (got $#: $*)"
+[ "$1" = "env" ] || refuse "first argument must be 'env' (got '$1')"
+[ "$2" = "lean" ] || refuse "second argument must be 'lean' (got '$2')"
+f="$3"
+case "$f" in
+  -*) refuse "options are not allowed ($f)" ;;
+  /*) refuse "absolute paths are not allowed ($f)" ;;
+  *..*) refuse "'..' is not allowed ($f)" ;;
+  *.lean) ;;
+  *) refuse "the argument must be a .lean file ($f)" ;;
+esac
+[[ "$f" =~ ^[A-Za-z0-9_./-]+$ ]] || refuse "unexpected characters in the file name"
+[ -f "$f" ] || refuse "file not found: $f"
+real=$(realpath -e -- "$f" 2>/dev/null) || refuse "cannot resolve $f"
+case "$real" in
+  "$ROOT"/.lake/*) refuse "files under .lake cannot be compiled" ;;
+  "$ROOT"/*) ;;
+  *) refuse "file is outside the sandbox root" ;;
+esac
+[ "$(pwd -P)" = "$ROOT" ] || refuse "the command must run from the sandbox root"
+LOG="${REPAIR_KERNEL_LOG:-}"
+MAXK="${REPAIR_MAX_KERNEL_CHECKS:-}"
+if [ -n "$LOG" ]; then
+  # Open the log on fd 9 and hold an exclusive lock over count + append; a refusal exits (releasing the lock) and logs nothing.
+  exec 9>>"$LOG" || refuse "cannot open the kernel-check log"
+  flock -x 9 || refuse "cannot lock the kernel-check log"
+  used=$(command grep -c . "$LOG" 2>/dev/null | head -n 1)
+  used=${used:-0}
+  if [ -n "$MAXK" ] && [ "$used" -ge "$MAXK" ] 2>/dev/null; then
+    echo "repair-sandbox: refused: kernel-check budget exhausted ($used of $MAXK lake env lean runs already used)" >&2; exit 126
+  fi
+  digest=$(sha256sum -- "$real" | cut -d' ' -f1)
+  printf '%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$f" "$digest" >&9 || refuse "cannot write the kernel-check log"
+  flock -u 9
+  exec 9>&-
+fi
+[ -x "$HOME/.elan/bin/lake" ] || refuse "toolchain proxy $HOME/.elan/bin/lake not found"
+if [ "${REPAIR_WORKER_ISOLATION:-1}" = "0" ]; then
+  exec "$HOME/.elan/bin/lake" env lean "$f"
+fi
+[ -x /usr/bin/bwrap ] || refuse "worker isolation requested but /usr/bin/bwrap is missing"
+exec /usr/bin/bwrap --die-with-parent --unshare-user --unshare-pid --unshare-ipc --unshare-uts --unshare-net \
+  --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/lib64 /lib64 --symlink usr/bin /bin --symlink usr/sbin /sbin \
+  --ro-bind /etc /etc --proc /proc --dev /dev --tmpfs /tmp --tmpfs "$HOME" --ro-bind "$HOME/.elan" "$HOME/.elan" \
+  --ro-bind "$ROOT" "$ROOT" --chdir "$ROOT" -- \
+  /usr/bin/env -i "HOME=$HOME" PATH=/usr/bin:/bin LANG=C.UTF-8 LC_ALL=C.UTF-8 REPAIR_LEAN_WORKER=1 \
+  "$HOME/.elan/bin/lake" env lean "$f"

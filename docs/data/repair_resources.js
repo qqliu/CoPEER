@@ -1,0 +1,112 @@
+window.COPEER_DATA = window.COPEER_DATA || {};
+window.COPEER_DATA["repair_resources"] = {
+ "source": {
+  "commit": "cb9312a",
+  "main_tex_sha256": "8e2d3c7cbed3535cf6ba877ab7b01e06042ec205f8c97ec74b41c34382cdfb53",
+  "label": "tab:repair_resources",
+  "main_tex_lines": [
+   1626,
+   1643
+  ],
+  "caption": "Token usage for selected first attempts (16 tasks per condition). The last column counts attempts with recorded native usage out of 16."
+ },
+ "header": [
+  "Configuration",
+  "Condition",
+  "Recorded total tokens",
+  "Output tokens",
+  "Attempts with recorded usage"
+ ],
+ "rows": [
+  {
+   "configuration": "Opus 5.5",
+   "condition": "A",
+   "recorded_total_tokens": {
+    "value": 598672,
+    "lower_bound": true
+   },
+   "output_tokens": {
+    "value": 42733,
+    "lower_bound": true
+   },
+   "attempts_with_recorded_usage": {
+    "pair": [
+     15,
+     16
+    ]
+   }
+  },
+  {
+   "configuration": "Opus 5.5",
+   "condition": "B",
+   "recorded_total_tokens": {
+    "value": 746580,
+    "lower_bound": true
+   },
+   "output_tokens": {
+    "value": 46799,
+    "lower_bound": true
+   },
+   "attempts_with_recorded_usage": {
+    "pair": [
+     15,
+     16
+    ]
+   }
+  },
+  {
+   "configuration": "Sonnet 5",
+   "condition": "A",
+   "recorded_total_tokens": {
+    "value": 9083964,
+    "lower_bound": true
+   },
+   "output_tokens": {
+    "value": 247815,
+    "lower_bound": true
+   },
+   "attempts_with_recorded_usage": {
+    "pair": [
+     13,
+     16
+    ]
+   }
+  },
+  {
+   "configuration": "Sonnet 5",
+   "condition": "B",
+   "recorded_total_tokens": 8819081,
+   "output_tokens": 221411,
+   "attempts_with_recorded_usage": {
+    "pair": [
+     16,
+     16
+    ]
+   }
+  },
+  {
+   "configuration": "GPT-OSS 120B",
+   "condition": "A",
+   "recorded_total_tokens": 2086312,
+   "output_tokens": 225343,
+   "attempts_with_recorded_usage": {
+    "pair": [
+     16,
+     16
+    ]
+   }
+  },
+  {
+   "configuration": "GPT-OSS 120B",
+   "condition": "B",
+   "recorded_total_tokens": 1720809,
+   "output_tokens": 227225,
+   "attempts_with_recorded_usage": {
+    "pair": [
+     16,
+     16
+    ]
+   }
+  }
+ ]
+};

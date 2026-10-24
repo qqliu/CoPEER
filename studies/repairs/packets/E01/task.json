@@ -1,0 +1,46 @@
+{
+  "record_id": "E01",
+  "title": "Square root: the incremental integer square-root routine",
+  "endpoint_kind": "change_incorrect_program_preserving_spec",
+  "located_defect": {
+    "declaration": "SqrtFailureBoundary.ProgramCorrect (the program prog against the specification R)",
+    "lean_text": "abbrev R (x y : Nat) : Prop := y * y ≤ x ∧ x < (y + 1) * (y + 1)\ndef prog : Nat → Nat\n  | 0 => 0\n  | n + 1 =>\n      let b := prog n\n      if n + 1 ≤ (b + 1) * (b + 1) then b else b + 1\ndef ProgramCorrect : Prop := ∀ x : Nat, R x (prog x)",
+    "description": "The extracted program (stored source lines 0066-0072) is claimed to compute the integer square root, i.e. to satisfy R on every input; that universal claim is the located defect. Change only the recursive step (the guard comparison and/or the two branch values) so that the program meets the unchanged specification R on every natural input, and prove it; there is no separate target theorem for this record."
+  },
+  "hole_marker": "«HOLE»",
+  "submission_namespace": "SqrtFailureBoundary",
+  "template_declaration": "step",
+  "repair_template": "import defs_only\n/-!\nRecord E01: correction template.\nFill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove\nthe OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the\nfixed part and the obligations, inside the namespace. Import nothing else.\n-/\nnamespace SqrtFailureBoundary\n\n-- ===== FIXED PART: only the hole «HOLE» may be edited =====\n/-- The corrected recursive step: the value of the program at input `n + 1`, computed from `n` and the\nprevious value `b = progC n`. The hole must have the form `if <comparison in n and b> then <value> else <value>`\nwith exactly one `if` and values that are expressions in `n` and `b` (no `prog`, no `match`, no `let`). -/\ndef step (n b : Nat) : Nat := «HOLE»\n\n/-- The corrected program: `progC 0 = 0` and `progC (n + 1) = step n (progC n)` (recursion shape fixed). -/\ndef progC : Nat → Nat\n  | 0 => 0\n  | n + 1 => step n (progC n)\n\n/-- The corrected correctness statement (shape fixed): the specification `R`, unchanged, on every input. -/\ndef CorrectedCorrectness : Prop := ∀ x : Nat, R x (progC x)\n-- ===== END FIXED PART =====\n\nend SqrtFailureBoundary\n",
+  "allowed_edit": "Replace the hole in `step` by one expression of the form `if <comparison in n and b> then <value> else <value>` (values are expressions in n and b; exactly one `if`; no call to prog or progC, no match/let); nothing else in the fixed part may change. The specification R, the recursion shape (progC 0 = 0, progC (n+1) from progC n by one comparison and two branch values) and the domain (all natural inputs, no precondition) are fixed. Do not redefine R, prog or ProgramCorrect; no instances, notations, macros, axioms or exports.",
+  "obligations": [
+    {
+      "name": "repair_statement",
+      "role": "universal",
+      "statement": "∀ x : Nat, SqrtFailureBoundary.R x (SqrtFailureBoundary.progC x)",
+      "description": "Universal: the corrected program meets `R` on every natural input."
+    },
+    {
+      "name": "repair_nonvacuous",
+      "role": "nonvacuity",
+      "statement": "∃ x : Nat, SqrtFailureBoundary.progC x ≠ SqrtFailureBoundary.prog x",
+      "description": "Non-vacuity: the program was actually changed (some input on which `progC` and `prog` differ)."
+    },
+    {
+      "name": "final_theorem",
+      "role": "final",
+      "statement": "∀ x : Nat, SqrtFailureBoundary.R x (SqrtFailureBoundary.progC x)",
+      "description": "The endpoint of this record is the corrected universal statement itself (a corrected program with a universal correctness proof against the unchanged specification); restate it here, e.g. `:= repair_statement`. If you cannot, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`."
+    }
+  ],
+  "reserved_names": [
+    "R",
+    "prog",
+    "ProgramCorrect"
+  ],
+  "allowed_imports": [
+    "defs_only"
+  ],
+  "forbidden_tokens_extra": [],
+  "source_context_file": "source_context.txt",
+  "challenged_passage": "0066-0072 prog :: Int → Int / prog 0 = 0 / prog n = let a = n - 1 ; b = prog a in if a + 1 <= (b + 1) * (b + 1) then b else b + 1"
+}

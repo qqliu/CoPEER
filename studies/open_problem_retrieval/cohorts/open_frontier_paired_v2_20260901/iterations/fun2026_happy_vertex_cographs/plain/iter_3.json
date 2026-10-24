@@ -1,0 +1,54 @@
+{
+  "record_id": "fun2026_happy_vertex_cographs",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 3,
+  "parent_sha256": "15d7818ae88f8ba1c61439085f336a30040fd1518e047de473f621bdca3ada83",
+  "audit_sha256": "7afb79c7d9cc255e47ad5b72c092387dd967ab0cdcf86bc87d07abb8023f71e7",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "Every connected cograph other than a singleton or a graph with exactly one universal vertex is equivalent to the zero game.",
+      "proof_sketch": "Let C be connected. Its cotree root is a join. If C has at least two universal vertices, pairing any two of them is a pairing dominating set, so C=0 by Remark 9. If C has no universal vertex, every root-join block has at least two vertices. Choose distinct a,b in one block and c,d in another. The disjoint pairs (a,b),(c,d) dominate C in the pairing sense: vertices in the first block lie in N[c]∩N[d], while all other vertices lie in N[a]∩N[b]. Hence C=0. The only remaining connected cases are K1 and components having a unique universal vertex."
+    },
+    {
+      "claim": "SHVG on cographs is polynomially equivalent to an explicit open-or-delete scoring game on rooted forests.",
+      "proof_sketch": "Construct a forest R(G) recursively over connected components. Ignore zero components from the preceding claim. A K1 component becomes a prize leaf. If a nontrivial component C has unique universal vertex u, make an internal root whose children are R(C-u).\n\nMoves at u dominate other moves in C. For Maker, transpose u with any proposed first move x in a simulated strategy. If simulated u ultimately belongs to Maker, the final coloring is unchanged on {u,x}; if simulated u belongs to Breaker, the simulated contribution of C is zero while the transposed contribution is nonnegative. The analogous transposition proves dominance for Breaker.\n\nBreaker claiming u makes C a zero position. After Maker claims u, the residual game is exactly C-u. Indeed, |C-u|≥2 and every nontrivial cograph contains twins a,b. Apply Theorem 13 both in C after u is Maker-owned and in C-u, virtually assigning a to Maker and b to Breaker. Vertex u is then spoiled by b, while every vertex of C-u is happy in C exactly when it is happy in C-u. These arguments remain valid after adjoining an arbitrary disjoint game, so they establish game equivalence. Thus Maker opening u exposes its child forest; Breaker taking u deletes its entire rooted tree. A prize leaf scores one only when Maker takes it.\n\nConversely, realize any rooted tree recursively: a prize leaf is K1; for an internal node, take the disjoint union of its child graphs and a zero K2 ballast, then join one new vertex to everything. That vertex is uniquely universal, the construction is a cograph, and a forest with L prize leaves and I internal nodes uses L+3I vertices and polynomially many edges. Therefore the two decision problems are polynomially interreducible."
+    },
+    {
+      "claim": "The cograph game is linear-time solvable when every tree in the reduced forest has outdegree at most two.",
+      "proof_sketch": "There are only two relevant equivalence types. Let A denote a prize leaf and Z the zero game. Induct upward. A node whose children contain zero A-types has game {0|0}=Z. With one A-child, Maker opening it leaves Breaker to move on A, yielding zero; Breaker can delete it, so both starting scores are zero and Theorem 6 gives Z. With two A-children, their sum is the constant game 1: two prize leaves score one regardless of starter. Hence the parent has options “Maker obtains 1” and “Breaker obtains 0,” exactly the game A. Z-children may be omitted. Labeling nodes bottom-up therefore leaves z copies of A at the top. Their scores are ceil(z/2) for Maker-first and floor(z/2) for Breaker-first. Each cotree and forest node is processed once, giving linear time."
+    },
+    {
+      "claim": "Reduced forests of height one—equivalently, disjoint unions of stars and isolated vertices after zero components are removed—admit an O(n^2) exact algorithm.",
+      "proof_sketch": "Let k1≤⋯≤kr be the leaf counts of unopened stars and let l be the number of exposed prize leaves. Write M(i,l),B(i,l) for the values with stars k1,…,ki remaining. A simultaneous strong induction on the remaining nodes establishes monotonicity in exposed leaves and star size, together with the exchange inequality V_X(S∪{j},l+k)≥V_X(S∪{k},l+j) for j≤k and X∈{M,B}. Matching exposed-leaf moves, moves in other stars, and moves in the two distinguished stars proves the induction; opening the distinguished stars gives the same successor with l+j+k leaves. Thus Maker loses nothing by opening the largest remaining star, while Breaker minimizes by deleting it.\n\nConsequently,\nM(i,l)=max(1+B(i,l-1) if l>0, B(i-1,l+ki)),\nB(i,l)=min(M(i,l-1) if l>0, M(i-1,l)).\nThe bases are M(0,l)=ceil(l/2), B(0,l)=floor(l/2), and unavailable leaf terms are omitted. Only states satisfying l+sum_{j≤i}kj≤K, where K is the total initial number of prize leaves, are needed. There are O(r(K+1)) such states, including the K=0 boundary case, so filling them after sorting costs O(n^2)."
+    },
+    {
+      "claim": "The pair of standalone scores (Ms,Bs) is insufficient as a cotree dynamic-programming state.",
+      "proof_sketch": "Both P3 and K1,3 have standalone scores (1,0). Nevertheless, P3+P3 has scores (1,1), whereas the height-one recurrence gives P3+K1,3 scores (2,1). Thus these components have identical left and right stops but different behavior in sums. Any full cotree algorithm must retain information richer than the two starting-player scores."
+    }
+  ],
+  "final_writeup": "A complete complexity classification is not obtained, but the remaining problem has an exact, substantially simpler form.\n\nGiven a cograph G, discard every connected component having either no universal vertex or at least two universal vertices: each has an explicit pairing dominating set and is therefore the zero game. Recursively replace every remaining nontrivial component C, with unique universal vertex u, by a rooted tree whose root represents u and whose children represent C-u. Singletons become prize leaves.\n\nThe resulting open-or-delete forest game is exact. On Maker's turn, choosing an internal root removes it and exposes its children; choosing a prize leaf removes it and scores one. On Breaker's turn, choosing any root deletes its entire rooted subtree. For a forest F, its unrestricted exact recurrence is\n\nM(F)=max_T {1+B(F-T) if T is a prize leaf; B(F-T+children(T)) otherwise},\nB(F)=min_T M(F-T).\n\nThe forward forest has at most one node per retained graph vertex. Conversely, a forest with L prize leaves and I internal nodes becomes a cograph with L+3I vertices and polynomially many edges. Starting player, score, and threshold are preserved, so classifying SHVG on cographs is polynomially equivalent to classifying this rooted-forest game. This formulation also explains why the neighborhood-diversity algorithm does not immediately become polynomial: distinct rooted projects interact through the global alternation of moves.\n\nTwo genuine polynomial subcases follow. If every reduced tree has outdegree at most two, every subtree collapses bottom-up to either zero or one prize-leaf game, giving a linear algorithm. If the reduced forest has height one, it is a collection of stars and exposed leaves; sorting star sizes and applying the displayed two-parameter recurrence gives an O(n^2) algorithm for both possible starters.\n\nThe unrestricted rooted-forest game remains unresolved here. No polynomial-time algorithm or matching hardness theorem is established for arbitrary reduced forests. In particular, merely storing (Ms,Bs) at cotree nodes cannot work: P3 and K1,3 both have (1,0), but their sums with P3 have different values. Thus the result is a precise reduction and two nontrivial tractable frontiers, rather than the requested full classification.",
+  "audit_feedback_acted_on": [
+    "There were no claim-level REFUTED or UNRESOLVED items: all five claims were VERIFIED, so claimed_resolution, every result claim and proof_sketch, and final_writeup were copied exactly from the parent as required.",
+    "Accepted the target verdict VALID_PARTIAL_PROGRESS: the exact target asks for a polynomial-time algorithm on all cographs or a matching hardness theorem, while arbitrary reduced rooted forests remain unresolved.",
+    "Accepted the claimed-resolution verdict ACCURATE and retained claimed_resolution PARTIAL; no complete classification at the requested strength is asserted.",
+    "Preserved all five load-bearing claims because the audit verified the zero-game characterization, contextual forest equivalence, both tractable subclasses, and the standalone-score counterexample."
+  ],
+  "checks_performed": [
+    "Read only the designated source, exact parent, and independent audit; no web, retrieval database, retrieval result, treatment receipt, external memory, prior frontier output, other solution, or verification report was used.",
+    "Recomputed the exact parent and audit SHA-256 digests; they match 15d7818ae88f8ba1c61439085f336a30040fd1518e047de473f621bdca3ada83 and 7afb79c7d9cc255e47ad5b72c092387dd967ab0cdcf86bc87d07abb8023f71e7.",
+    "Checked that all five parent claim strings exactly match the five audited claim strings, that every claim verdict is VERIFIED, that confirmed_refutations is empty, and that the overall audit verdict is VERIFIED.",
+    "Adversarially rechecked the load-bearing cotree pairing cases, universal-vertex transitions, twin reduction, reverse construction, bounded-binary collapse, height-one recurrence, and target-coverage limitation against the authorized source and audit.",
+    "Ran fresh exact-arithmetic checks in iter3_exact_checks.py: integer-bitmask minimax reproduced the four standalone/context graph scores, and exact forest minimax reproduced the formula on all 290 bounded-binary forests through eight nodes and the greedy recurrence on 7,392 bounded height-one player-states.",
+    "Verified that each retained proof_sketch is under 500 words and final_writeup is 339 words, below the 3,000-word limit.",
+    "Verified proof-state closure by leaving claimed_resolution, all claims and proof_sketches in results, and final_writeup unchanged from the exact parent."
+  ],
+  "self_assessment": "CONFIDENT"
+}

@@ -1,0 +1,45 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": false,
+  "evaluation_scorable": false,
+  "exclude_from_primary": true,
+  "n_nonblank_text": 52,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": true
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/SE_cs_97637__a97647.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "prog :: Int → Int\n    prog 0 = 0\n    prog n = let a = n - 1 ; b = prog a\n             in\n               if   a + 1 <= (b + 1) * (b + 1)\n               then b\n               else b + 1",
+  "explanation": "The guard in the extracted program is off by one: it tests `a + 1 <= (b + 1) * (b + 1)`, i.e. (substituting a = n-1) `n <= (b+1)^2`, where the specification R(x, y) = [y^2 <= x < (y+1)^2] requires the STRICT test `n < (b+1)^2`. Consequently, whenever the input n equals (b+1)^2 exactly — where b = prog (n-1) is the correct value floor(sqrt(n-1)) = sqrt(n) - 1 for n a perfect square — the program keeps the stale value b instead of incrementing to b+1. The smallest instance is x = 1: prog 1 = 0, and the claim asserts (prog x)^2 <= x < (prog x + 1)^2, i.e. 0 <= 1 < 1; the lower bound holds (0 <= 1) but the upper bound FAILS, since claim says x < 1 while x = 1 >= 1. Note the error does not propagate past a perfect square: at n = k^2 + 1 the guard n <= (b+1)^2 = k^2 is false, so the value increments back to k = floor(sqrt(k^2+1)), which is why the failure set is exactly the nonzero perfect squares rather than a growing drift. This is a genuine refutation of the unbounded universal claim (not an artifact of the search bound), since x = 1 is a concrete non-negative input of the program's domain and both prog 1 and R(1, 0) were recomputed exactly.",
+  "flaw": "The final extracted program `prog` (prog 0 = 0; prog n = let a = n-1; b = prog a in if a+1 <= (b+1)*(b+1) then b else b+1) satisfies the specification R(x, prog x), i.e. (prog x)^2 <= x < (prog x + 1)^2 for all inputs x — as asserted by the comment \"Output y = prog x satisfies relationship R(x, y), for all input x.\"",
+  "problem": "Relating a proof to a Haskell program\n\nI am trying to relate the following [integer square root theorem][1] \n\n$\\forall x: \\mathbb{N}, \\exists y : \\mathbb{N}((y^2 \\leq x) \\land  (x < (y+1)^2))$\n\nand its proof to its role as a specification of the Integer Square Root `isqrt` ($\\lfloor \\sqrt{x} \\rfloor$) function in a Haskell program.\n\nBelow is a [inductive proof][2] of the theorem and the related Haskell program. \nThe proof was done using natural deduction in the [Fitch system][3], hence there are notational differences between code and proof e.g. no $\\leq$ in Fitch. \n\nFor my question the details of the proof are not important. I wish to focus on the base case, and the two cases involving  $\\exists$-Elimination and $\\lor$-Elimination. \n\nI used Quickcheck as a reasonable check that the theorem holds in the code. \n\nI can see that cases **1** and **2** in the proof correspond to the guard conditions in the Haskell definition of `isqrt` function. I did not specify, prove, and implement  the function `isqrt` in any structured way. I just used any examples I could find. I believe that there must some more formal transformation from proof to code that I am missing. So despite having written both the proof and code the precise correspondence between both eludes my comprehension. \n\nIs there a technical name for this form of proof to program relation?\nI would be grateful for an explanation or pointer to the literature.\n \n[![Inductive Proof][4]][4]\n\n    module Peano where\n    import Test.QuickCheck\n    \n    data Nat = Z | S Nat deriving Show\n    -- addition\n    (+@) :: Nat -> Nat -> Nat\n    Z +@ y = y\n    (S x) +@ y = S (x +@ y)\n    -- multiplication\n    (*@) :: Nat -> Nat -> Nat\n    x *@ Z = Z \n    x *@ S y = (x *@ y) +@ x \n    -- square\n    sqr x = x *@ x \n    -- equality\n    (=@) :: Nat -> Nat -> Bool\n    Z =@ Z  = True\n    (S m) =@  (S n) = m =@ n \n    _=@ _  = False \n    \n    -- lesst than\n    (<@) :: Nat -> Nat -> Bool\n    Z <@ Z = False \n    Z <@ x | not(x =@ Z) = True \n    x <@ Z | not(x =@ Z) = False \n    (S x) <@ (S y) = x <@ y \n    \n    \n    -- less than or equal\n    (<=@) :: Nat -> Nat -> Bool\n    x <=@ y = if (x =@ y) || (x <@ y) then True else False\n    \n    \n    -- Integer square root function\n    isqrt Z = Z\n    isqrt (S x) | (sqr (S (isqrt x))) <=@  (S x) = (S (isqrt x))\n                | (S x) <@ (sqr (S (isqrt x))) = isqrt x\n    \n    -- test with Quickcheck\n    instance Arbitrary Nat where\n     arbitrary = oneof [return Z, (S  <$>  arbitrary) ]\n    \n    isqrtPostCondition :: Nat  -> Bool\n    isqrtPostCondition x  = (sqr (isqrt x) <=@ x) && (x <@ sqr(S (isqrt x)))\n    check = quickCheck isqrtPostCondition\n    -- +++ OK, passed 100 tests.\n\n\n  [1]: http://www.nuprl.org/MathLibrary/integer_sqrt/\n  [2]: https://math.stackexchange.com/questions/2891932/inductive-proof-using-fitch-software\n  [3]: https://www.press.uchicago.edu/ucp/books/book/distributed/L/bo12734345.html\n  [4]: https://i.sstatic.net/Qr4Jp.png",
+  "source_context": "0047 |       and so we may take the output $y$ to be $b + 1$ for our goal (*).\n0048 | \n0049 | ---\n0050 | \n0051 | # Curry-Howard: Proving ≅ Programming\n0052 | \n0053 | The above was a proof [sketch] which corresponds to the a program.\n0054 | \n0055 | A proof of $$∀ x : ℕ • ∃ y : ℕ • R(x, y)$$\n0056 | corresponds to the program\n0057 | \n0058 |     -- Output y = prog x satisfies relationship R(x, y), for all input x.\n0059 |     prog :: Int → Int\n0060 |     prog 0  = “the y found in the base case of the proof”\n0061 |     prog n  = “the y found in the inductive step, \n0062 |                  along with any conditionals and recursive calls”\n0063 | \n0064 | Applying this to our above proof yields,\n0065 | \n0066 |     prog :: Int → Int\n0067 |     prog 0 = 0\n0068 |     prog n = let a = n - 1 ; b = prog a\n0069 |              in\n0070 |                if   a + 1 <= (b + 1) * (b + 1)\n0071 |                then b",
+  "witness": "x = 1. Evaluate the program as written: prog 1 = let a = 1-1 = 0; b = prog 0 = 0 in (since a+1 = 1 <= (b+1)*(b+1) = 1 is TRUE) return b = 0. So prog 1 = 0, whereas floor(sqrt 1) = 1. The specification R(x, y) := y*y <= x < (y+1)*(y+1) then requires 1 < (0+1)^2 = 1, which is false. The same failure recurs at every nonzero perfect square: prog 4 = 1 (needs 2), prog 9 = 2 (needs 3), prog 16 = 3, prog 25 = 4, prog 36 = 5, ..., i.e. prog(k^2) = k-1 for all k >= 1. Exhaustive check over 0 <= x <= 2,000,000 found exactly 1414 failing inputs, and all 1414 are precisely the nonzero perfect squares in that range (1414 = floor(sqrt(2000000))), with prog x = sqrt(x) - 1 on each."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_BY_THIS_AUTOMATED_RELEASE",
+ "record_id": "SE_cs_97637__a97647",
+ "scope_metadata": null,
+ "selected_declarations": [
+  {
+   "axioms": [],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "SE_cs_97637_a97647.refutation",
+   "native_candidate_axioms": [],
+   "type": "¬∀ (x : Nat), SE_cs_97637_a97647.R x (SE_cs_97637_a97647.prog x)",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/SE_cs_97637__a97647.json",
+ "source_group": "stackexchange",
+ "supporting_evidence": []
+}

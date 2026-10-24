@@ -1,0 +1,104 @@
+{
+  "record_id": "tcs_incremental_toposort_nsqrtm",
+  "stage": "REVISION_AUDIT",
+  "arm": "plain",
+  "iteration": 7,
+  "parent_sha256": "29201656c0e180234fad7aa49d58bceb2473a9414c00e62b6ada666679fd3da0",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The two source-stated bounds imply total update time Õ(min{n²,m^(4/3)}). This meets Õ(n√m) when m≤n^(6/5) and when m≥n²/log^{O(1)}n; over all m it is within an Õ(n^(1/4)) factor of the target.",
+      "claim_sha256": "79003b417cee6573b8c836f7fd4f5efe82f393a8dfcd3dfee6043f7ded223a27",
+      "verdict": "VERIFIED",
+      "evidence": "The source states soft-O(n²) and soft-O(m^(4/3)) bounds. The sparse comparison reduces to m^(5/6)≤n, exactly m≤n^(6/5). The dense ratio is n/√m, hence polylogarithmic for m≥n²/polylog(n). Below the crossover m=n^(3/2), the sparse ratio increases to n^(1/4); above it, the dense ratio decreases from n^(1/4).",
+      "witness": "At m=n^(3/2), both baselines equal n² while the target is n^(7/4), giving the maximum factor n^(1/4).",
+      "search_method": "Direct symbolic comparison of the two source bounds against n√m, split at their crossover.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 1,
+      "claim": "Balanced-cut lemma: for every order-violating insertion u→v into a DAG, either the insertion closes a cycle, or one can find equally sized sets B,F and a cut c such that F consists of the descendants of v at or left of c, B consists of the ancestors of u right of c, and the stable order (L\\F),B,F,(R\\B) is topological. In the latter case, all |B||F| ordered pairs in B×F become newly reachable.",
+      "claim_sha256": "1a373761ae60fc74a6b3d22660333f85a2d6067791f2f307eda805a6ac373c39",
+      "verdict": "VERIFIED",
+      "evidence": "If v reaches u, the inserted edge closes a cycle. Otherwise, inclusive descendants D of v and inclusive ancestors C of u are disjoint. Moving a cut across [v,u], Δ=|D∩L|−|C∩R| starts negative, ends positive, and rises only in unit increments, so Δ=0 at some cut. For F=D∩L and B=C∩R, every potentially backward old edge in the four-block order is excluded by the old topological order, descendant closure, ancestor closure, or the absence of a v-to-u path. The new edge is directed B-to-F. Each b∈B reaches each f∈F through b→…→u→v→…→f, and no such pair was previously reachable because b followed f in the old topological order.",
+      "witness": "The zero of Δ supplies |B|=|F|; the block order (L\\F),B,F,(R\\B) supplies the required stable topological reorder.",
+      "search_method": "Reconstructed the cut argument and checked all inter-block edge directions; additionally exhaustively enumerated finite DAGs through six vertices.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The balanced-cut construction gives an explicit combinatorial algorithm with total time Õ(m+n√m+A), where A is the total number of adjacency entries scanned from selected forward vertices and selected backward vertices. Consequently it attains Õ(n√m) whenever A=Õ(n√m), including sequences in which every selected forward vertex has polylogarithmic out-degree and every selected backward vertex has polylogarithmic in-degree at its expansion time.",
+      "claim_sha256": "1e3b755a91cfb2c9e7b71b948548bc049c5686be8c3f70aea12a6364f7205a45",
+      "verdict": "VERIFIED",
+      "evidence": "Paired minimum-forward and maximum-backward searches select q vertices on each side and furnish the balanced cut. Claim 1 gives q² newly reachable ordered pairs per acyclic violating update. Reachability is monotone, so Σq_i²≤n(n−1), and Cauchy–Schwarz gives Σq_i≤n√m. Heap insertions and stale entries are charged to scanned adjacency entries A; selected-vertex heap operations and stable sequence-tree movement cost soft-O(Σq_i), while storing and processing insertions costs soft-O(m). A final cycle search contributes at most soft-O(n) selected vertices plus its scans. Under the stated degree hypothesis, A is polylogarithmic times Σq_i+n. For distinct simple edges, m≤n² implies m≤n√m.",
+      "witness": "The central amortization is Σ_i q_i≤√(mΣ_i q_i²)≤n√m.",
+      "search_method": "Reconstructed the paired compatible-search implementation and independently audited every charge in its heap, adjacency-scan, and stable-reordering accounting.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Full adjacency-list rescanning cannot be charged automatically to the balanced-search vertex bound: there is a DAG sequence with n=2r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, yet rescanning the selected forward list costs r².",
+      "claim_sha256": "52567c84ad8041cb3bc36f8d47aa749b024b2b3014b8efa9e2e527fc45212061",
+      "verdict": "VERIFIED",
+      "evidence": "The construction has vertices v,u_1,…,u_r,z,w_1,…,w_r and 3r initial edges v→w_j, z→w_j, and u_i→z. Before u_i→v, v and u_i are adjacent in the maintained order, so F={v}, B={u_i}, and q=1. Since u_i already reaches z and every w_j and has no proper ancestor, the only newly reachable pair is (u_i,v). Vertex v nevertheless retains r outgoing entries, yielding r scans on each of r updates. Counts are n=2r+2, m=3r+r=4r, and total scans r².",
+      "witness": "For every i, the exact reachability delta is {(u_i,v)} while the selected forward vertex v has out-degree r.",
+      "search_method": "Checked the invariant inductively and simulated every update with exact transitive closures for r=1,…,12.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 4,
+      "claim": "Interval-pruning lemma: in a compatible-search round whose current forward-minimum and backward-maximum candidates are f≺b, forward expansion may ignore out-neighbors right of b and backward expansion may ignore in-neighbors left of f. The pruned search still detects every cycle-forming insertion and, in the non-cycle branch, selects the same first q descendants and last q ancestors that yield a balanced cut.",
+      "claim_sha256": "af6ddd6067c56bee1ecfe58ebb99c4efd05fc0f150ba09db2f21bf11fec868a5",
+      "verdict": "VERIFIED",
+      "evidence": "Forward minima move monotonically right and backward maxima monotonically left. A forward neighbor discarded to the right of the current b, and all its descendants, therefore can never become a compatible forward selection; the backward argument is symmetric. For a cycle path v=p_0→…→p_k=u, if expanding p_i would first discard p_(i+1)>b, then the path suffix lies right of b. Backward induction from u shows that suffix was already backward-expanded: each predecessor lay at or right of the then-current forward frontier and was not pruned. Expansion of p_(i+1) therefore marks p_i, forcing an intersection. Thus pruning cannot hide a cycle and cannot alter the compatible selected prefix and suffix in an acyclic update.",
+      "witness": "The monotone-frontier invariant makes every pruned vertex permanently incompatible; the path-suffix induction handles intersections that might otherwise appear to be pruned.",
+      "search_method": "Proved frontier monotonicity and the cycle-path induction, then compared full and pruned searches exhaustively on all tested DAG/insertion cases through six vertices.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 5,
+      "claim": "Selective-expansion refinement: let H sum, over all compatible-search expansions, min{outdeg(f),|{x:f≺x≼b}|} on the forward side and min{indeg(b),|{x:f≼x≺b}|} on the backward side. There is an explicit combinatorial implementation with total update time Õ(m+n√m+H). Moreover H≤A, and H=O(m) on the rescanning family of the preceding audited claim.",
+      "claim_sha256": "9b913a4b3f8715e6ab51ad9a810122eee20099bdb4f93fdcce2938290720122f",
+      "verdict": "VERIFIED",
+      "evidence": "Ranks give the active interval size before expansion. The implementation can either scan the directional adjacency list or enumerate the active order interval and test each possible edge in a deterministic dictionary, choosing the smaller count. Claim 4 justifies omitting edges outside the interval. Each probe, comparison, and generated heap item is charged, up to polylogarithmic factors, to the corresponding minimum in H; the remaining accounting is that of Claim 2. Pointwise each minimum is at most the fully scanned degree, so H≤A. In Claim 3's family, f=v and b=u_i are adjacent, making the forward term one and the backward term zero per violation, hence H=r=O(m).",
+      "witness": "The two realizations of a forward expansion cost respectively outdeg(f) and |(f,b]| dictionary probes, establishing the stated minimum; the backward side is symmetric.",
+      "search_method": "Audited implementability using order-statistic ranks and immutable-ID edge dictionaries, and evaluated H exactly on the rescanning construction.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 6,
+      "claim": "The selective parameter H is still not bounded by Õ(n√m): there is a DAG sequence with n=3r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, but both the forward degree and active forward interval have size at least r, giving H=r².",
+      "claim_sha256": "09b467146550974502671baf8c76af42f1501abad481057c9d93121c57a1d6ba",
+      "verdict": "VERIFIED",
+      "evidence": "Adding neutral vertices x_1,…,x_r between v and the u_i preserves F={v}, B={u_i}, q=1, and the singleton reachability delta {(u_i,v)}. Before every update, (v,u_i] contains the r neutral vertices and u_i, while outdeg(v)=r. Thus the forward selective cost is min(r,r+1)=r; indeg(u_i)=0 gives zero backward cost. Across r updates H=r². The graph has n=3r+2 and m=4r, whereas n√m=(3r+2)·2√r=Θ(r^(3/2)), leaving a Θ(√r) gap.",
+      "witness": "Every one of the r violating updates contributes exactly r to H despite selecting only v and u_i and creating only (u_i,v).",
+      "search_method": "Maintained the claimed order inductively and computed degrees, interval cardinalities, and exact reachability deltas for each update; also simulated r=1,…,12.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    },
+    {
+      "idx": 7,
+      "claim": "Padding sharpens the selective-expansion obstruction across every subquadratic density: for integers r≥1 and 0≤s≤r, adjoining a disconnected s-vertex transitive DAG to the preceding sequence gives n=3r+s+2, m=4r+binom(s,2), while every violating update still has q=1, creates one new reachability pair, and contributes total H=r². Consequently H/(n√m)=Θ(r/√(r+s²)). For every fixed a∈[1,2), choosing s=⌈r^(a/2)⌉ gives m=Θ(n^a) and a polynomial gap Θ(n^(1−a/2)); at a=3/2 the gap is Θ(n^(1/4)), whereas at the quadratic or polylogarithmically near-quadratic boundary it is only constant or polylogarithmic.",
+      "claim_sha256": "2969e3f31cd6707b0a2c5cfef101de7b87625f54f4773c9a78c36373440a1452",
+      "verdict": "VERIFIED",
+      "evidence": "The disconnected transitive component contributes exactly s vertices and binom(s,2) order-consistent edges and cannot affect any compatible search or original-component reachability delta. Hence q, H, and the singleton fresh pair remain unchanged. Because s≤r, n=Θ(r) and m=Θ(r+s²), yielding H/(n√m)=Θ(r/√(r+s²)). For fixed 1≤a<2, s=⌈r^(a/2)⌉ gives n=Θ(r), m=Θ(r^a), and gap Θ(r^(1−a/2))=Θ(n^(1−a/2)). Substituting a=3/2 gives n^(1/4); s=Θ(r) gives a constant, while s=r/polylog(r) gives a polylogarithmic gap.",
+      "witness": "The exact finite identities are n=3r+s+2, m=4r+s(s−1)/2, and H=r²; all asymptotic conclusions follow directly.",
+      "search_method": "Separated the disconnected-component invariants from the asymptotic substitutions and checked every integer pair 1≤r≤12, 0≤s≤r by exact simulation.",
+      "checker_path": "<workspace-home>/paired_v2_fixed_point_extension_v3_scratch/tcs_incremental_toposort_nsqrtm/audit/plain/attempt_7/audit_attempt7_checker.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The draft establishes valid conditional algorithms, pruning lemmas, and sharp obstructions for the proposed implementations, but it never bounds A or H by soft-O(n√m) unconditionally and supplies no alternative algorithm closing the intermediate-density gap. Its explicit PARTIAL claim is therefore accurate, and it does not fully resolve the source target.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only /evidence/source.json and /evidence/parent.json as evidentiary inputs; used no web or prohibited material.",
+    "Verified /evidence/parent.json SHA-256 as 29201656c0e180234fad7aa49d58bceb2473a9414c00e62b6ada666679fd3da0.",
+    "Recomputed all eight claim-string SHA-256 values and matched every supplied binding.",
+    "Independently reconstructed the regime algebra, balanced-cut proof, compatible-search accounting, interval-pruning proof, selective implementation, and both obstruction families.",
+    "Persisted /work/audit_attempt7_checker.py (SHA-256 3c909380de51e958cf8ac7cc5e4714f94edc883a57d9c5e3e2da100a620d3cdb).",
+    "The checker exhaustively tested 502170 DAG/insertion cases through six vertices and found identical full and pruned compatible-search outcomes, correct cycle decisions, valid balanced reorders, and all required fresh pairs.",
+    "The checker also verified the exact update-by-update graph, edge-count, reachability-delta, scan-cost, and H identities for r=1,…,12 and every padding value 0≤s≤r."
+  ]
+}

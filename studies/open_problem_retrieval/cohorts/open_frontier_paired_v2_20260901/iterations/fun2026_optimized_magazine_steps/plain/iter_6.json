@@ -1,0 +1,58 @@
+{
+  "record_id": "fun2026_optimized_magazine_steps",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 6,
+  "parent_sha256": "4adebaa931dede2801a91af4ad8d4aea761afcef35e2346200d5496b5b67f739",
+  "audit_sha256": "3270e4d7a28fa4774a8c0acf61dc1d49638ecdacacf3bdd83fd7e29738f967a8",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "PARTIAL",
+  "results": [
+    {
+      "claim": "The source-literal optimized FIFO algorithm’s complexity is Θ(n+M_FIFO), where M_FIFO=Σ_t|Q_t| for its actual marked queues; processing (p_t,Q_t) yields p_{t+1}=reverse(Q_t) followed by the stable deletion of Q_t from p_t.",
+      "proof_sketch": "Initialization costs Θ(n). Every subsequent PopFront/MoveToFront performs a constant number of list, queue, and comparison operations, so the remaining cost is Θ(Σ_t|Q_t|). Moving the distinct elements of Q_t to the front in FIFO order reverses their order and preserves the relative order of all other elements. Although Q_0 lists the initial descent bottoms from left to right, later queues are ordered by detection events during earlier moves. For p=(4,1,5,2,6,3), the first shelf state is (3,2,1,4,5,6), but Q_1=(1,2), while the shelf-order descent-bottom list is (2,1). Thus the literal next shelf is (2,1,3,4,5,6), not reverse(D(p_1)) followed by U(p_1)."
+    },
+    {
+      "claim": "There is an exact phase decomposition that isolates the unresolved cost.",
+      "proof_sketch": "Let i be the largest unfixed value and s_i<i its position when its phase starts. All larger values form a permanent fixed suffix, so i is not a descent bottom. Before a round, partition its marked elements into ℓ_t elements left of i and q_t elements right of i. Removing and then prepending an element left of i shifts i once left and once right, for net zero; prepending an element removed from its right shifts i right exactly once. Hence its position increases by q_t, independently of FIFO order. When i reaches position i, Σ_t q_t=i−s_i. The phase move count is therefore exactly (i−s_i)+Σ_tℓ_t. Bounding the accumulated left-of-active moves remains the unresolved part."
+    },
+    {
+      "claim": "The parent does not establish an Ω(n^{3/2}) lower bound, or the coefficient (4√2/3+o(1)), for the source-literal optimized FIFO algorithm.",
+      "proof_sketch": "The staircase recurrence analyzes the ordinary transition T(p)=reverse(D(p)) followed by U(p), whose marked elements are processed in shelf order. It does not describe later FIFO queues of the literal optimized pseudocode. The transfer already fails for P_6=(6,1,2,3,4,5): after three rounds T gives (3,1,2,6,4,5), whereas literal FIFO execution gives (1,3,2,6,4,5). Consequently the claimed prefix identity and its summation do not count the requested execution. This withdraws the proposed proof; it does not assert that an Ω(n^{3/2}) bound is false."
+    },
+    {
+      "claim": "For n≤9, the exact maximum numbers of moves for the source-literal optimized FIFO algorithm are 0,1,3,6,11,18,27,38,53.",
+      "proof_sketch": "Exact exhaustive enumeration covered all Σ_{n=1}^9 n!=409,113 permutations. A direct vector transcription and an array-backed doubly-linked-list transcription agreed on every move and round count. The discrepancy from the earlier rejected model begins at n=4: the literal maximum is 6, attained by (4,1,2,3), rather than 7."
+    },
+    {
+      "claim": "A natural twice-per-unordered-pair charging bound is false.",
+      "proof_sketch": "For p=(2,4,…,4096,1,3,…,4095), exact literal FIFO execution makes 49,545,006 moves. This exceeds 2·binom(4096,2)=16,773,120, so a charging invariant allowing at most two moves per unordered pair cannot cover every execution. The earlier counts 161 for P_13 and 50,546,772 for this instance belong to the ordinary T process and are removed; literal P_13 makes 97 moves. This finite witness refutes only that charging rule, not an O(n²) asymptotic bound."
+    },
+    {
+      "claim": "The requested asymptotically tight worst-case step complexity remains unresolved; this revision establishes no improvement beyond the source’s Ω(n log n)–O(n³) interval.",
+      "proof_sketch": "The only proposed asymptotic improvement depended on the invalid identification of the literal FIFO orbit with the ordinary T orbit. The phase identity leaves Σ_tℓ_t uncontrolled, the n≤9 maxima are finite data, and the size-4096 charging counterexample supplies no asymptotic family. None yields a tighter lower or upper bound, much less matching bounds."
+    }
+  ],
+  "final_writeup": "Partial progress, but not a solution of the target, is claimed. The revision preserves the exact parent’s corrected model of the source-literal optimized FIFO pseudocode.\n\nLet Q_t be the optimized algorithm’s actual FIFO queue at the beginning of round t. Processing Q_t changes the shelf p_t to reverse(Q_t) followed by the elements outside Q_t in their previous relative order. The initial queue is the left-to-right list of descent bottoms, but subsequent queues are appended in the order that new marks are detected while earlier elements are removed and prepended. That order need not be shelf order. Thus the correct evolving state is (p_t,Q_t), and the running time is Θ(n+Σ_t|Q_t|), rather than a weighted orbit under T(p)=reverse(D(p))·U(p).\n\nThe distinction is visible on (4,1,5,2,6,3). After round one the shelf is (3,2,1,4,5,6), while the literal next queue is (1,2). Literal FIFO processing therefore produces (2,1,3,4,5,6); processing the current descent bottoms in shelf order would instead produce the sorted permutation. Literal execution takes six moves in three rounds, versus five moves in two ordinary-T rounds.\n\nThere is also an exact phase decomposition. If i is the largest unfixed value and its phase begins at position s_i, all larger values form a permanent fixed suffix and i cannot be marked. In any round, a moved element initially left of i has zero net effect on i’s position, while one initially right of i advances i by one. If ℓ_t and q_t are the respective counts, then Σ_tq_t=i−s_i and the phase makes exactly\n\n(i−s_i)+Σ_tℓ_t\n\nmoves. Controlling the second term remains the obstacle.\n\nThe proposed Ω(n^{3/2}) lower bound remains withdrawn. Its staircase calculation applies only to the auxiliary ordinary transition and was not transferred to the literal FIFO process. Already for P_6, their states differ after three rounds. This invalidates the proposed proof and coefficient without proving that such a lower bound is impossible.\n\nExact exhaustive literal execution gives move maxima 0,1,3,6,11,18,27,38,53 for n=1,…,9. The corrected even-then-odd instance of size 4096 makes 49,545,006 moves, exceeding 2·binom(4096,2)=16,773,120 and thereby refuting a twice-per-unordered-pair charging invariant. It is only a finite obstruction and establishes no asymptotic lower bound.\n\nAccordingly, neither a stronger asymptotic lower bound nor a better upper bound has been proved. The requested tight complexity remains open between the authorized source’s Ω(n log n) and O(n³) bounds. Nevertheless, the corrected state model, exact phase identity, exhaustive small-n maxima, and obstruction to one charging argument are material progress directly relevant to the target; claimed_resolution is therefore PARTIAL.",
+  "audit_feedback_acted_on": [
+    "Claim verdicts: the independent audit contains no REFUTED or UNRESOLVED item and no confirmed refutation; all six claims are VERIFIED, so claimed_resolution, every claim and proof_sketch, and final_writeup are preserved exactly.",
+    "Target coverage: accepted VALID_PARTIAL_PROGRESS because the corrected FIFO state model, exact phase accounting, exhaustive small-n maxima, and finite charging obstruction are material, while no n-only asymptotic bound is improved.",
+    "Claimed-resolution judgment: accepted ACCURATE and retained claimed_resolution PARTIAL; the final writeup continues to state expressly that the target remains unresolved.",
+    "Native adversarial self-critique: rechecked that Θ(n+M_FIFO) is not an n-only bound, the phase identity leaves Σ_tℓ_t uncontrolled, finite computations imply no asymptotic family, the charging witness refutes only one charging rule, and the ordinary-T divergence blocks the withdrawn lower-bound transfer; no material correction is warranted."
+  ],
+  "checks_performed": [
+    "Read only the authorized source JSON, exact parent JSON, and independent audit JSON; used no web, prior frontier output, other solution, verification report, retrieval database, retrieval result, treatment receipt, or external memory.",
+    "Confirmed the supplied exact parent SHA-256 and audit SHA-256.",
+    "Parsed the exact target and source-literal optimized FIFO pseudocode, including detection-ordered PushBack operations.",
+    "Compared all six parent claims with the independent audit: every claim is VERIFIED, confirmed_refutations is empty, target coverage is VALID_PARTIAL_PROGRESS, claimed-resolution is ACCURATE, and overall is VERIFIED.",
+    "Performed native adversarial dependency review of every load-bearing claim and found no basis for a material proof-state correction or any new load-bearing claim.",
+    "Copied claimed_resolution, all claims and proof_sketches, and final_writeup exactly from the parent; the final_writeup has 408 whitespace-delimited words and the longest proof_sketch has 114, within the requested limits.",
+    "Created no checker or other file and modified no repository file."
+  ],
+  "self_assessment": "CONFIDENT"
+}

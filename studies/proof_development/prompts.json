@@ -1,0 +1,89 @@
+{
+  "shared_pre": "You are writing a rigorous, complete mathematical proof. Read ${IN}/${fn}.json - it contains only a problem statement. No web access; do not read any other file in runs/proof_construction/.\n\nWrite a full proof of the problem's claim (or, if the claim as stated is false, say so and prove the correction - but do not assume it is false).\n\n",
+  "shared_post": "\n\nYour final_proof must be the complete, self-contained final version. Set record_id to exactly ${rid_json} and arm to \"${arm}\"; report iterations_used honestly.\n\nBEFORE returning, write your structured answer as JSON to ${OUTDIR}/${fn}__${arm}.json (create the directory if needed).",
+  "arms": {
+    "plain_orig": {
+      "family": "original",
+      "protocol": "REVISION PROTOCOL (self-critique): after each draft, re-read it adversarially - hunt for the weakest step, an unjustified claim, a case you skipped - and revise. Up to 2 revisions; stop early only if your adversarial pass finds nothing to attack. Set bugbank_hits_acted_on to [].",
+      "retrieval": null,
+      "note": "verbatim original plain arm (proof_construction_arms.js FEEDBACK.plain)"
+    },
+    "bugbank_orig": {
+      "family": "original",
+      "protocol": "REVISION PROTOCOL (BugBank-checked): after each draft:\n1. List the draft's load-bearing claims (at most 6 one-sentence statements) into /tmp/claude-24032/pc_claims_RECORDID.json as a JSON list of strings.\n2. Run via Bash: python3 ${BASE}/scripts/bugbank_retrieve.py --claims-json /tmp/claude-24032/pc_claims_RECORDID.json -k 3 --out /tmp/claude-24032/pc_hits_RECORDID.json   (a zero-token mechanical lookup of known-false claims) and read the output.\n3. If a retrieved known-false pattern matches a claim your draft relies on, your draft is at risk: revise to avoid or properly justify that step, and record the entry_id in bugbank_hits_acted_on.\n4. Up to 2 revisions; stop early only if retrieval returns nothing that matches your draft.",
+      "retrieval": "real_noexclude",
+      "note": "verbatim original BugBank arm; no own-record exclusion, as in August"
+    },
+    "plain_parity": {
+      "family": "parity",
+      "protocol": "REVISION PROTOCOL (claim check): after each draft:\n1. Save the draft to /tmp/claude-24032/pc_draft_RECORDID_N.md (N = 1 for the first draft, 2, 3 for revisions).\n2. List the draft's load-bearing claims (at most 6 one-sentence statements) into /tmp/claude-24032/pc_claims_RECORDID_N.json as a JSON list of strings.\n3. CHECK SOURCE: re-read the listed claims adversarially, one by one - for each, hunt for the weakest step, an unjustified assumption, a case you skipped - and write your verdict per claim into /tmp/claude-24032/pc_check_RECORDID_N.json as a JSON list of {\"claim\": ..., \"flagged\": true|false, \"reason\": ...}.\n4. A claim is FLAGGED if the check raises a concrete concern about it (a matching known-false pattern, or a gap you cannot close on re-reading). If any load-bearing claim is flagged, revise to avoid or properly justify that step; record any BugBank entry_id you acted on in bugbank_hits_acted_on (or [] if none).\n5. Up to 2 revisions. Stop early only if the check flags no load-bearing claim. Apply this same rule after every draft.",
+      "retrieval": null,
+      "note": "parity skeleton, self-review check"
+    },
+    "bugbank_parity": {
+      "family": "parity",
+      "protocol": "REVISION PROTOCOL (claim check): after each draft:\n1. Save the draft to /tmp/claude-24032/pc_draft_RECORDID_N.md (N = 1 for the first draft, 2, 3 for revisions).\n2. List the draft's load-bearing claims (at most 6 one-sentence statements) into /tmp/claude-24032/pc_claims_RECORDID_N.json as a JSON list of strings.\n3. CHECK SOURCE: run via Bash: python3 ${BASE}/scripts/bugbank_retrieve.py --claims-json /tmp/claude-24032/pc_claims_RECORDID_N.json -k 3 --out /tmp/claude-24032/pc_hits_RECORDID_N.json   (a zero-token mechanical lookup of known-false claims) and read the output; a claim is flagged if a retrieved known-false pattern matches a claim your draft relies on.\n4. A claim is FLAGGED if the check raises a concrete concern about it (a matching known-false pattern, or a gap you cannot close on re-reading). If any load-bearing claim is flagged, revise to avoid or properly justify that step; record any BugBank entry_id you acted on in bugbank_hits_acted_on (or [] if none).\n5. Up to 2 revisions. Stop early only if the check flags no load-bearing claim. Apply this same rule after every draft.",
+      "retrieval": "real_exclude_own",
+      "note": "parity skeleton, BugBank retrieval with own-record exclusion"
+    },
+    "placebo_parity": {
+      "family": "parity",
+      "protocol": "REVISION PROTOCOL (claim check): after each draft:\n1. Save the draft to /tmp/claude-24032/pc_draft_RECORDID_N.md (N = 1 for the first draft, 2, 3 for revisions).\n2. List the draft's load-bearing claims (at most 6 one-sentence statements) into /tmp/claude-24032/pc_claims_RECORDID_N.json as a JSON list of strings.\n3. CHECK SOURCE: run via Bash: python3 ${BASE}/scripts/bugbank_retrieve.py --claims-json /tmp/claude-24032/pc_claims_RECORDID_N.json -k 3 --out /tmp/claude-24032/pc_hits_RECORDID_N.json   (a zero-token mechanical lookup of known-false claims) and read the output; a claim is flagged if a retrieved known-false pattern matches a claim your draft relies on.\n4. A claim is FLAGGED if the check raises a concrete concern about it (a matching known-false pattern, or a gap you cannot close on re-reading). If any load-bearing claim is flagged, revise to avoid or properly justify that step; record any BugBank entry_id you acted on in bugbank_hits_acted_on (or [] if none).\n5. Up to 2 revisions. Stop early only if the check flags no load-bearing claim. Apply this same rule after every draft.",
+      "retrieval": "placebo",
+      "note": "parity skeleton, byte-identical prompt to bugbank_parity; the retrieval wrapper returns length-matched records from unrelated problems (env-selected)"
+    }
+  },
+  "model_arm_label": {
+    "plain_orig": "plain",
+    "bugbank_orig": "bugbank",
+    "plain_parity": "plain",
+    "bugbank_parity": "bugbank",
+    "placebo_parity": "bugbank"
+  },
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "record_id",
+      "arm",
+      "final_proof",
+      "iterations_used",
+      "bugbank_hits_acted_on",
+      "self_assessment"
+    ],
+    "properties": {
+      "record_id": {
+        "type": "string"
+      },
+      "arm": {
+        "type": "string",
+        "enum": [
+          "plain",
+          "bugbank"
+        ]
+      },
+      "final_proof": {
+        "type": "string"
+      },
+      "iterations_used": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+      },
+      "bugbank_hits_acted_on": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "self_assessment": {
+        "type": "string",
+        "enum": [
+          "CONFIDENT",
+          "UNSURE"
+        ]
+      }
+    }
+  },
+  "source": "qedbench_certificate_availability_triage/runs/proof_construction_arms.js (original FEEDBACK texts copied verbatim; ${BASE} and /tmp/claude-24032 are path tokens substituted per cell)"
+}

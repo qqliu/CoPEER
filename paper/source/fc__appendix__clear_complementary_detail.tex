@@ -1,0 +1,174 @@
+\section{Search, repair, and retrieval: protocols and complete results}
+\label{app:complementary-detail}
+The localization benchmark asks where a critic places an error. The three studies summarized in Section~\ref{sec:complementary} ask whether counterexamples help beyond localization: in directing a search, in completing a given correction, and in revising or developing a proof. Each study has its own inputs, conditions, and grading, described below, and none of them uses the 100-input benchmark.
+
+\subsection{Counterexample-first search versus sequential review}
+\label{app:instruction-model-details}
+\label{sec:cost-repro-design}
+\label{sec:empirical-results}
+\label{sec:triage-results}
+\paragraph{Inputs and conditions.}
+The instruction study uses 100 proofs sampled from 560 inputs that the construction workflow had labelled as containing errors with concrete witnesses. This panel predates the human-approved core and is distinct from the benchmark. We compared four instructions, each applied to the same proof. \emph{Counterexample-first search} asks the model to find a claim it can refute and stop. \emph{Full review} judges every step. \emph{Ordinary early stopping} may stop at the first failing step without a witness. \emph{Sequential review with a counterexample required} may stop at the first failing step only when it also produces a concrete counterexample, so that it must deliver the same evidence as search. The main comparison is search against this last instruction. Appendix~\ref{app:cost-repro-procedures} gives the exact prompts, the execution settings, and the separate 60-statement panel.
+
+\paragraph{Grading.}
+A model grader~\citep{zheng2023judging}, \texttt{gpt-6-astra}, sees the saved reference defect and grades each answer. An objection counts as \emph{confirmed} when the grader accepts the response's counterexample or self-contained refutation as refuting the reference defect (\texttt{CAUGHT\_MATCHING}) or another defect (\texttt{CAUGHT\_DIFFERENT}). An objection the grader finds unsupported is recorded as \texttt{FALSE\_CATCH}. The comparison uses one common grading pass from September for all 100 inputs, including a regrading of the saved Opus~5 answers. Under that pass, Opus~5 has 81, 83, 76, and 76 confirmed objections for search, full review, early stopping, and review with a counterexample required, compared with 83, 84, 78, and 79 under its original grading. Table~\ref{tab:instruction-main} reports the common September grades for all three models, while the four-instruction Table~\ref{tab:cost-repro} keeps the original Opus~5 proof grades and uses the September grades for the other rows. The original token summaries use 2,000 bootstrap resamples and the paired comparison 20,000 \citep{efron1979bootstrap}.
+
+\input{fc__sections__instruction_table}
+
+\paragraph{Results.}
+Search used 31\%, 15\%, and 29\% less recorded output than review with a counterexample required for Sol, Gemini, and Opus~5. The corresponding differences in confirmed objections are $+2$, $-5$, and $+5$ percentage points, with paired 95\% bootstrap intervals $[-2,+6]$, $[-13,+3]$, and $[-2,+12]$; each interval includes zero, so the study does not establish an accuracy difference in either direction. The comparison instruction matters: against ordinary early stopping, which permits an objection without a concrete witness, search uses 6--11\% more output. Requiring the same form of evidence in both conditions is therefore central to reading the comparison. On the separate panel of 60 false statements presented without proofs, search also used less output than a proof attempt that must supply a counterexample when it rejects a statement (Table~\ref{tab:claims60-evidence} in Appendix~\ref{app:cost-repro-procedures}).
+
+Output tokens are not the whole cost. Recorded token totals are uncached input plus cached input plus output, with reasoning counted once within output. Their ratios are $0.958$ for Sol and $0.650$ for Gemini, the Sol interval including one; on the 96 Sol and 94 Gemini task pairs with no recorded additional execution in either condition they are $0.977$ and $0.955$. Tables~\ref{tab:cost-repro} and~\ref{tab:proofs100-fourarm-full-components} give every grade and token component for the four instructions on the 100-proof panel; Appendix~\ref{app:cost-repro-procedures} gives the 60-statement panel's accounting. The proof totals are reconstructed from saved native usage and Opus~5 telemetry, with a publication receipt covering 1,709 source files; the reconstruction source is \path{studies/instructions/source/recompute_proofs100_full_components.py}, and \path{studies/instructions/README.md} gives portable replay instructions.
+
+\input{fc__generated__cost_repro_tables}
+\input{fc__generated__proofs100_full_components}
+
+\subsection{Token accounting and sensitivity}
+\label{app:primary-witness-accounting}
+\paragraph{Answers and grades.}
+Each model has 100 paired grades and 100 paired usage records for accepted attempts. Search yields 95 confirmed and 3 unsupported objections for Sol, against 93 and 4 for review with a counterexample required; the counts are 84 and 1 against 89 and 0 for Gemini, and 81 and 2 against 76 and 3 for Opus~5. The repository provides the source audit in \path{studies/instructions/reference_validity/audit.json} and the input manifest in \path{studies/instructions/reproduction/manifest.json}.
+
+\paragraph{Paired estimates.}
+A token ratio divides the sum used by search by the sum used by sequential review on the same tasks, so a ratio below one means lower recorded usage for search. For token ratios and for differences in confirmed objections we resample task pairs 20,000 times with seed 20260917 and report the 2.5th and 97.5th percentiles \citep{efron1979bootstrap}; these pointwise intervals describe uncertainty for each comparison separately. The original output-token summaries use 2,000 resamples, which explains small differences in interval endpoints.
+
+\paragraph{Input and cache accounting.}
+Gemini reports uncached input separately from cache reads, so its recorded total adds both components to output; this corrects an earlier summary that subtracted cache reads from uncached input, and the saved receipts preserve the original components. Accepted-attempt ratios measure recorded solver usage; the ledgers separately identify additional attempts and unknown usage. Monetary comparisons would also require prices and billing rules for each execution system.
+
+\paragraph{Connecting the study to the source audit.}
+The saved crosswalk matches each study input to the 425-record source audit by \texttt{record\_id} or its explicit \texttt{original\_record\_id} alias; two Graph Theory records use the alias. This gives 46 retained, 25 excluded, and 29 unmatched records in that earlier audit, against 46, 23, and 31 when only literal identifiers are matched, with the same 21 human-review overlaps either way. These counts describe the earlier audit; current core membership is recorded separately. Establishing that a review applies to an experiment's saved reference also requires comparing the source text and witness, which the next subsection does; the original human returns identify their review packets but do not record hashes of the files the reviewers opened.
+
+\paragraph{Recorded tool use.}
+The instructions allow reading the input and prohibit other code execution, yet the accepted-attempt logs record six additional executions across four Sol task pairs and 48 across six Gemini pairs: for Sol, one search cell and three review cells with execution totals of 2 and 4; for Gemini, two and five cells with totals of 6 and 42. An execution here is any recorded non-read command or tool call and can include work other than mathematical computation. The main comparison keeps all 100 task pairs; the subset of pairs with no recorded additional execution in either condition (96 for Sol, 94 for Gemini) describes observed runs and does not randomize tool permissions, and Opus~5 has no matching execution telemetry. A controlled comparison would assign those permissions before execution. The per-task data are in \path{studies/instructions/reference_validity/toolfree_sensitivity.json}.
+
+\paragraph{How one large execution moves the average.}
+For Gemini, the median per-task recorded-total ratio is $0.952$, while the ratio of sums is $0.650$. The difference arises in part from one sequential review, \path{arxiv_1904.10482v2__source_enriched_codex}, which records 24 additional executions and 1,639,229 input tokens, or 1,686,890 including output; omitting that pair gives a ratio of $0.830$. The complete 100-pair result and this sensitivity together show how single long runs shape aggregate usage.
+
+\subsection{Checking the reference objections}
+\label{app:reference-reconciliation}
+We revisited the reference objections for the 100 proofs of the instruction study. Twenty-two cases had matching full source texts and unchanged witnesses supported by the earlier automated checks: 15 exact text matches and seven complete-text matches after removing line numbers and normalizing whitespace. Cases with only a matching excerpt or a replacement witness were excluded, so this subset was selected by the source-matching rules, not sampled at random. On it, search and review with a counterexample required received 22 and 21 confirmed objections for Sol, 21 and 20 for Gemini, and 19 and 19 for Opus~5; Table~\ref{tab:reference-sensitivity} gives the paired token comparisons. These are results from the earlier experiment; Section~\ref{app:retained-core-membership} defines the human-approved core.
+
+\begin{table}[!htbp]
+\centering
+\caption{The 22 source-matched cases from the instruction study. Counts compare search with sequential review with a counterexample required, under the common September grades. Ratios compare accepted solver-attempt token sums. Intervals use the paired 20,000-resample analysis described in Section~\ref{app:primary-witness-accounting}.}
+\label{tab:reference-sensitivity}
+\small
+\setlength{\tabcolsep}{4pt}
+\input{fc__generated__reference_sensitivity_table}
+\end{table}
+
+\paragraph{What changed when the references were checked?}
+Thirteen original references failed later checks: ten had a recorded source-interpretation problem, and three used witnesses that were replaced as invalid. The saved grader nevertheless marked 60 of their 78 model-and-instruction responses as matching the reference objection; the other 18 received six supported-alternative, one unsupported-objection, and eleven missed grades. Agreement with a stored reference must therefore be checked against the source. Scores also move with the subset: Gemini has 84 and 89 confirmed objections on all 100 inputs, 35 and 39 on the 42 cases supported by the recorded automated checks, and 21 and 20 on the 22 source-matched cases, search listed first.
+
+\paragraph{Three examples.}
+These cases from the earlier source audit show why an objection's exact target matters.
+\begin{description}[style=nextline,leftmargin=0pt]
+\item[\path{mse_25914__ans25916}: a local proof step.]
+The proposed step requires a product of strictly smaller positive integers. Prime 7 has no such factorization. The source's assertion about expressing an integer as an odd number times a power of two is not disproved. The selected Lean theorem addresses the product claim, including possible factors 1.
+\item[\path{mse_1513740__ans1513768}: a local size comparison.]
+The proposed strict size comparison fails at $k=2$: the reduced system has two equations, not fewer than two. This refutes the printed comparison, not the underlying solvability theorem.
+\item[\path{SE_cs_12812__a12823}: an algorithmic claim.]
+The source proposes satisfying the first disjunct as its procedure. It does not assume that every disjunct is internally consistent. The witness tests that stated procedure rather than adding such an assumption.
+\end{description}
+The \href{https://github.com/qqliu/CoPEER/blob/main/studies/instructions/README.md}{instruction-experiment reproduction guide} links the source-matching rules, record lists, saved responses, grades, token components, and example evidence; the original 100-input comparison and every group above remain available there.
+
+\subsection{Repair tasks with the correction given}
+\label{app:repair-study}
+This study asks whether a checked counterexample helps a solver complete a specified mathematical correction. It uses 16 Lean tasks derived from source arguments. Both conditions supply the source context, definitions, identified defect, repair template, and required proof statements; condition A uses this information alone, and condition B adds the checked counterexample. The task's fixed checker accepts a submission when its edits are allowed and its proofs establish the requested correction for all permitted inputs, show that the hypotheses admit an example, and establish any task-specific endpoint properties. Each of three solvers, Opus, Sonnet, and GPT-OSS 120B, received up to three attempts per task and condition.
+
+Table~\ref{tab:repair_outcomes} reports first-attempt acceptance; ``Absent'' means no submission was saved, and missing submissions count as failures. The counts are the same when acceptance also requires compliance with the runtime rules, because a later runtime stop leaves an already saved, accepted submission intact.
+
+\begin{table}[h]
+\centering
+\caption{First-attempt checker-accepted submissions on 16 source-derived repair tasks.}
+\label{tab:repair_outcomes}
+\begin{tabular}{l c c c c}
+\toprule
+\textbf{Solver} & \textbf{Condition} & \textbf{PASS} & \textbf{FAIL} & \textbf{Absent} \\
+\midrule
+Claude Opus 5.5 & A & 15 & 0 & 1 \\
+Claude Opus 5.5 & B & 15 & 0 & 1 \\
+Claude Sonnet 5 & A & 13 & 3 & 0 \\
+Claude Sonnet 5 & B & 15 & 1 & 0 \\
+GPT-OSS 120B    & A & 1 & 10 & 5 \\
+GPT-OSS 120B    & B & 2 & 8 & 6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across up to three attempts, Opus obtained an accepted submission on all 16 tasks in both conditions; Sonnet completed 14 of 16 without the counterexample and 16 of 16 with it; GPT-OSS 120B completed 2 of 16 and 3 of 16. Sonnet's first attempts passed in both conditions on 13 tasks, in neither on one, and only with the counterexample on two. The paired outcomes show a benefit for Sonnet on these given repairs; the small task set leaves the broader effect unresolved.
+
+Table~\ref{tab:repair_resources} reports token usage across all 16 selected first attempts for each solver and condition, including failed attempts. Recorded total tokens include output and all reported input components, including cache creation and reads; the released artifact gives the component breakdown. The symbol $\ge$ marks a lower bound where provider usage is unavailable. Earlier attempts made to recover from execution problems, and evaluation costs, are recorded separately. The tasks, checker obligations, saved submissions, and replay instructions are documented in \path{studies/repairs/README.md}.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Token usage for selected first attempts (16 tasks per condition). The last column counts attempts with recorded native usage out of 16.}
+\label{tab:repair_resources}
+\begin{tabular}{l c r r r}
+\toprule
+\textbf{Configuration} & \textbf{Condition} & \textbf{\shortstack{Recorded\\total tokens}} & \textbf{Output tokens} & \textbf{\shortstack{Attempts with\\recorded usage}} \\
+\midrule
+Opus 5.5 & A & $\ge$ 598,672 & $\ge$ 42,733 & 15/16 \\
+Opus 5.5 & B & $\ge$ 746,580 & $\ge$ 46,799 & 15/16 \\
+Sonnet 5 & A & $\ge$ 9,083,964 & $\ge$ 247,815 & 13/16 \\
+Sonnet 5 & B & 8,819,081 & 221,411 & 16/16 \\
+GPT-OSS 120B & A & 2,086,312 & 225,343 & 16/16 \\
+GPT-OSS 120B & B & 1,720,809 & 227,225 & 16/16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Retrieval during proof revision}
+\label{app:proof-development}
+This study asks whether retrieved counterexamples help a model develop a proof through repeated revision. Each model worked on the same 50 tasks in two conditions. The BugBank condition could retrieve up to three records for each queried claim from an earlier 661-entry database, ranked by SQLite FTS5 \texttt{bm25}~\citep{robertson2009bm25} (\url{https://sqlite.org/fts5.html#the_bm25_function}); the Plain condition used iterative self-feedback~\citep{madaan2023selfrefine}. Each row of Table~\ref{tab:proof50-results} grades all 100 final drafts, 50 from each condition. The shared-rule protocol uses the same revision cap and stopping rule in both conditions; the original-protocol rows retain the earlier stopping rules as a separate comparison. These tasks and the retrieval database belong to this study alone and are separate from the human-approved core and its benchmark.
+
+\begin{table}[ht]
+\centering\small
+\caption{Proof development outcomes on 50 tasks per model, reported as BugBank / Plain. Correctness is judged by model graders using the recorded rubric. Recorded total tokens are uncached input, cached input, and output (with reported reasoning counted once within output) for the selected completed solver attempts, including auxiliary calls; output tokens also include auxiliary calls. Grading, rejected attempts, and later checks are accounted for separately. Total-token ratios divide the BugBank condition by Plain, with 95\% intervals from 2,000 paired bootstrap resamples of tasks.}
+\label{tab:proof50-results}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{llrrrr}
+\toprule
+Model & Protocol & Graded correct (/50) & All-model output tokens & Recorded total tokens & Total-token ratio [95\% CI] \\
+\midrule
+GPT-5.6-Sol & shared & 45 / 47 & 315,167 / 339,701 & 9,762,586 / 7,184,842 & 1.359 [1.211, 1.511] \\
+Gemini 3.1 Pro & shared & 43 / 42 & 491,041 / 552,991 & 10,354,373 / 7,949,686 & 1.302 [1.193, 1.428] \\
+Opus 5 & shared & 44 / 43 & 746,839 / 1,023,808 & 6,768,539 / 9,721,951 & 0.696 [0.555, 0.887] \\
+\midrule
+GPT-5.6-Sol & original & 48 / 48 & 294,955 / 253,003 & 10,089,707 / 5,280,740 & 1.911 [1.634, 2.215] \\
+Gemini 3.1 Pro & original & 43 / 42 & 442,707 / 636,047 & 8,167,805 / 4,189,656 & 1.950 [1.773, 2.140] \\
+Opus 5 & original & 44 / 46 & 902,816 / 1,094,155 & 8,160,358 / 7,651,046 & 1.067 [0.869, 1.349] \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Under the shared rule the models differ. Opus used fewer recorded tokens with retrieval, a ratio of 0.696 with interval [0.555, 0.887], and had 44 proofs judged correct against 43. Sol and Gemini used more tokens with retrieval, with 45 against 47 and 43 against 42 proofs judged correct. Under the original stopping rules all three ratios exceeded one. The comparison evaluates complete revision procedures, so its reading depends on the feedback source and the stopping rule together.
+
+Grading used 3,312,989 recorded tokens for Sol, 3,536,651 for Gemini, and 3,806,090 for Opus, with 200 grading receipts and complete grading-usage records per model. Additional-attempt records contain two attempts with unknown usage for Sol, none for Gemini, and at least 349,775 tokens for Opus, 25 of whose 26 additional attempts lack complete native usage; these costs are recorded outside the selected-attempt totals and are not allocated to conditions or protocols. The inputs, prompts, grading records, retrieval snapshot, and deterministic replay are documented in \path{studies/proof_development/README.md}.
+
+\subsection{Retrieval in open-problem search}
+\label{app:historical-retrieval}
+This paired study examined retrieval during longer mathematical searches. Each target was pursued with BugBank retrieval (B) and with self-critique and model auditing alone (P). The main comparison contains 36 distinct final targets; for 22 of them a continued search replaced the original endpoint, so each target is counted once. A model audit accepted a full resolution of the stated target in 12 retrieval runs and 11 self-critique runs: eleven targets were accepted in both conditions, one only with retrieval, and 24 in neither. ``Audited-full'' in Table~\ref{tab:historical_retrieval} denotes this saved model-audit decision; the deciding audits for the 31 original-run targets could see which condition used retrieval, and independent checks of the mathematical claims are a separate step. The table also reports 58 observations from individual stages of these searches; some stages concern the same target, so they are not 58 independent targets. Two further panels are disjoint from the main comparison: six exploratory targets from fresh sources, with no acceptance in either condition, and six targets chosen to test BugBank retrieval, with one acceptance in each.
+
+Component model tokens count completed, valid revision and audit calls through the recorded endpoint; they exclude the shared starting draft and audit, retrieval, invalid or failed attempts, and later work. Original and hard-target rows report cumulative endpoint usage; the continuation row reports only added usage. The Plain condition was required to use at least the BugBank token budget before stopping without a full resolution, so the usage differences partly reflect the execution protocol rather than a causal efficiency gain from retrieval, and because the stages overlap their costs are reported separately rather than summed. The target definitions, saved model audits, continuation rules, and replay instructions are in \path{studies/open_problem_retrieval/README.md}.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Component & Paired units & Audited-full (B / P) & Both & B-only / P-only & Neither \\
+\midrule
+Distinct targets, final endpoints & 36 & 12 / 11 & 11 & 1 / 0 & 24 \\
+Protocol stages, descriptive & 58 & 12 / 11 & 11 & 1 / 0 & 46 \\
+\midrule
+Original run & 31 & 9 / 8 & 8 & 1 / 0 & 22 \\
+Hard-target run & 5 & 0 / 0 & 0 & 0 / 0 & 5 \\
+Fixed-point continuation & 22 & 3 / 3 & 3 & 0 / 0 & 19 \\
+Exploratory cohort & 6 & 0 / 0 & 0 & 0 / 0 & 6 \\
+Targeted stress test & 6 & 1 / 1 & 1 & 0 / 0 & 5 \\
+\bottomrule
+\end{tabular}
+\caption{Paired-search components comparing BugBank retrieval (B) against a self-critique/audit condition (P). Component model token usage (B / P): Original $16{,}449{,}383 / 17{,}590{,}589$; Hard $1{,}683{,}108 / 2{,}050{,}662$; Continuation (incremental) $19{,}577{,}279 / 20{,}301{,}967$; Exploratory $1{,}370{,}760 / 1{,}710{,}782$; Targeted $1{,}372{,}591 / 1{,}436{,}842$.}
+\label{tab:historical_retrieval}
+\end{table}

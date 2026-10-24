@@ -1,0 +1,64 @@
+{
+  "record_id": "tcs_incremental_toposort_nsqrtm",
+  "stage": "REVISION_AUDIT",
+  "arm": "bugbank",
+  "iteration": 3,
+  "parent_sha256": "249cdc18016f6c308fc59789844cfed4e098ce395c399c983935905f94c912f2",
+  "complete": true,
+  "claims": [
+    {
+      "idx": 0,
+      "claim": "The two source-stated bounds imply total update time Õ(min{n²,m^(4/3)}). This meets Õ(n√m) when m≤n^(6/5) and when m≥n²/log^{O(1)}n; over all m it is within an Õ(n^(1/4)) factor of the target.",
+      "claim_sha256": "79003b417cee6573b8c836f7fd4f5efe82f393a8dfcd3dfee6043f7ded223a27",
+      "verdict": "VERIFIED",
+      "evidence": "The source states soft-O(n²) and soft-O(m^(4/3)) bounds. Dividing the sparse bound by n√m gives m^(5/6)/n, which is at most one exactly when m≤n^(6/5). Dividing the dense bound by n√m gives n/√m, which is polylogarithmic when m≥n²/log^C n for a constant C. Writing m=n^a, the available bounds cross at a=3/2. The ratio exponent is 5a/6−1 before that point and 1−a/2 afterward; these functions respectively increase and decrease, and both equal 1/4 at a=3/2. Thus the worst polynomial gap on the simple-graph range is n^(1/4), up to polylogarithms.",
+      "witness": "The extremal density is m=n^(3/2), where both available bounds are n² while n√m=n^(7/4), giving ratio n^(1/4).",
+      "search_method": "Recomputed every exponent and threshold symbolically with exact Fraction arithmetic and checked the two monotonic pieces; no floating-point decisions were used.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_3/audit_claim0_exact.py"
+    },
+    {
+      "idx": 1,
+      "claim": "Corrected balanced-cut lemma: for every order-violating insertion u→v into a DAG, either v already reaches u, so the insertion closes a cycle, or one can find equally sized sets B,F and a cut c such that F consists of the descendants of v at or left of c, B consists of the ancestors of u right of c, the stable order (L\\F),B,F,(R\\B) is topological after the insertion, and all |B||F| ordered pairs in B×F become newly reachable.",
+      "claim_sha256": "76b33884b45bcb42d8f9cba826e81e36204c1dd3420a109e05b64fe9487b8ffd",
+      "verdict": "VERIFIED",
+      "evidence": "Use reflexive reachability and set D={x:v reaches x} and A={x:x reaches u}. If D∩A is nonempty, concatenating the two paths proves that v reaches u, and adding u→v closes a cycle. Otherwise D and A are disjoint. For a cut swept from immediately before v to immediately after u, h(c)=|D∩L|−|A∩R| starts negative, ends positive, and changes only by zero or one because no vertex lies in both sets. Hence h(c)=0 at a cut between v and u, where both sets are nonempty. Let F=D∩L and B=A∩R. In the proposed stable reorder, the only potentially reversed old-edge classes are F→(L\\F), (R\\B)→B, and F→B. The first two contradict descendant or ancestor closure, and the third would imply an old v-to-u path. The new edge is forward because u∈B and v∈F. Finally every b∈B reaches every f∈F through b→…→u→v→…→f, whereas previously f preceded b in a topological order, so b could not reach f. This proves every asserted case and quantifier.",
+      "witness": "A zero of h(c)=|D∩L|−|A∩R| supplies the required nonempty equally sized sets F=D∩L and B=A∩R; disjointness D∩A=∅ is the key certificate excluding every problematic edge class.",
+      "search_method": "Proved the sweep and edge-class invariants directly, then exhaustively enumerated all 33,866 DAGs respecting a fixed order on two through six vertices and all 502,170 backward insertions. The checker found 325,405 cycle cases, 176,765 non-cycle cases, and validated all 214,503 balanced cuts, including topological reordering and fresh B×F reachability.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_3/audit_claim1_exact.py"
+    },
+    {
+      "idx": 2,
+      "claim": "The balanced-cut construction gives an explicit combinatorial algorithm with total time Õ(m+n√m+A), where A is the total number of adjacency entries scanned from selected forward vertices and selected backward vertices. Consequently it attains Õ(n√m) whenever A=Õ(n√m), including sequences in which every selected forward vertex has polylogarithmic out-degree and every selected backward vertex has polylogarithmic in-degree at its expansion time.",
+      "claim_sha256": "1e3b755a91cfb2c9e7b71b948548bc049c5686be8c3f70aea12a6364f7205a45",
+      "verdict": "VERIFIED",
+      "evidence": "A forward min-heap enumerates descendants of v in increasing current topological order, while a backward max-heap enumerates ancestors of u in decreasing order. Pairing pops until the next frontiers cross produces equally many selected vertices and a cut realizing exactly the sets in claim 1; if v reaches u, the two discovered regions must intersect before crossing along a v-to-u path. Heap insertions other than the two roots are charged to scanned adjacency entries in A, selected-vertex heap and sequence-tree work is Õ(q_i), and ordinary insertions, initialization, and edge storage total Õ(m). For every non-cycle violating update, its q_i² pairs in B_i×F_i are newly reachable. Monotone reachability makes these products disjoint across updates, so Σq_i²≤n(n−1). With at most m such updates, Cauchy–Schwarz gives Σq_i≤√(mΣq_i²)=O(n√m). A terminal cycle search contributes at most Õ(n+A), yielding Õ(m+n√m+A). Under the directional-degree hypothesis, A is at most a polylogarithmic factor times 2Σq_i plus at most n terminal-search vertices. Thus A=Õ(n√m); and for distinct simple edges m≤n² implies m≤n√m. The algorithm uses only adjacency lists, heaps, reachability searches, and a balanced order tree, so it is combinatorial.",
+      "witness": "The amortization certificate is the disjoint family of newly reachable products B_i×F_i, giving Σq_i²≤n(n−1) and hence Σq_i=O(n√m); all uncharged adjacency work is isolated explicitly in A.",
+      "search_method": "Checked the search, stopping rule, cycle detection, exact cut realization, reordering, fresh-pair property, and scan-to-heap accounting by exhaustive integer-bitset simulation on all 502,170 fixed-order DAG insertion cases through six vertices. All 325,405 cycle cases and 176,765 cut cases were classified correctly; 1,262,028 scanned entries were accounted for without floating point.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_3/audit_claim2_exact.py"
+    },
+    {
+      "idx": 3,
+      "claim": "Full adjacency-list rescanning cannot be charged automatically to the balanced-search vertex bound: there is a DAG sequence with n=2r+2 and m=4r in which every violating update has q=1 and creates exactly one new reachability pair, yet rescanning the selected forward list costs r².",
+      "claim_sha256": "52567c84ad8041cb3bc36f8d47aa749b024b2b3014b8efa9e2e527fc45212061",
+      "verdict": "VERIFIED",
+      "evidence": "Take the order v,u₁,…,u_r,z,w₁,…,w_r and the 3r initial edges v→w_j, z→w_j, and u_i→z. Insert u_i→v for i=1,…,r. Before update i the maintained order is u₁,…,u_(i−1),v,u_i,…,u_r,z,w₁,…,w_r. The cut immediately after v has F={v} and B={u_i}, so q=1. Before the insertion u_i already reaches z and every w_j, while v reaches only the w_j; after insertion, the only new proper reachable pair is therefore (u_i,v). The graph remains acyclic. Vertex v retains exactly r outgoing adjacency entries and is the selected forward root in every one of the r violating updates, so full-list expansion scans r entries r times. There are n=2r+2 vertices and 3r+r=4r edges, exactly as claimed.",
+      "witness": "For every integer r≥1, use edges {v→w_j,z→w_j:1≤j≤r}∪{u_i→z,u_i→v:1≤i≤r}, inserting the u_i→v edges last in increasing i. This gives r² repeated scans and only the r new pairs (u_i,v).",
+      "search_method": "Derived the family parametrically and exactly simulated r=1 through 64 with integer transitive closures, checking 2,080 violating updates, every q value, every newly reachable-pair set, every maintained topological order, edge counts, and scan totals.",
+      "checker_path": "/tmp/open_frontier_paired_v2/tcs_incremental_toposort_nsqrtm/audit-revision/bugbank/iter_3/audit_claim3_exact.py"
+    }
+  ],
+  "confirmed_refutations": [],
+  "target_verdict": "VALID_PARTIAL_PROGRESS",
+  "claimed_resolution_verdict": "ACCURATE",
+  "target_evidence": "The exact target requests an unconditional combinatorial incremental topological-sort algorithm with total update time Õ(n√m) for arbitrary insertion sequences. The draft does not establish that result: claim 0 only compares the two coarser source-stated bounds, while claim 2 proves Õ(m+n√m+A) and reaches the target only under the additional condition A=Õ(n√m). Claim 3 concretely shows why the reachability-pair charge alone cannot bound A under unrestricted degrees. These are correct and material structural and conditional advances, so VALID_PARTIAL_PROGRESS is warranted, but the arbitrary-degree intermediate-density case remains open within the draft. The final writeup explicitly says that the result is partial and that the exact target remains unresolved; therefore claimed_resolution PARTIAL is ACCURATE and is not a headline overclaim.",
+  "overall": "VERIFIED",
+  "checks_performed": [
+    "Read only the authorized source JSON and authorized iteration-3 draft JSON; did not use the web, retrieval data, treatment receipts, earlier runs, verification reports, or other solutions.",
+    "Read the exact target and the source section stating the soft-O(n²) dense and soft-O(m^(4/3)) sparse bounds.",
+    "Recomputed the threshold, crossover, and worst-gap exponents with exact rational arithmetic: 6/5, 3/2, and 1/4.",
+    "Exhaustively enumerated 33,866 fixed-order DAGs on two through six vertices and 502,170 backward insertions using integer bitsets. All 325,405 cycle cases and 176,765 non-cycle cases satisfied the balanced-cut disjunction; all 214,503 balanced cuts passed the reorder and new-reachability checks.",
+    "Independently simulated the paired min/max search on all 502,170 finite cases, verifying cycle detection, frontier crossing, exact selected sets, heap/scan accounting, topological reordering, and fresh product pairs.",
+    "Exactly simulated the rescanning construction for r=1 through 64, verifying n=2r+2, m=4r, q=1, one new proper reachability pair per violating update, acyclicity, and r² scans across 2,080 updates.",
+    "Checker SHA-256 values are 0ca6241e92ef3e6c73fd841f4923bf574342ca23f92ea98a628378b506f3cb77, fd01529391114b20d3a23ec0d82e0afad1625a34c146bd9c741599cd9999ac28, c7ca88536b8da287edacd67e5c5ed42e434994cc4c36894233bf9e49cf122a14, and a8c2a2277f202558b8564e6436c1d9e7899a40a7029aef387d75df72ec1398fa for claims 0 through 3 respectively."
+  ]
+}

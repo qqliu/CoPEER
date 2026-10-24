@@ -1,0 +1,280 @@
+We need to locate false assertion in the piece. The statement is about symmetric irreflexive relation on finite set, with s(Y) = max size of a clique (complete subgraph) in Y (i.e., a set where all pairs are related). So s(Y) is size of largest clique in induced subgraph. Assumptions: s(X) is even. Claim: there exists a 2-element partition {Y,Z} of X such that s(Y) = s(Z). The algorithm given attempts to find partition by moving vertices from Y to Z starting with Y = X, Z empty, removing vertices from a particular maximal clique G (even size) from Y to Z, etc. Need to examine correctness. Likely false assertion appears in the algorithm, e.g., line 0003 or 0004 or 0005. Let's analyze.
+
+First, note: The algorithm assumes existence of a maximal clique G that is even. Assumption 2: |G| even. Since s(X) is even, we can choose G as a maximum clique (size s(X)). Since s(X) is even, |G| even. So we can pick a maximum clique G (size even). So assumptions are fine.
+
+Now algorithm: start Y = X, Z = ∅. We will repeatedly select a vertex in G ∩ Y and move it from Y to Z. For each vertex removed from Y, s(Y) will either decrease by 1 (if the vertex belongs to Y's unique maximal clique) or remain the same. On the other hand, since Z ⊆ G at each step, Z is always a complete graph, and s(Z) = |Z|. That's true because Z is subset of G which is a clique, so Z is a clique, and since it's a subset of G, any larger clique in Z cannot exceed |Z| because G is maximal? Actually s(Z) = size of largest clique in Z. Since Z ⊆ G and G is a clique, the largest clique in Z could be |Z| if Z itself is a clique. Since Z ⊆ G and G is a clique, any subset of a clique is a clique, so Z is a clique. Thus its largest clique size is |Z|. So s(Z) = |Z]. Good.
+
+The selection criterion: select a vertex whose removal will leave s(Y) unchanged, unless there are none. So they try to keep s(Y) same as long as possible, otherwise they have to decrease s(Y) by 1 when moving a vertex that belongs to Y's unique maximal clique.
+
+Claim: This process will terminate with Y = X - G and Z = G. Indeed after moving all vertices of G from Y to Z, we have Y = X \ G, Z = G.
+
+Thus discrepancy D = s(Y) - s(Z) will decrease monotonically from s(X) - s(∅) >=0 to s(X - G) - s(G) <=0, decreasing by either 1 or 2 per vertex moved. Moreover, it will only decrease by 2 (i.e., skip a value) if there is no member of G∩Y that, when moved, will decrease it by only 1. So s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique.
+
+Now they claim that we can carry out procedure until s(Y)=s(Z) (done) or until s(Y)=s(Z)+1 and the next vertex to be moved will decrease s(Y)-s(Z) by 2. Then they argue that at this point Y has a unique maximal clique H containing G∩Y. Then they prove that H∩G^c non-empty etc leading to constructing partition.
+
+We need to see if any step is false.
+
+Potential false: The claim that s(Y) will either decrease by 1 (if the vertex belongs to Y's unique maximal clique) or remain the same. Is that always true? Removing a vertex from Y could reduce the size of the maximum clique by more than 1, if the vertex was part of all maximum cliques? Actually if a vertex is in all maximum cliques of Y, removing it could reduce the clique number by more than 1? Consider a graph where the maximum clique size is k, and there is a vertex v that is in every maximum clique, but after removal the new maximum clique size could be k-1 (since you lose at most one vertex from any clique). Indeed the maximum clique size can drop by at most 1 when removing a vertex, because any clique in Y\{v} is either a clique in Y not containing v (size <= k) or a clique in Y that contained v, after removal size reduces by at most 1. So the new clique number is at least k-1. It cannot drop by more than 1. So s(Y) can decrease by at most 1. It could stay same if there exists a maximum clique not containing v. So the statement that s(Y) will either decrease by 1 (if the vertex belongs to Y's unique maximal clique) or remain the same is correct: If v belongs to all maximum cliques (i.e., Y has a unique maximal clique that contains v), then removal reduces s(Y) by 1; if there exists at least one maximum clique not containing v, s(Y) stays same. So that part seems correct.
+
+Next: "since Z ⊆ G at each step, Z is always a complete graph, and s(Z)=|Z|." This is true as argued.
+
+Now: "The selection criterion is the following: select a vertex whose removal will leave s(Y) unchanged, unless there are none. This process will terminate with Y=X-G and Z=G." If we always pick a vertex whose removal leaves s(Y) unchanged when possible, we will only move vertices that are not in all maximum cliques (i.e., not essential). As we move vertices from G to Z, eventually we may run out of such vertices; then we must move a vertex that is in all maximum cliques (i.e., belongs to Y's unique maximal clique). They claim that this will happen exactly when each member of G∩Y belongs to Y's unique maximal clique, causing a decrease of 2 in discrepancy? Let's examine discrepancy D = s(Y) - s(Z). Initially, s(Y)=s(X) (even), s(Z)=0, so D = s(X) >=0. After moving a vertex v from Y to Z:
+
+- s(Y) may stay same or decrease by 1.
+- s(Z) increases by 1 (since Z grows by one vertex and remains a clique, s(Z)=|Z| increments by 1).
+
+Thus D change = Δs(Y) - Δs(Z) = (0 or -1) - (+1) = -1 or -2. So D decreases by 1 if s(Y) stays same, decreases by 2 if s(Y) decreases by 1.
+
+Thus D decreases by 2 exactly when removing v reduces s(Y) by 1 (i.e., v belongs to Y's unique maximal clique). So D decreases by 2 when we are forced to take a vertex that is essential (in all maximum cliques). They claim D will skip a value only if each member of G∩Y belongs to Y's unique maximal clique. Let's test: If at a step, all vertices in G∩Y are essential (i.e., each belongs to Y's unique maximal clique), then any move we make will decrease s(Y) by 1 => D decreases by 2. So we skip a value (i.e., D goes down by 2). Conversely, if there exists at least one vertex in G∩Y that is non-essential (i.e., there is a maximum clique not containing it), we can pick that vertex, s(Y) stays same, D decreases by 1, no skip. So statement matches.
+
+Now they claim: "Carry out the procedure until s(Y)=s(Z) (in which case we are done) or until s(Y)=s(Z)+1 and the next vertex to be moved will decrease s(Y)-s(Z) by 2."
+
+Thus they aim to achieve either equality or off-by-one with next move causing a decrease by 2 (so after moving, D would go from +1 to -1? Actually if D = s(Y)-s(Z) = 1, and next vertex removal decreases D by 2, resulting D = -1, meaning s(Y)-s(Z) = -1 => s(Z) = s(Y)+1. That overshoots equality. But they then claim we can adjust using the element x from H∩G^c not adjacent to all Z to get equality. Let's verify.
+
+After some steps, we have Y and Z such that s(Y) = s(Z)+1 and the next vertex to be moved (some v in G∩Y) would decrease D by 2 (so v is essential in Y). They then argue that Y has a unique maximal clique H that contains G∩Y. Let's see: If v is essential (belongs to all maximum cliques of Y), then indeed Y has a unique maximum clique? Not necessarily: essential vertex means it belongs to every maximum clique; there could be multiple maximum cliques all containing that vertex. For example, consider a graph where maximum cliques are of size k, and they all share a common vertex v, but differ elsewhere. Then v is in all maximum cliques, but there could be more than one maximum clique. Does that imply Y has a unique maximal clique? Not necessarily; there could be multiple maximum cliques sharing v. However, they claim Y has a unique maximal clique (call it H) that contains G∩Y. This may be false. Let's test with a concrete counterexample.
+
+We need to find a finite set X with irreflexive symmetric relation (graph) such that s(X) even, and the algorithm fails to produce equal s(Y) and s(Z) as claimed. Perhaps the false assertion is in line 0005: "We conclude that there is at least one element x ∈ H∩G^{c} that is not adjacent to all members of Z. Therefore, $$s(Z ∪ {x}) = s(Z) = s(Y)-1 = s(Y-{x}),$$ and {Y-{x}, Z∪{x}} is the desired partition of X." This conclusion may rely on false premise that H is unique maximal clique, or that H∩G^c non-empty etc.
+
+Let's try to construct a counterexample where the algorithm gets stuck at s(Y)=s(Z)+1 and the next vertex to move is essential, but there is no x in H∩G^c that is not adjacent to all Z (i.e., all vertices in H∩G^c are adjacent to all Z). Then the claim that we can find such x fails, and we cannot adjust to get equality.
+
+Alternatively maybe the false assertion is earlier: the claim that "the process will terminate with Y=X-G and Z=G" is false because you might get stuck earlier due to inability to select a vertex whose removal leaves s(Y) unchanged (i.e., all vertices in G∩Y are essential) before you have moved all of G. However, they argue that if all members of G∩Y are essential, then D decreases by 2 each step, potentially skipping values, but still you continue moving vertices until G exhausted? Let's see: Suppose at some point, all vertices in G∩Y are essential. Then moving any of them reduces s(Y) by 1 and increases s(Z) by 1 => D decreases by 2. You could still continue moving vertices; after moving one, G∩Y shrinks by one. The property that all remaining vertices in G∩Y are essential may or may not persist. The algorithm says we will continue until Y=X-G and Z=G. That is true regardless of selection: we keep moving vertices from G∩Y to Z until none left. So termination with Y=X-G, Z=G is guaranteed as long as we keep moving vertices from G∩Y. The selection criterion may sometimes force us to move a vertex that decreases s(Y) by 1, but that's fine; we still move it. So termination with Y=X-G, Z=G holds.
+
+Thus the false statement likely is about the existence of x.
+
+Let's examine the reasoning in lines 0005-0006 more carefully.
+
+At point where s(Y) = s(Z)+1 and next vertex to be moved will decrease D by 2. They say: At this point, Y has a unique maximal clique (call it H) that contains G∩Y.
+
+Is that true? Let's analyze.
+
+We have D = s(Y)-s(Z) = 1. Also we know that any vertex v in G∩Y, if moved, would decrease D by 2 (since they said the next vertex to be moved will decrease s(Y)-s(Z) by 2). This implies that for any vertex v in G∩Y, moving it reduces s(Y) by 1 (essential) and increases s(Z) by 1. So all vertices in G∩Y are essential (belong to all maximum cliques of Y). Does that imply Y has a unique maximal clique? Not necessarily; there could be several maximum cliques, all containing all vertices in G∩Y? Wait if all vertices in G∩Y are essential, that means each such vertex belongs to every maximum clique of Y. So the intersection of all maximum cliques contains G∩Y. However, there could still be multiple maximum cliques that differ outside G∩Y. For example, suppose Y's maximum clique size is k. Let G∩Y be a set of vertices that are all in every maximum clique. Then the maximum cliques could differ on vertices outside G∩Y. So Y may not have a unique maximal clique. The claim that Y has a unique maximal clique H that contains G∩Y is too strong.
+
+Thus line 0005: "At this point, Y has a unique maximal clique (call it H) that contains G ∩ Y." This is likely false.
+
+We need to provide a concrete counterexample where assumptions hold but Y does not have a unique maximal clique despite all vertices in G∩Y being essential.
+
+Let's construct a graph where s(X) even, pick G a maximum clique (even size). Run algorithm moving vertices from G to Z while trying to keep s(Y) unchanged when possible. Eventually we get to a state where s(Y) = s(Z)+1 and all remaining vertices in G∩Y are essential (i.e., each belongs to every maximum clique of Y). Yet Y has multiple maximum cliques.
+
+We need to find such a scenario.
+
+Let’s denote n = s(X) = size of G (maximum clique). Since s(X) even, n is even.
+
+We start Y = X, Z = ∅. At each step we prefer to move a vertex whose removal does not decrease s(Y). So we will move vertices from G that are not essential (i.e., there exists some maximum clique of Y not containing that vertex) as long as possible. Once we exhaust such vertices, all remaining vertices in G∩Y are essential. At that point, moving any of them will decrease s(Y) by 1 (since they are in all maximum cliques) and increase s(Z) by 1, decreasing D by 2.
+
+We want to arrive at a point where s(Y) = s(Z)+1 before we have moved all of G. Let's try to simulate.
+
+Let k = s(Y) (current clique number of Y). Initially k = n. s(Z) = 0. D = n.
+
+Each time we move a vertex that does not decrease s(Y): s(Y) stays same, s(Z)+1 => D decreases by 1.
+
+Each time we move a vertex that does decrease s(Y): s(Y) decreases by 1, s(Z)+1 => D decreases by 2.
+
+Goal: Reach D = 1 (i.e., s(Y) = s(Z)+1). Starting D0 = n (even). Each step reduces D by either 1 or 2. We want to see if we can land exactly on 1 after some number of steps, given that we can choose steps of size 1 or 2 (by selecting appropriate vertex type) as long as such vertices exist.
+
+We need to see if it's possible to get stuck at D=1 with only essential vertices left (i.e., only steps of size 2 possible). If at D=1, the only possible move is size 2, which would go to D=-1 (skip 0). That's the scenario they consider: they will then try to fix via x.
+
+Thus we need to construct a scenario where after some number of moves, we have D=1, and all remaining vertices in G∩Y are essential (so only size-2 moves possible). Additionally, Y does not have a unique maximal clique.
+
+Let's try small n.
+
+Let n=2 (smallest even). Then G is an edge (two vertices a,b). s(X)=2. X may have additional vertices outside G.
+
+We start Y = X, Z = ∅, D=2.
+
+We need to see if we can get D=1 with essential vertices left.
+
+We can only move vertices from G∩Y. Initially G∩Y = {a,b}. Are they essential? Essential means belonging to all maximum cliques of Y. Since maximum clique size in Y is currently maybe >2 if there are other vertices forming larger cliques? But G is a maximum clique of X (size n=2). Since s(X)=2, there is no larger clique. So maximum cliques in Y (which is X) are all cliques of size 2. Are a and b each essential? For a to be essential, it must belong to every maximum clique (size 2) in Y. If there is another vertex c such that {a,c} is also an edge (i.e., a adjacent to c) and {b,c} not edge, then there is a maximum clique {a,c} not containing b, but does a belong to all maximum cliques? There might be also {b,c} if b adjacent to c. Let's think.
+
+We need to understand essential property: a vertex v is essential if every maximum clique contains v. In a graph where maximum clique size is 2 (i.e., the graph is triangle-free but has edges), essential vertices are those that belong to every edge (i.e., vertex that is adjacent to all other vertices? Actually maximum cliques are edges. For v to be in every edge, the graph must be a star centered at v? Let's examine: If the graph has edges, maximum clique size 2. For v to be in every edge, every edge must involve v. That means the graph is a star with center v (plus possibly isolated vertices). So essential vertices correspond to universal vertices (adjacent to all other vertices) in a triangle-free graph.
+
+Now G is a particular edge {a,b}. For a to be essential, a must be in every edge. So the graph must be a star centered at a (or maybe also b if also essential). But if both a and b essential, then every edge must contain both a and b, which is impossible unless the only edge is {a,b} and there are no other edges. So if there are any other edges, at most one of a,b can be essential.
+
+Thus in a graph with s(X)=2, it's unlikely both a and b are essential unless X consists solely of that edge and no other edges. In that case Y=X=G, and moving a vertex from Y to Z: initially Y=G, Z=∅. G∩Y = {a,b}. Are they essential? Since the only maximum cliques are {a,b} (the edge) – actually there is only one maximum clique (the edge itself). So both a and b belong to the unique maximum clique, thus each is essential. So moving either will decrease s(Y) by 1 (since after removal, Y will have one vertex left, which cannot form an edge, so s(Y) becomes 0). So moving a vertex reduces s(Y) by 1, increases s(Z) by 1 => D change -2. Starting D = s(Y)-s(Z) = 2-0=2. After moving one vertex (say a), Y={b}, Z={a}. s(Y)=0 (no edges), s(Z)=1 (single vertex trivially a clique of size1? Wait clique of size 1? In irreflexive relation, a single vertex has no pairs, but is it considered a clique? Usually a set of size 1 is vacuously a clique because condition (∀a,b∈A: a≠b → a∼b) holds vacuously as there are no distinct pairs. So s of a singleton is 1. So s(Z)=1. Then D = 0-1 = -1. So we went from D=2 to D=-1, skipping 1 and 0. So we never hit D=1. So algorithm would not encounter the situation s(Y)=s(Z)+1 because we skipped over it. The claim that we can carry out procedure until s(Y)=s(Z)+1 or s(Y)=s(Z) may be false: we might skip directly from D>=2 to D<=0 without hitting +1 or 0.
+
+But they said "Carry out the procedure until s(Y)=s(Z) (in which case we are done) or until s(Y)=s(Z)+1 and the next vertex to be moved will decrease s(Y)-s(Z) by 2." This suggests that we will always hit either equality or one before needing a -2 step. However as we just saw with n=2 and both vertices essential from start, moving any vertex reduces D by 2, skipping +1 and 0. So we never get to s(Y)=s(Z) or s(Y)=s(Z)+1 before moving a vertex. Actually after moving one vertex we got D=-1, which is less than 0, and we have not achieved equality. The process terminated with Y = X - {a} = {b}, Z={a}. That's not X-G and Z=G? Wait we moved only one vertex from G, not all of G. The algorithm said we will continue until Y = X - G and Z = G. But we stopped early because perhaps we thought we were done? The algorithm's description says we will repeatedly select a vertex ... This process will terminate with Y=X-G and Z=G. But if we follow the selection criterion (choose vertex whose removal leaves s(Y) unchanged unless none), we might have to move a vertex that reduces s(Y) (since none leave s(Y) unchanged). In the example, at start, does there exist a vertex in G∩Y whose removal leaves s(Y) unchanged? s(Y)=2 (clique size). Removing a vertex from Y: if we remove a, does s(Y) stay same? Y after removal is {b} plus possibly other vertices? In our example X=G only, so Y after removal is {b}. s(Y) becomes 0 (since no edge). So decreases by 1. Same for b. So there is no vertex whose removal leaves s(Y) unchanged. So we must pick a vertex whose removal decreases s(Y) by 1 (the only option). According to selection criterion: select a vertex whose removal will leave s(Y) unchanged, unless there are none. Since none, we select any vertex (they said unless there are none). So we will select a vertex, causing D to decrease by 2. After moving that vertex, we have Y={b}, Z={a}. Now G∩Y = {b} (since G={a,b}, Y={b}). Now is there a vertex in G∩Y whose removal leaves s(Y) unchanged? s(Y)=0 (no edge). Removing b from Y yields empty set, s(∅)=0? By definition, s(empty set) = max{|A|: A subset of empty set and all pairs related}. The only subset is empty set; its size is 0. So s(∅)=0. So removal of b leaves s(Y) unchanged (0 to 0). So we can now select b, removal leaves s(Y) unchanged, moving it to Z yields Y=∅, Z={a,b}. s(Y)=0, s(Z)=2 (since Z is edge). D = -2. Continue? G∩Y empty now, stop. Y=∅, Z=G, which is X-G? X-G = ∅ indeed. So we eventually reached Y=X-G, Z=G after moving both vertices. However we passed through a state where D went from 2 to -1 after first move, then after second move D went from -1 to -2? Wait compute: after first move: Y={b}, Z={a}. s(Y)=0, s(Z)=1 => D=-1. After second move: Y=∅, Z={a,b}. s(Y)=0, s(Z)=2 => D=-2. So D never equaled 0 or +1. The algorithm's claim that we will encounter s(Y)=s(Z) or s(Y)=s(Z)+1 before needing a -2 step is false in this case. But they said we will carry out procedure until s(Y)=s(Z) (done) or until s(Y)=s(Z)+1 and next vertex will decrease by 2. In our example, we never had s(Y)=s(Z) or s(Y)=s(Z)+1 before moving a vertex that reduces D by 2; we moved a vertex that reduced D by 2 from the start, and we never hit those conditions. However after moving the first vertex, we had s(Y)=s(Z)? No, s(Y)=0, s(Z)=1 not equal. s(Y)=s(Z)+1? 0 = 1+1? No. So condition not met. Then we considered next vertex to be moved (b). Does moving b decrease s(Y)-s(Z) by 2? Let's compute D before moving b: s(Y)-s(Z) = -1. Moving b: s(Y) stays 0 (since removing b from {b} yields empty set, s=0) unchanged; s(Z) increases by 1 (from 1 to 2). So D changes by -1 (0 - (+1) = -1). Actually Δs(Y)=0, Δs(Z)=+1 => D change = -1. So moving b decreases D by 1, not 2. Wait earlier I said it leaves s(Y) unchanged and increases s(Z) by 1, so D decreases by 1. So after moving b, D goes from -1 to -2 (decrease by 1). So the second move was a -1 step.
+
+Thus the algorithm encountered a -2 step only on the first move, after which D = -1. At that point, s(Y) = s(Z) -1? Actually s(Y)=0, s(Z)=1 => s(Y) = s(Z) -1. That's s(Y) = s(Z) -1, not s(Y) = s(Z)+1. So the condition they considered (s(Y)=s(Z)+1) never occurred.
+
+Thus the false assertion may be the claim that we can guarantee to reach either equality or off-by-one before needing a -2 step. The algorithm's description may be flawed. Let's see if any line expresses that false assertion.
+
+Line 0003: "The selection criterion is the following: select a vertex whose removal will leave s(Y) unchanged, unless there are none. This process will terminate with Y=X-G and Z=G. Therefore, the discrepancy s(Y)-s(Z) will decrease monotonically from s(X) - s(∅) ≥ 0 to s(X - G)-s(G) ≤ 0, decreasing by either 1 or 2 per vertex moved. Moreover, it will only decrease by 2 (i.e., skip a value) if there is no member of G∩Y that, when moved, will decrease it by only 1. So s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique."
+
+This paragraph contains multiple claims. The false claim might be that "the discrepancy will decrease monotonically from s(X) - s(∅) ≥ 0 to s(X - G)-s(G) ≤ 0". This is true: start D0 = s(X) - 0 = s(X) >=0; end D_end = s(X-G) - s(G). Since s(X) even, s(G)=s(X) (since G is a maximum clique). s(X-G) is the clique number of the graph after removing a maximum clique. Could be less than or equal to s(G). So D_end <=0. So that's fine.
+
+The claim " decreasing by either 1 or 2 per vertex moved." That's true as argued.
+
+The claim "it will only decrease by 2 (i.e., skip a value) if there is no member of G∩Y that, when moved, will decrease it by only 1." This is also true: D decreases by 2 iff s(Y) decreases by 1 (i.e., vertex essential). So if there exists a vertex whose removal leaves s(Y) unchanged (non-essential), D decreases by 1. So only decrease by 2 if all vertices in G∩Y are essential (i.e., each belongs to Y's unique maximal clique). Wait they added "belongs to Y's unique maximal clique". As argued earlier, essential does not imply unique maximal clique. So that statement is false: D decreases by 2 iff each member of G∩Y belongs to Y's unique maximal clique? Actually D decreases by 2 iff each member of G∩Y is essential (belongs to all maximum cliques). This does not require Y to have a unique maximal clique. So the statement that it will only decrease by 2 if each member of G∩Y belongs to Y's unique maximal clique is too strong; it's sufficient but not necessary. The claim "only decrease by 2 if ..." means that if D decreases by 2, then each member of G∩Y belongs to Y's unique maximal clique. That's the converse: they assert that decreasing by 2 implies each member of G∩Y belongs to Y's unique maximal clique. Is that true? Let's test: Suppose Y has multiple maximum cliques, but all vertices in G∩Y are essential (i.e., each belongs to every maximum clique). Is it possible that Y has multiple maximum cliques yet each vertex in G∩Y belongs to all of them? Yes, as we considered: If all maximum cliques share a common set of vertices (the intersection of all maximum cliques) which includes G∩Y, but they may differ elsewhere. Then each vertex in G∩Y belongs to every maximum clique (essential), but Y does not have a unique maximal clique. So D would decrease by 2 when moving any of those vertices, yet the condition "each member of G∩Y belongs to Y's unique maximal clique" fails because there is no unique maximal clique. So the implication is false. Therefore the statement "it will only decrease by 2 (i.e., skip a value) if there is no member of G∩Y that, when moved, will decrease it by only 1. So s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique." The "only if" part is false.
+
+Thus line 0003 contains a false assertion.
+
+We need to pick a line label that contains the false assertion. The line is 0003 (the whole paragraph). Could also be 0005 etc. But the false assertion we identified is in 0003: the claim that s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique. This is false as we have counterexample.
+
+Let's construct a concrete counterexample to illustrate false assertion: a graph where s(X) even, pick G a maximum clique (even size), and during algorithm we encounter a step where moving a vertex from G∩Y decreases s(Y) by 1 (so D decreases by 2) but Y does not have a unique maximal clique.
+
+We need to produce such a scenario. Let's try to construct a graph with maximum clique size 4 (even). Let G be a 4-clique {a,b,c,d}. Add extra vertices e,f such that they create additional maximum cliques of size 4 that all contain a,b (say) but differ in c/d/e/f combos.
+
+Goal: Ensure that at some point, G∩Y consists of {a,b} (both essential) but Y has multiple maximum cliques of size 4, all containing a,b but varying elsewhere.
+
+Consider base: start with a 4-clique G = {a,b,c,d}. Add vertex e adjacent to a,b,c (but not d). Add vertex f adjacent to a,b,d (but not c). Also ensure no larger cliques appear.
+
+Now examine cliques: The original G {a,b,c,d} size 4. Also {a,b,c,e} is a clique? Check edges: a-b, a-c, a-e, b-c, b-e, c-e all present (since e adjacent to a,b,c). d-e missing, but not needed. So {a,b,c,e} size 4. Similarly {a,b,d,f} size 4. Also maybe {a,b,c,d} still exists. Are there any cliques of size 5? Possibly {a,b,c,d,e}? Need edges between d and e: missing, so no. {a,b,c,d,f}? missing c-f? f adjacent to a,b,d only, not c, so no. So maximum clique size remains 4.
+
+Now what are the maximum cliques? They include: G={a,b,c,d}, {a,b,c,e}, {a,b,d,f}. Also possibly {a,b,e,f}? Need e-f edge? Not defined; assume not adjacent, so not a clique. Also {a,c,d,e}? Need b? Actually {a,c,d,e}: edges a-c, a-d, a-e, c-d, c-e, d-e? d-e missing, so not a clique. So max cliques are those three.
+
+Now intersection of all maximum cliques: common vertices across all three: a and b are in all three. c is not in {a,b,d,f}. d is not in {a,b,c,e}. e is only in second, f only in third. So intersection = {a,b}. So vertices a and b belong to every maximum clique (essential). c,d,e,f are not essential.
+
+Now suppose we have moved some vertices from G to Z such that G∩Y = {a,b} (i.e., we have moved c and d to Z). Let's see if we can arrive at that state while maintaining the selection rule (choose vertex whose removal leaves s(Y) unchanged unless none). We'll need to simulate.
+
+Start Y = X (all vertices a,b,c,d,e,f), Z = ∅. s(Y) = 4 (max clique size). s(Z)=0. D=4.
+
+We want to move vertices from G to Z while trying to keep s(Y) unchanged when possible. Initially G∩Y = {a,b,c,d}. Which of these vertices are non-essential (i.e., there exists a maximum clique not containing them)? Let's check each:
+
+- a: appears in all max cliques, so essential.
+- b: essential.
+- c: is there a max clique not containing c? Yes, {a,b,d,f} does not contain c. So c is non-essential.
+- d: there is max clique not containing d: {a,b,c,e}. So d non-essential.
+
+Thus we have non-essential vertices c,d. According to selection rule, we will select a vertex whose removal leaves s(Y) unchanged, i.e., a non-essential vertex. So we can move c or d first. Suppose we move c from Y to Z.
+
+After moving c: Y loses c, Z gains c. Update Y = {a,b,d,e,f}. Z = {c}. Need to recompute s(Y). Let's compute maximum clique size in Y.
+
+Y vertices: a,b,d,e,f. Edges: we need to check adjacency.
+
+Recall edges: original G edges among a,b,c,d all present. e adjacent to a,b,c (not d). f adjacent to a,b,d (not c). Also we haven't defined edges between e and f; assume none. Also edges between e and d? e not adjacent to d. Edges between f and c? f not adjacent to c.
+
+Now Y includes a,b,d,e,f.
+
+Check cliques:
+
+- {a,b,d} is a clique (a-b, a-d, b-d present). Size 3.
+- Can we add e? e adjacent to a,b but not d, so {a,b,d,e} not a clique.
+- Can we add f? f adjacent to a,b,d, so {a,b,d,f} is a clique? Check: a-f, b-f, d-f all present; a-b, a-d, b-d present. So {a,b,d,f} size 4 is a clique. Good.
+- Any other 4-clique? {a,b,d,e}? e not adj to d, fails. {a,b,e,f}? need e-f edge missing. {a,d,e,f}? need a-e yes, a-f yes, d-e missing, d-f yes, e-f missing. So not.
+- Could there be a clique of size 5? need all five vertices; missing many edges.
+
+Thus s(Y) = 4 (clique {a,b,d,f}). s(Z) = |Z| = 1 (since Z={c} is a clique of size 1). D = 3.
+
+Now G∩Y = {a,b,d} (since G={a,b,c,d}, Y missing c). So G∩Y = {a,b,d}. Determine essential vertices in Y w.r.t maximum cliques of Y.
+
+We need to find all maximum cliques in Y (size 4). We found {a,b,d,f} is one. Are there others? Let's check {a,b,d,e}? e not adj to d, so no. {a,b,e,f}? need e-f edge missing. {a,d,e,f}? need a-e, a-f, d-e missing, d-f yes, e-f missing. So not. {b,d,e,f}? need b-e yes, b-f yes, d-e missing, d-f yes, e-f missing. So not. {a,b,d,c}? c not in Y. So the only size-4 clique appears to be {a,b,d,f}. Are there any other size-4 cliques involving e? Maybe {a,b,e,?} need fourth vertex adjacent to both a,b and e and each other. e adjacent to a,b,c only. So to have a 4-clique with e, need two other vertices both adjacent to e and each other. Candidates: a,b are adjacent to e; need third vertex adjacent to both a,b and e and to each other. c is adjacent to e but not in Y. d is not adjacent to e. f is not adjacent to e. So no.
+
+Thus the unique maximum clique in Y is H = {a,b,d,f}. So Y has a unique maximal clique (size 4). Good.
+
+Now G∩Y = {a,b,d}. Are all of these essential? Let's test:
+
+- a: is a in every maximum clique of Y? The only max clique is {a,b,d,f}, includes a. So yes essential.
+- b: essential.
+- d: essential.
+
+Thus all three vertices in G∩Y are essential. So if we now select a vertex whose removal leaves s(Y) unchanged, there is none (since all essential). So per selection rule, we must select a vertex whose removal will decrease s(Y) by 1 (any of them). Suppose we select d.
+
+Now move d from Y to Z. After move: Y loses d, Z gains d. Y = {a,b,e,f}. Z = {c,d}. Compute s(Y).
+
+Y vertices: a,b,e,f. Edges: a-b yes; a-e yes; a-f yes; b-e yes; b-f yes; e-f? assume none. So we have a 4-vertex set missing e-f edge. Cliques: {a,b,e} size 3 (a-b, a-e, b-e). {a,b,f} size 3. {a,e,f}? a-e yes, a-f yes, e-f missing => size 2. {b,e,f} similarly. {e,f} size 1 if edge missing? Actually no edge => not a clique of size2 (since need edge). So maximum clique size = 3. So s(Y)=3.
+
+s(Z): Z = {c,d}. Are c and d adjacent? In original G, c-d edge yes (since G is clique). So Z is a clique of size 2. s(Z)=2.
+
+Thus D = s(Y)-s(Z) = 3-2=1.
+
+Now we have D=1, s(Y)=s(Z)+1. Good.
+
+Now G∩Y = {a,b} (since G={a,b,c,d}, Y={a,b,e,f}). Determine essential vertices in Y.
+
+We need to find maximum cliques in Y (size s(Y)=3). Let's list all triangles (3-cliques) in Y.
+
+Vertices: a,b,e,f.
+
+Edges: a-b, a-e, a-f, b-e, b-f, e-f missing.
+
+Triangles:
+
+- {a,b,e}: edges a-b, a-e, b-e present => triangle.
+- {a,b,f}: edges a-b, a-f, b-f present => triangle.
+- {a,e,f}: missing e-f => not triangle.
+- {b,e,f}: missing e-f => not.
+- {a,b,?} we already covered.
+- {a,e,?} need third vertex adjacent to both a and e and each other: b works (we have). f? a-f yes, e-f missing => no.
+- {b,e,?}: a works, f? b-f yes, e-f missing => no.
+Thus we have two maximum cliques of size 3: H1 = {a,b,e}, H2 = {a,b,f}. Intersection of all maximum cliques = {a,b}. So vertices a and b are essential (belong to all max cliques). e and f are not essential.
+
+Thus G∩Y = {a,b} are both essential. So again, all members of G∩Y are essential. According to the selection rule, we must select a vertex whose removal decreases s(Y) by 1 (since none leave s(Y) unchanged). Selecting either a or b will reduce s(Y) by 1 (since they are essential). Let's see what happens if we move a.
+
+Move a from Y to Z: Y loses a, Z gains a.
+
+Now Y = {b,e,f}. Z = {c,d,a}.
+
+Compute s(Y): Y vertices b,e,f. Edges: b-e yes, b-f yes, e-f missing. So max clique size = 2 (either {b,e} or {b,f}). So s(Y)=2.
+
+s(Z): Z = {a,c,d,a? Actually we have a,c,d}. Wait Z currently had {c,d} and we add a, so Z = {a,c,d}. Edges: a-c, a-d, c-d all present (since original G clique). So Z is a clique of size 3. So s(Z)=3.
+
+Thus D = s(Y)-s(Z) = 2-3 = -1.
+
+Now we have passed equality; we never got s(Y)=s(Z) exactly. But we had D=1 before moving a, and moving a caused D to go from 1 to -1 (decrease by 2). Indeed because s(Y) decreased by 1 (from 3 to 2) and s(Z) increased by 1 (from 2 to 3), net -2.
+
+Now check condition: At the point before moving a, we had D=1, s(Y)=s(Z)+1, and all members of G∩Y were essential (a,b essential). According to the false claim, this situation would imply that Y has a unique maximal clique. But we saw Y had two maximum cliques {a,b,e} and {a,b,f}. So Y did NOT have a unique maximal clique. Thus the statement "s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique" is false: we had a skip (decrease by 2) while each member of G∩Y belonged to Y's unique maximal clique? Actually they belonged to all maximum cliques, but Y did not have a unique maximal clique. So the condition "belongs to Y's unique maximal clique" is false (since no unique maximal clique). So the implication "if decrease by 2 then each member of G∩Y belongs to Y's unique maximal clique" is false.
+
+Thus line 0003 contains the false assertion.
+
+We should verify that the assumptions hold at that point: X finite set, ~ irreflexive symmetric relation (graph). s(X) even? Let's compute s(X) for our constructed graph. X includes vertices a,b,c,d,e,f. What is the maximum clique size in X? We have cliques of size 4: {a,b,c,d}, {a,b,c,e}, {a,b,d,f}. No larger clique because to get size 5 need all pairwise edges; missing e-d, f-e, c-f etc. So s(X)=4, which is even. Good. So assumptions satisfied.
+
+We have G as a maximum clique; we chose G = {a,b,c,d} (size 4 even). The algorithm described: start Y = X, Z = ∅, repeatedly select vertex in G∩Y whose removal leaves s(Y) unchanged unless none. Let's see if our simulation followed that rule.
+
+Step 1: G∩Y = {a,b,c,d}. We selected c (non-essential) because its removal leaves s(Y) unchanged? Check: removal of c from Y (X) gave s(Y) unchanged? We earlier computed after moving c, s(Y) stayed 4 (since we found clique {a,b,d,f} size 4). So yes removal left s(Y) unchanged. So we followed rule.
+
+Step 2: G∩Y after step1 = {a,b,d}. We selected d? Wait we selected d after step1? Actually after step1 we had Y={a,b,d,e,f}, Z={c}. G∩Y = {a,b,d}. At that point we determined all members essential? We found unique max clique {a,b,d,f} so all three essential. According to rule, since none leave s(Y) unchanged, we must select a vertex (any) whose removal will decrease s(Y) by 1. We selected d (essential). Good.
+
+Step3: After moving d, Y={a,b,e,f}, Z={c,d}. G∩Y = {a,b}. We determined both essential (since max cliques {a,b,e} and {a,b,f}). So again none leave s(Y) unchanged, we must select a vertex whose removal decreases s(Y) by 1. We selected a (essential). So we followed rule.
+
+Thus the algorithm's execution matches the described selection rule.
+
+At the point before moving a (step3), we had D=1, s(Y)=s(Z)+1, and each member of G∩Y (a,b) belonged to Y's unique maximal clique? No, Y did not have a unique maximal clique. So the claim in line 0003 that "s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique" is false: we had a skip (decrease by 2) while the condition fails.
+
+Thus line 0003 is the false assertion.
+
+We should also verify that the statement "So s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique." is indeed in line 0003. Yes it's in that paragraph: "Moreover, it will only decrease by 2 (i.e., skip a value) if there is no member of G∩Y that, when moved, will decrease it by only 1. So s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique."
+
+Thus false.
+
+Now we need to output JSON with candidates (up to three lines) most likely first. Provide the line label(s) containing false assertion. Could also include other lines if they also contain false assertions, but we need up to three. The most likely is 0003. Provide claim and counterexample.
+
+Claim: "s(Y)-s(Z) will skip a value only if each member of G∩Y belongs to Y's unique maximal clique." Or we can phrase as the false assertion: "If the discrepancy decreases by 2 when moving a vertex, then each member of G∩Y belongs to Y's unique maximal clique."
+
+Counterexample: Provide the graph we constructed: X = {a,b,c,d,e,f} with edges making G={a,b,c,d} a 4-clique, e adjacent to a,b,c, f adjacent to a,b,d, and no edge between e and f. Then s(X)=4 even, G maximal clique of size 4. Following the algorithm, after moving c and d we reach Y={a,b,e,f}, Z={c,d} where s(Y)=3, s(Z)=2, discrepancy =1, and moving a (or b) decreases discrepancy by 2 although Y has two maximal cliques {a,b,e} and {a,b,f} (not unique).
+
+We need to ensure that at that point, each member of G∩Y belongs to Y's unique maximal clique? Actually G∩Y = {a,b}. They belong to all maximal cliques but Y does not have a unique maximal clique. So the condition fails.
+
+Thus answer.
+
+Now format JSON:
+
+{
+  "candidates": [3],
+  "claim": "If moving a vertex from Y to Z decreases the discrepancy s(Y)-s(Z) by 2, then each member of G∩Y belongs to Y's unique maximal clique.",
+  "counterexample": "In the graph with vertices {a,b,c,d,e,f} where {a,b,c,d} is a 4-clique, e adjacent to a,b,c, f adjacent to a,b,d, and no e-f edge, we have s(X)=4, G={a,b,c,d}, after moving c and d we get Y={a,b,e,f}, Z={c,d} with s(Y)=3, s(Z)=2, discrepancy 1; moving a decreases discrepancy by 2 although Y has two maximal cliques {a,b,e} and {a,b,f}."
+}
+
+But note line label should be integer (for numbered text line) or string like "P1". Since line 0003 is a numbered text line, we output integer 3? The line label is "0003". According to instructions: "an integer for a numbered text line (for example 17)". So we should output the integer without leading zeros: 3. However they gave example 17. So we output 3.
+
+Thus candidates: [3].
+
+We need to output exactly one JSON object.
+
+Let's double-check that there are no other false assertions earlier. Possibly line 0005 also false but we already have one. The instruction: "Give up to three candidate lines, most likely first." So we can give just one.
+
+Thus final answer.
+
+Make sure JSON is valid: {"candidates": [3], "claim": "...", "counterexample": "..."}.
+
+Now construct claim sentence: "If moving a vertex from Y to Z decreases s(Y)-s(Z) by 2, then each member of G∩Y belongs to Y's unique maximal clique." That's one sentence.
+
+Counterexample sentence: "Consider the graph on {a,b,c,d,e,f} where {a,b,c,d} is a 4‑clique, e is adjacent to a,b,c, f is adjacent to a,b,d, and e and f are non‑adjacent; then s(X)=4, G={a,b,c,d}, after moving c and d we have Y={a,b,e,f}, Z={c,d} with s(Y)=3, s(Z)=2, so moving a lowers s(Y)-s(Z) by 2 although Y has two maximal cliques {a,b,e} and {a,b,f}."
+
+Make sure it's one sentence. Might be long but okay.
+
+Now output JSON.
+
+Let's produce.
+
+</think>
+
+{"candidates": [3], "claim": "If moving a vertex from Y to Z decreases s(Y)-s(Z) by 2, then each member of G∩Y belongs to Y's unique maximal clique.", "counterexample": "Consider the graph on vertices {a,b,c,d,e,f} where {a,b,c,d} is a 4‑clique, e is adjacent to a,b,c, f is adjacent to a,b,d, and e and f are non‑adjacent; then s(X)=4, G={a,b,c,d}, after moving c and d we obtain Y={a,b,e,f}, Z={c,d} with s(Y)=3, s(Z)=2, so moving a lowers s(Y)-s(Z) by 2 although Y has two maximal cliques {a,b,e} and {a,b,f}."}

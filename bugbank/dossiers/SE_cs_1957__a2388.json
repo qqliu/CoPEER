@@ -1,0 +1,49 @@
+{
+ "benchmark_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "n_nonblank_text": 45,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "split": "evaluation",
+  "unscorable": false
+ },
+ "blockers": [],
+ "certificate": "bugbank/certificates/SE_cs_1957__a2388.lean",
+ "evidence_tier": "KERNEL_ONLY",
+ "fields": {
+  "claim_quote": "$$g(n) = \\displaystyle n^{\\log_b a} \\log_b^k n \\; \\sum_{j=0}^{\\log_b{n-1}}  \\left(\\frac{a}{b^{\\log_b a}}\\right)^j = n^{\\log_b a} \\log_b^{k +1} n.$$",
+  "explanation": "The displayed chain has two equalities. The SECOND one is fine: since a/b^{log_b a} = a/a = 1 exactly, the geometric sum is just log_b n copies of 1, giving n^{log_b a} log_b^k n * log_b n = n^{log_b a} log_b^{k+1} n. The FIRST equality is the error, exactly as the flagging system states: with f(x) = x^{log_b a} log_b^k x, the true driving sum is g(n) = sum_{j=0}^{L-1} a^j (n/b^j)^{log_b a} log_b^k(n/b^j) = n^{log_b a} sum_{j=0}^{L-1} (L-j)^k = n^{log_b a} * sum_{i=1}^{L} i^k, where L = log_b n. Pulling log_b^k(n/b^j) out of the sum as if it were the constant log_b^k n replaces sum_{i=1}^{L} i^k by L * L^k = L^{k+1}. For k = 0 these agree (the pulled factor really is constant), and for L = 1 the sum is a single term, so the substitution is vacuous; but for every k >= 1 and L >= 2 one has sum_{i=1}^{L} i^k < L^{k+1} strictly (indeed sum_{i=1}^{L} i^k ~ L^{k+1}/(k+1)), so the asserted identity fails. At b=2, a=2, k=1, n=4: sum_{i=1}^{2} i = 3 whereas L^{k+1} = 4, giving g(4) = 4*3 = 12 rather than the claimed 4*4 = 16. The two sides differ by a constant factor tending to k+1, so the literal identity (and Lemma A's conclusion stated as an equality rather than a Theta-bound) is false; only the Theta-version survives.",
+  "flaw": "Lemma A's proof asserts the exact identity g(n) = n^{log_b a} log_b^k n * sum_{j=0}^{log_b n - 1} (a/b^{log_b a})^j = n^{log_b a} log_b^{k+1} n, obtained by pulling log_b^k(n/b^j) out of the sum as if it equaled log_b^k n. This equality chain (and Lemma A's conclusion as literally stated, without Theta) is false for k >= 1.",
+  "problem": "Master theorem not applicable?\n\nGiven the following recursive equation\n\n$$ T(n) = 2T\\left(\\frac{n}{2}\\right)+n\\log n$$ we want to apply the Master theorem and note that\n\n$$ n^{\\log_2(2)} = n.$$\n\nNow we check the first two cases for $\\varepsilon > 0$, that is whether\n\n * $n\\log n \\in O(n^{1-\\varepsilon})$ or\n * $n\\log n \\in \\Theta(n)$.\n\nThe two cases are not satisfied. So we have to check the third case, that is whether\n\n * $n\\log n \\in \\Omega(n^{1+\\varepsilon})$ .\n\nI think the third condition is not satisfied either. But why? And what would be a good explanation for why the Master theorem cannot be applied in this case?",
+  "source_context": "0006 | \n0007 | **Case 2A:**\n0008 | Consider $f(n) = \\Theta (n^{\\log_b a }\\log_b^k n)$ for some $k\\geq 0$.\n0009 | \n0010 | This case reduces to Case 2 when $k = 0$. It is intuitively clear that along each branch of the recurrence tree $f(x)$ is being added $\\Theta (\\log_b n)$ times. A sketch of a more formal proof can be found below. The final result is that\n0011 | \n0012 | $$T(n) = \\Theta (n^{\\log_b a }\\log_b^{k+1} n).$$\n0013 | \n0014 | In the _Introduction to algorithms_ this statement is left as an exercise.\n0015 | \n0016 | Applying this statement to the recurrence in question we finally get\n0017 | \n0018 | $$\n0019 |     T(n) = \\Theta(n \\cdot \\log^2 n).\n0020 | $$\n0021 | \n0022 | More details on the Master Theorem can be found in the excellent (imho) [Wikipedia page][1].\n0023 | \n0024 | As @sdcvvc points in the comments to prove that Case 3 does not apply here one can invoke L'Hospital's rule that says that\n0025 | \n0026 | $$\n0027 |    \\lim_{x\\to c} \\frac{f(x)}{g(x)} = \\lim_{x\\to c} \\frac{f^\\prime(x)}{g^\\prime(x)}\n0028 | $$\n0029 | \n0030 | for any functions $f(x)$ and $g(x)$ differentiable in the vicinity of $c$. Applying this to $f(n) = n \\log n$ and $g(n) = n^{1+\\varepsilon}$ one can show that $\\log n \\not\\in \\Theta (n^{1+\\varepsilon}).$",
+  "witness": "Take b = 2, a = 2, k = 1, n = 4 (so log_b a = 1, log_b n = 2, f(x) = x^{log_b a} log_2^k x = x log_2 x). The recursion-tree driving sum is g(n) = sum_{j=0}^{log_b n - 1} a^j f(n/b^j) = a^0 f(4) + a^1 f(2) = (4 * log_2 4) + 2 * (2 * log_2 2) = 8 + 4 = 12. The displayed chain evaluates its middle and right members to n^{log_b a} log_b^k n * sum_{j=0}^{1} (a/b^{log_b a})^j = 4 * 2 * (1 + 1) = 16 and n^{log_b a} log_b^{k+1} n = 4 * 2^2 = 16. So the claim says g(4) = 16, while g(4) = 12; discrepancy -4. An even smaller (degenerate) witness is b = 2, a = 1, k = 1, n = 4: g(4) = f(4) + f(2) = 2 + 1 = 3, claimed value 4^0 * 2^2 = 4, so 3 != 4. Every quantity here is an exact integer."
+ },
+ "human_approval_of_current_artifact": "NOT_ESTABLISHED_BY_THIS_AUTOMATED_RELEASE",
+ "record_id": "SE_cs_1957__a2388",
+ "scope_metadata": null,
+ "selected_declarations": [
+  {
+   "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+   ],
+   "disallowed_axioms": [],
+   "kind": "theorem",
+   "name": "SE_cs_1957_a2388.real_log_source_counterexample",
+   "native_candidate_axioms": [],
+   "type": "∑ j ∈ Finset.range 2, 2 ^ j * SE_cs_1957_a2388.sourceH (4 / 2 ^ j) = 12 ∧\n  4 ^ Real.logb 2 2 * Real.logb 2 4 ^ 2 = 16 ∧ 12 ≠ 16",
+   "unsafe": false,
+   "uses_native_reduction": false
+  }
+ ],
+ "source_correspondence": null,
+ "source_correspondence_flags": null,
+ "source_file": "bugbank/sources/SE_cs_1957__a2388.json",
+ "source_group": "stackexchange",
+ "supporting_evidence": []
+}

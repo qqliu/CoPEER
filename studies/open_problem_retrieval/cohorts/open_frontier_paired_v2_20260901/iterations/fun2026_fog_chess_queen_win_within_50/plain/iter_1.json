@@ -1,0 +1,46 @@
+{
+  "record_id": "fun2026_fog_chess_queen_win_within_50",
+  "stage": "REVISION",
+  "arm": "plain",
+  "iteration": 1,
+  "parent_sha256": "1053f395b5625881a8c8d0451b413e2ffacc7a254afe8d29b265ae2bbc2a92a5",
+  "audit_sha256": "b24bcdfed3160aea29cee55d279d6fb574dd3313d409fd38d3c557e9f0e6448f",
+  "treatment_status": "PLAIN_SELF_CRITIQUE",
+  "receipt_path": "",
+  "receipt_sha256": "",
+  "retrieved_entry_ids": [],
+  "acted_on_entry_ids": [],
+  "dismissed_hits": [],
+  "claimed_resolution": "FULL",
+  "results": [
+    {
+      "claim": "Finite-horizon play is exactly represented by a perfect-recall belief-state recurrence.",
+      "proof_sketch": "At a White turn let k,q be White’s squares and S the possible invisible black-king squares; a visible king is captured immediately. After White moves to k',q', let A be the squares attacked by those pieces. The observation immediately after White’s move partitions S into S\\A and one singleton {b} for each b in S∩A. For each block G, enumerate every adjacent Black reply. A reply capturing k' is losing; capture of q' is losing unless q' is king-protected; a reply in A is captured on White’s next move. All remaining replies producing the same unseen observation are unioned into a successor belief T_G. Thus an unseen state is winning within d≥2 White moves iff some safe White move has every nonempty T_G winning within d−1. This includes every legal move, observation, and adversarial reply. Declaring an unprotected queen capture losing is exact: the kings then have Chebyshev distance at least two, and Black can perpetually retain such a distance by moving perpendicular to any coordinate gap of at least two; if White instead moves adjacent, Black captures White."
+    },
+    {
+      "claim": "With draw termination suppressed, the exact worst-case capture time over all initial configurations is 23 White moves.",
+      "proof_sketch": "There are 64·63·62=249,984 distinct labeled placements. Of these, 105,476 allow capture on move 1. The remaining 144,508 singleton beliefs form 18,081 classes under the eight board symmetries. Exhaustive iteration of the recurrence closed every class by depth 23. Exactly 32 labeled configurations remained after depth 22, represented by White king a1, Black king d4, and White queen respectively b1, h2, g5, or h7 (and their symmetries). Hence 23 is sharp in the draw-suppressed game."
+    },
+    {
+      "claim": "Even with the source’s host-enforced repetition rule, White can guarantee capture within 28 White moves.",
+      "proof_sketch": "The search was augmented by the multiset of White king/queen square-pairs already occurring in the observation history. It rejected any action whose resulting pair had occurred twice. Every nonterminal Black move leaves that pair unchanged for the next White turn, so neither the White-turn nor Black-turn sequence can contain any White-piece pair three times; therefore no complete position can repeat three times. Starting each invisible initial class with five moves beyond its draw-suppressed optimum, all 18,081 classes succeeded, giving a maximum horizon of 23+5=28. An independently implemented transition replay checked 3,024,867 history-dependent policy nodes and 3,518,324 invisible-successor edges without failure. Since 28<50, neither threefold repetition nor the fifty-move limit intervenes."
+    }
+  ],
+  "final_writeup": "Yes. White can guarantee capture from every source-legal placement within 28 White moves, substantially below 50.\n\nThe proof is a finite exhaustive analysis of the exact one-sided-information game. Initially White knows Black’s square, so an invisible initial position is represented by a singleton belief. Thereafter, observations immediately following White’s move and Black’s move update the belief exactly as described in the first claim. Visible branches end by capture on the next White move; unsafe branches in which Black captures White’s king or an unprotected queen are rejected.\n\nThe draw-suppressed recurrence establishes the sharper optimal worst-case value 23. To respect the source’s automatic repetition rule as well, the certified strategies carry their own square-pair history and never use the same ordered White king/queen pair three times. A threefold full-position repetition would force that pair to occur three times, so it is impossible. The augmented strategies require at most five extra moves, yielding the rigorous bound 28.\n\nThus the recorded target has an affirmative answer. The exact worst-case optimum under all host draw rules lies between 23 and 28; determining whether the extra five-move allowance is necessary is not needed for the target.",
+  "audit_feedback_acted_on": [
+    "Claims 0–2 were independently VERIFIED; there were no REFUTED or UNRESOLVED items requiring repair, narrowing, replacement, or removal, so all three load-bearing claims and their proof sketches were preserved.",
+    "The audit judged target coverage FULLY_RESOLVES_TARGET. The repetition-safe 28-White-move guarantee covers every source-legal placement and is strictly below 50, so the affirmative conclusion was retained.",
+    "The audit judged claimed_resolution ACCURATE, so claimed_resolution remains FULL."
+  ],
+  "checks_performed": [
+    "Read only the designated source, exact parent, and independent-audit JSON files; did not use the web, retrieval material, treatment receipts, external memory, prior frontier outputs, other solutions, or verification reports.",
+    "Confirmed the exact parent SHA-256 is 1053f395b5625881a8c8d0451b413e2ffacc7a254afe8d29b265ae2bbc2a92a5 and the audit SHA-256 is b24bcdfed3160aea29cee55d279d6fb574dd3313d409fd38d3c557e9f0e6448f.",
+    "Checked exactly that 64·63·62=249,984, that the 23 minimum-horizon counts sum to 249,984, and that 105,476+144,508=249,984.",
+    "Checked exactly that 23+5=28 and 28<50.",
+    "Adversarially checked the scope distinction: 23 is asserted as the sharp draw-suppressed value, while only the sufficient repetition-safe bound 28—not optimality under all host draw rules—is asserted for the target.",
+    "Checked the repetition argument: three repetitions of a complete position necessarily entail three occurrences of its ordered White king/queen square-pair, which the augmented policy forbids.",
+    "Reviewed the audit’s exhaustive coverage findings: all 249,984 labeled placements were covered, all 18,081 initially invisible symmetry classes succeeded with maximum budget 28, and the other 105,476 placements permit capture on move 1.",
+    "Confirmed the independent audit contains no confirmed refutations and rates all claims VERIFIED, the target FULLY_RESOLVES_TARGET, and the claimed resolution ACCURATE."
+  ],
+  "self_assessment": "CONFIDENT"
+}

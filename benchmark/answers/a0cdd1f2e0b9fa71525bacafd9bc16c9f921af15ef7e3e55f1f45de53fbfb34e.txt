@@ -1,0 +1,309 @@
+Here's a thinking process:
+
+1.  **Analyze User Input:**
+   - I'm given a mathematical writing piece with a title (P1) and numbered text lines (0001, 0002, ...).
+   - At least one assertion is false under the assumptions in force at that point.
+   - I need to find a concrete counterexample existence under those assumptions.
+   - The false assertion could be a theorem, lemma, problem statement, or intermediate assertion.
+   - I need to identify a line containing the false assertion.
+   - If same assertion appears multiple times, any occurrence is fine.
+   - Don't point at a line that only uses the assertion later, nor a step merely because justification is thin.
+   - Give up to three candidate lines, most likely first.
+   - Candidate is one line label: integer for numbered text line, or string like "P1".
+   - Output exactly one JSON object with fields: "candidates": [<line>, <line>, <line>], "claim": "<the false assertion, one sentence>", "counterexample": "<one sentence>".
+
+2.  **Scan the Text for False Assertions:**
+   - I need to carefully read and find an assertion that is mathematically false given the assumptions/context.
+   - Let's go through sections.
+
+   - P1: Title "The Art of Staying Ahead of Deadlines: Improved Algorithms for the Minimum Tardy Processing Time"
+   - Text lines start at 0001.
+
+   Let's list key assertions and check them:
+
+   - Line 0033: "We study the fundamental scheduling problem $1\|\sum p_jU_j$. Given a set of $n$ jobs with processing times $p_j$ and deadlines $d_j$, the problem is to select a subset of jobs such that the total processing time is maximized without violating the deadlines." This is the problem definition. Generally correct as a description of 1||sum p_j U_j (maximize total processing time of on-time jobs). Not obviously false.
+
+   - Line 0035: "However, $P$ is not the sole parameter one could parameterize the running time by. Indeed, they explicitly leave open the question of whether a running time of $\widetilde O(n + \max d_j)$ or even $\widetilde O(n + \max p_j)$ is possible." This is stating an open question. Not an assertion that's false, just noting an open problem.
+
+   - Line 0050: "Similar to the Subset Sum problem, our problem also has other parameters that can be used to parametrize the running time by. Prominent examples are $\dmax = \max d_j$ and $\pmax = \max p_j$. Prior research also introduced algorithm w.r.t.~to these parameters: an $\widetilde O(\min\{P\cdot D_{\#}, P + D\})$-time algorithm~\cite{ref_12}, where $\#D$ is the number of distinct deadlines and $D$ is the sum of all distinct deadlines, and an $\widetilde O(n + \pmax^3)$-time algorithm~\cite{ref_28}. Fischer and Wennmann explicitly leave open the question of whether a time of $\widetilde O(n + \dmax)$ or even $\widetilde O(n + \pmax)$ is possible~\cite{baseline}." Again, stating prior work and open questions.
+
+   - Line 0052: "We show that an $\widetilde O(n + \dmax)$-time algorithm does indeed exist. Perhaps surprisingly, our algorithm is a simple refined implementation of Fischer and Wennmann's. Our analysis also extends to the multi-machine setting, resulting in a $\widetilde O(n + \dmax^m)$-time algorithm." This is a claim of their result.
+
+   - Line 0077: "However, observe that in Eq.~\eqref{eq:3rd}, we anyway \emph{trim} the current set $S_{j} + \{0, p_j\}$ by its processing times greater than $d_j$. Hence, if we had a mechanism to only add \emph{valid} processing times, i.e., l.e.q.~$d_j$, we could interpret the sets $S_{j}$ indeed as indicator strings of size $\dmax$ + 1." This is an observation/claim.
+
+   - Line 0115-0130: Lemma 0116-0119: "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$." with proof.
+
+   - Line 0130: "Using the dynamic string data structure with string-size $u = \dmax + 1$, we obtain an $\widetilde O(n + \dmax)$-time algorithm."
+
+   - Line 0163-0175: Lemma for m machines: "It holds that $\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| \leq (\dmax + 1)^m$."
+
+   - Line 0180: "We settled an open question explicitly asked by Fischer and Wennmann~\cite{baseline}. Somewhat surprisingly, we obtained it by slightly modifying their original algorithm, resulting in a $\widetilde O(n + \dmax)$-time algorithm. A pressing open question is whether the problem can be solved in $\widetilde O(n + \pmax)$-time."
+
+   Now, I need to find a false assertion. Let's scrutinize the mathematics, especially the lemmas and the algorithm's claims.
+
+   The problem is $1\|\sum p_j U_j$: maximize total processing time of on-time jobs. Jobs have processing times $p_j$ and deadlines $d_j$. The goal is to select a subset of jobs that can be scheduled on a single machine without preemption, each job j must finish by its deadline $d_j$ (i.e., completion time $\leq d_j$). The standard Lawler-Moore algorithm does dynamic programming over total processing time P.
+
+   The paper claims a refined algorithm that runs in $\widetilde O(n + \dmax)$ time, where $\dmax = \max d_j$. This is the central claim.
+
+   Let's check the lemma (line 0116-0119):
+   $\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$.
+   The proof says: For any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$, so the count of indices i where x is in the difference is $\leq 1$. Then they sum over x in [0..\dmax], getting $\leq \dmax + 1$.
+
+   Is this correct? Let's think carefully.
+   The algorithm defines:
+   $S_0 = \{0\}$
+   $L_{j-1} = S_{j-1} \cap [0..d_j - p_j]$
+   $\widetilde S_{j} = L_{j-1} + p_j$  (I assume this means $\{x + p_j \mid x \in L_{j-1}\}$)
+   $S_{j} = \widetilde S_{j} \cup S_{j-1}$
+
+   And they claim the invariant $S_{j-1} \subseteq [0..d_{j-1}]$. Wait, is that invariant maintained? Let's check.
+
+   Original Lawler-Moore:
+   $S_0 = \{0\}$
+   $S_j' = S_{j-1} + \{0, p_j\}$
+   $S_j = S_j' \cap [0..d_j]$
+
+   The invariant in original is that $S_j \subseteq [0..d_j]$, and typically $S_j$ contains all possible completion times for on-time subsets using first j jobs.
+
+   In the refined algorithm, they define $L_{j-1} = S_{j-1} \cap [0..d_j - p_j]$, $\widetilde S_j = L_{j-1} + p_j$, $S_j = \widetilde S_j \cup S_{j-1}$.
+
+   They need to ensure $S_j \subseteq [0..d_j]$ to maintain the deadline constraint. Let's see: $S_{j-1} \subseteq [0..d_{j-1}]$ by invariant. But $d_{j-1}$ may not relate to $d_j$. The algorithm as described might not correctly enforce deadlines for job j.
+
+   Actually, the critical part: In Lawler-Moore, the step $S_j = (S_{j-1} + \{0, p_j\}) \cap [0..d_j]$ ensures that only sums $\leq d_j$ are kept. The refined algorithm tries to avoid the explicit $\cap [0..d_j]$ by splitting and only adding valid times. But does $S_j = \widetilde S_j \cup S_{j-1}$ guarantee $S_j \subseteq [0..d_j]$? $S_{j-1}$ might contain times $> d_j$ if $d_{j-1} > d_j$, but the invariant says $S_{j-1} \subseteq [0..d_{j-1}]$. If deadlines are not sorted, this could be an issue. The paper earlier (line 0058) says: "we employ the key observation due to Lawler and Moore that w.l.o.g. the early, i.e., non-tardy, jobs may be scheduled in the sorted order of their deadlines." So they assume jobs are sorted by deadlines non-decreasingly. That's standard.
+
+   Assuming jobs sorted by deadlines: $d_1 \leq d_2 \leq \ldots \leq d_n$.
+
+   Then invariant $S_{j-1} \subseteq [0..d_{j-1}]$ holds if we maintain it. For j=1, $S_0 = \{0\} \subseteq [0..d_1]$ assuming $d_1 \geq 0$, which is true.
+
+   Now, $L_{j-1} = S_{j-1} \cap [0..d_j - p_j]$. Since $S_{j-1} \subseteq [0..d_{j-1}]$ and $d_{j-1} \leq d_j$ (sorted), we have $S_{j-1} \subseteq [0..d_j]$. So $d_j - p_j$ could be negative; if so, $L_{j-1}$ might be empty or adjusted.
+
+   $\widetilde S_j = L_{j-1} + p_j$. Since $x \in L_{j-1} \implies x \leq d_j - p_j$, we have $x + p_j \leq d_j$. So $\widetilde S_j \subseteq [0..d_j]$.
+
+   $S_j = \widetilde S_j \cup S_{j-1}$. $S_{j-1} \subseteq [0..d_{j-1}] \subseteq [0..d_j]$. So $S_j \subseteq [0..d_j]$. Good, invariant holds.
+
+   Now the lemma's proof: "For any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have $| \{ i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1} \} | \leq 1$."
+
+   Let's parse this. $\widetilde S_j \setminus S_{j-1}$ are new sums added at step j that weren't in $S_{j-1}$. The claim is that for a fixed x, it can be in $\widetilde S_j \setminus S_{j-1}$ for at most one j. Why? Because if x is in $\widetilde S_j \setminus S_{j-1}$, then x gets added to S_j, and since S_k for k >= j will contain x (as they only add more non-negative times or keep previous?), wait, the algorithm's S_k sets are growing? In Lawler-Moore, S_j are not necessarily monotonic in inclusion? Actually, in the standard DP, S_j = (S_{j-1} + {0,p_j}) ∩ [0,d_j]. Since we intersect with [0,d_j], and d_j is non-decreasing, S_j may not be a superset of S_{j-1}. But often, the sets are such that completion times accumulate.
+
+   Let's check the refined algorithm's S_j definition: $S_j = \widetilde S_j \cup S_{j-1}$. Since both $\widetilde S_j$ and $S_{j-1}$ are subsets of [0,d_j] (as argued), and S_j is their union. Is S_j a superset of S_{j-1}? Yes, because $S_j = \widetilde S_j \cup S_{j-1} \supseteq S_{j-1}$. So by induction, S_j is monotonically increasing: $S_0 \subseteq S_1 \subseteq \ldots \subseteq S_n$.
+
+   That's important. If S_j are increasing, then once x is in S_j, it stays in all subsequent S_k for k >= j.
+
+   Now, $\widetilde S_j \setminus S_{j-1}$: since S_{j-1} ⊆ S_j, the difference is the new elements added at step j.
+
+   The lemma claims: for any x, the number of j such that x ∈ $\widetilde S_j \setminus S_{j-1}$ is at most 1. If S_j are increasing, and x enters S_j via $\widetilde S_j$ at step j, then since S_k for k>j already contain x (because increasing), could x also be in $\widetilde S_k \setminus S_{k-1}$ for some k>j? Possibly, if x is generated again at later steps. But the proof attempts to show it's at most once.
+
+   Let's read the proof carefully: "A benefit of the new algorithm is that, compared to Ref.~\cite{baseline}, we do not need to split w.r.t.~$d_j$ since the set $S_j$ is, \emph{by construction}, already filtered out of processing times greater than $d_j$. Hence, for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have $| \{ i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1} \}| \leq 1$."
+
+   The reasoning "once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$" is true if S is increasing. But then they conclude the count is ≤ 1. Why would it be at most 1? If x is in S_j, S_{j+1}, ..., and each step could potentially have x in $\widetilde S_k \setminus S_{k-1}$, the difference could happen multiple times if x is "regenerated" or appears in the difference at multiple steps. But if S is increasing, and x is already in S_{j-1}, then x ∉ $\widetilde S_j \setminus S_{j-1}$. If x ∉ S_{j-1}, and x ∈ $\widetilde S_j$, then x enters S_j. For x to be in $\widetilde S_k \setminus S_{k-1}$ for some k>j, we need x ∉ S_{k-1} and x ∈ $\widetilde S_k$. But since S_{k-1} ⊇ S_j (because increasing), and x ∈ S_j, we have x ∈ S_{k-1}. So x ∉ $\widetilde S_k \setminus S_{k-1}$. Therefore, x can be in the difference for at most the step j where it first enters S. After that, it's in all previous S_{k-1}, so can't be in the difference. Before j, x ∉ S_{j-1}, but could x be in $\widetilde S_i \setminus S_{i-1}$ for i < j? Possibly, if x enters at an earlier step. But the key is: for a given x, there is at most one i where x ∉ S_{i-1} and x ∈ $\widetilde S_i$. Because once it enters S, it stays. So indeed, the number of i with x ∈ $\widetilde S_i \setminus S_{i-1}$ is exactly the number of times x "newly appears", which is at most 1 if S is increasing and $\widetilde S_i$ only adds new elements not already in S_{i-1}. But is it possible that x is in $\widetilde S_i \setminus S_{i-1}$ for two different i? Suppose x ∉ S_0 = {0}. At i=1, $\widetilde S_1$ might contain x, and x ∉ S_0, so x ∈ $\widetilde S_1 \setminus S_0$. Then S_1 contains x. At i=2, S_1 contains x, so x ∉ $\widetilde S_2 \setminus S_1$. So only i=1. What if x is not in $\widetilde S_1$, but appears later? Then it would be in some $\widetilde S_k \setminus S_{k-1}$ for the first k where it appears. Since S is increasing, it can only happen once. So the claim "at most 1" seems logically correct under the assumption that S_j are increasing and $\widetilde S_j \setminus S_{j-1}$ are the new additions.
+
+   But wait: is S_j really increasing in this refined algorithm? $S_j = \widetilde S_j \cup S_{j-1}$. Yes, by definition, S_j ⊇ S_{j-1}. So monotonically increasing holds.
+
+   Now, the sum: $\sum_{i\in[n]} |\widetilde S_{j} \setminus S_{j-1}|$. Wait, the lemma says $\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$. But the index i is over [n], and the expression has j as a free variable? Let's check the lemma statement: "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$." This is ambiguous: is the sum over i, and j is fixed? Or is it $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}|$? Looking at the proof: "With this observation, the cumulative number of insertions reads $\displaystyle\sum_{i\in[n]}|\widetilde S_{j} \setminus S_{j-1}| = \displaystyle\sum_{x \in [0.. \dmax]} |\{i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1}\}| \leq \dmax + 1$." Here j is used as a fixed index in the sum, but then they sum over i in [n] of $|\widetilde S_j \setminus S_{j-1}|$. That would be n times the same quantity if j is fixed, which doesn't make sense. Actually, looking at the proof text: "$\displaystyle\sum_{i\in[n]}|\widetilde S_{j} \setminus S_{j - 1}|$" – this is likely a typo in the OCR/rendering; it should be $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}|$. Because later in the multi-machine section, they have $\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| \leq (\dmax + 1)^m$. And in the single machine lemma, it's probably $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}| \leq \dmax + 1$. The text says "cumulative number of insertions", which suggests summing over j. Let me check the exact line:
+
+   Line 0118: "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$."
+
+   Line 0125-0127: "With this observation, the cumulative number of insertions reads $\displaystyle\sum_{i\in[n]}|\widetilde S_{j} \setminus S_{j-1}| = \displaystyle\sum_{x \in [0.. \dmax]} |\{i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1}\}| \leq \dmax + 1$."
+
+   This is definitely messed up. The sum over i in [n] of $|\widetilde S_j \setminus S_{j-1}|$ where j is free is odd. But the right-hand side sums over x in [0..\dmax] of |{i in [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$|. Here i is used as the job index? Wait, earlier they defined [n] as {1,...,n} jobs. And S_j are sets of completion times. So |$\widetilde S_j \setminus S_{j-1}$| is a number (size of a set of times). Summing that over i in [n] doesn't make sense unless i is indexing something else. Probably it's a notation issue: they mean $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}|$, and the "i" in the sum is a typo for "j". Given the proof structure: sum over x in [0..\dmax] of |{j in [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$|. That makes perfect sense: for each possible processing time x (from 0 to \dmax), count how many steps j add x as a new element; sum over x gives total number of "insertions" (new elements added across all steps). And they bound that by \dmax + 1 because for each x, it's added at most once.
+
+   So the intended lemma is: $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}| \leq \dmax + 1$.
+
+   Now, is this actually true? Let's test with a small example.
+
+   Suppose n=2, jobs: job 1: p1=2, d1=5; job 2: p2=3, d2=7. Sorted by deadline: d1=5, d2=7.
+   S0 = {0}
+   j=1: L0 = S0 ∩ [0.. d1 - p1] = {0} ∩ [0..3] = {0}. $\widetilde S_1 = L0 + p1 = {2}$. S1 = {2} ∪ {0} = {0,2}. $\widetilde S_1 \setminus S_0 = {2} \setminus {0} = {2}$. Size 1.
+   j=2: L1 = S1 ∩ [0.. d2 - p2] = {0,2} ∩ [0..4] = {0,2}. $\widetilde S_2 = L1 + p2 = {3,5}$. S2 = {3,5} ∪ {0,2} = {0,2,3,5}. $\widetilde S_2 \setminus S_1 = {3,5} \setminus {0,2} = {3,5}$. Size 2.
+   Total sum of sizes = 1 + 2 = 3. \dmax = max(d1,d2) = 7. \dmax + 1 = 8. 3 ≤ 8, holds.
+
+   Another example: what if deadlines are tight? n=3, p=[1,1,1], d=[1,2,3].
+   S0={0}
+   j=1: d1=1, p1=1. L0 = {0} ∩ [0..0] = {0}. $\widetilde S_1 = {1}$. S1 = {1}∪{0}={0,1}. diff={1}, size 1.
+   j=2: d2=2, p2=1. L1 = S1 ∩ [0..1] = {0,1} ∩ [0..1] = {0,1}. $\widetilde S_2 = {1,2}$. S2 = {1,2}∪{0,1}={0,1,2}. diff = {1,2} \ {0,1} = {2}, size 1. (Wait, {1,2} \ {0,1} = {2}, yes size 1.)
+   j=3: d3=3, p3=1. L2 = S2 ∩ [0..2] = {0,1,2} ∩ [0..2] = {0,1,2}. $\widetilde S_3 = {1,2,3}$. S3 = {1,2,3}∪{0,1,2}={0,1,2,3}. diff = {1,2,3} \ {0,1,2} = {3}, size 1.
+   Sum = 3. \dmax=3, \dmax+1=4. Holds.
+
+   What about a case where the lemma might fail? The proof seems plausible, but I need to find a concrete counterexample to the assertion as written, or to the algorithm's claim.
+
+   Let's read the paper's claims more carefully. The big claim is: "Using the dynamic string data structure with string-size u = \dmax + 1, we obtain an $\widetilde O(n + \dmax)$-time algorithm." And the lemma bounds the number of insertions by \dmax + 1.
+
+   But is the algorithm actually correct for the problem? Let's think about the problem $1\|\sum p_j U_j$. The standard Lawler-Moore algorithm computes the maximum total processing time of on-time jobs. The DP sets S_j represent all possible completion times of on-time subsets using first j jobs (sorted by deadline). The refined algorithm attempts to avoid the O(P) parameter by using \dmax.
+
+   However, there's a subtle issue: In the refined algorithm, they define $L_{j-1} = S_{j-1} \cap [0..d_j - p_j]$. But S_{j-1} is supposed to be subsets of [0..d_{j-1}]. With deadlines sorted, d_{j-1} ≤ d_j, so S_{j-1} ⊆ [0..d_j]. But d_j - p_j could be negative. If d_j < p_j, then [0..d_j - p_j] is empty or we interpret it as empty set. That's fine.
+
+   The critical part: $\widetilde S_j = L_{j-1} + p_j$. This adds p_j to each element in L_{j-1}. Since L_{j-1} ⊆ [0..d_j - p_j], we get elements ≤ d_j. Good.
+
+   Then S_j = $\widetilde S_j \cup S_{j-1}$. As argued, S_j ⊆ [0..d_j].
+
+   But does this DP correctly compute the maximum total processing time of on-time jobs? In Lawler-Moore, the recurrence is exactly that, but with the intermediate step S_j' = S_{j-1} + {0, p_j}, and then intersect with [0,d_j]. The refined algorithm merges the +p_j step with the split/trim. It's known that Lawler-Moore can be implemented this way; it's a standard variant. I think the DP is correct.
+
+   Now, where's the false assertion? Let's look for statements that are mathematically false under the assumptions.
+
+   Line 0115-0130: Lemma and its proof. Is the proof correct? Let's scrutinize the proof of Lemma 0116.
+
+   Proof: "A benefit of the new algorithm is that, compared to Ref.~\cite{baseline}, we do not need to split w.r.t.~$d_j$ since the set $S_j$ is, \emph{by construction}, already filtered out of processing times greater than $d_j$. Hence, for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have $| \{ i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1} \}| \leq 1$."
+
+   Wait, the index i in the set notation: "|{ i ∈ [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$ }|". Here i is presumably the job index, but $\widetilde S_j \setminus S_{j-1}$ is a set of processing times (values), not jobs. So "x ∈ $\widetilde S_j \setminus S_{j-1}$" is a condition on x, and the set is over i? That doesn't type-check. It's almost certainly a typo, and it should be j instead of i, or the sum is over j. Given the context "cumulative number of insertions", it's $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}|$, and for each x, |{ j ∈ [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$ }| ≤ 1.
+
+   Assuming that, the proof sketch: since S_j are increasing, x can enter the difference at most once. But is S_j really increasing? S_j = $\widetilde S_j \cup S_{j-1}$. Yes, S_j ⊇ S_{j-1}. So S_0 ⊆ S_1 ⊆ ... ⊆ S_n. That's solid.
+
+   Now, "once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$". Since S_j ⊇ S_{j-1}, and x ∈ $\widetilde S_j \setminus S_{j-1}$, we have x ∉ S_{j-1}, but x ∈ $\widetilde S_j$ ⊆ S_j. Then by induction, S_k ⊇ S_j for k ≥ j, so x ∈ S_k. Good.
+
+   Then they say "and, hence, we have $| \{ i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1} \}| \leq 1$." The logic: if for each x, it can be in the difference for at most one j, then summing over j the sizes of differences counts each x at most once. But the statement as written is a bit garbled.
+
+   Is there a hidden assumption that might make this false? What if $\widetilde S_j \setminus S_{j-1}$ can contain x for multiple j because S_j are not strictly increasing in the right way, or because x could be removed? But we established S_j are increasing, so no removals.
+
+   Wait: In the refined algorithm, is it possible that $\widetilde S_j \setminus S_{j-1}$ contains x, and later $\widetilde S_k \setminus S_{k-1}$ also contains x for k > j? As argued, since S_{k-1} ⊇ S_j and x ∈ S_j, x ∈ S_{k-1}, so x ∉ $\widetilde S_k \setminus S_{k-1}$. So no.
+
+   But what about the domain? x ∈ [0..\dmax]. The sets S_j are subsets of [0..d_j] ⊆ [0..\dmax]. So x is in that range. The proof seems logically sound.
+
+   Maybe the false assertion is elsewhere. Let's check line 0130: "Using the dynamic string data structure with string-size $u = \dmax + 1$, we obtain an $\widetilde O(n + \dmax)$-time algorithm." This is a claim of running time. Is it always achievable? The dynamic string data structure operations have costs depending on string size u. The analysis might have hidden dependencies.
+
+   Line 0112: "To obtain, $L_{j - 1}$, we split $x_{S_{j-1}}$ at position $d_j - p_j$. Afterward, we can compute $\widetilde S_j$ by shifting $x_{L_{j - 1}}$ by $p_j$ positions. Namely, we perform $\texttt{concat}(0^{p_j}, x_{L_{j-1}})$, where the string $0^{p_j}$ can be obtained by splitting off the above pre-computed $0^{u}$ via $\texttt{split}(0^u, p_j)$. We finally trim the resulting string to length $u$ via $\texttt{split}(0^{p_j}x_{L_{j-1}}, u)$. Merging $\widetilde S_j$ with $S_{j - 1}$ is now a bit-wise OR of $x_{\widetilde S_j}$ and $x_{S_{j - 1}}$ and can be implemented in the same way as by Fischer and Wennmann~\cite{baseline}$."
+
+   There's a potential issue here: The dynamic string data structure maintains strings, and operations like concat, split take time depending on total length s. The paper sets u = \dmax + 1. But the strings represent indicator strings of sets S ⊆ [0..\dmax], so length u. The operations are on these strings. The running time analysis claims $\widetilde O(n + \dmax)$. But is the number of operations really bounded by O(n + \dmax)? The lemma says the number of insertions (which correspond to string operations) is ≤ \dmax + 1. But each insertion might involve operations on strings of size u. The dynamic string data structure's time per operation is O(log s) or O(log^{1+o(1)} s) where s is max total length and number of operations. If we have O(\dmax) insertions, and string size u = \dmax + 1, then s = O(\dmax + number of operations) = O(\dmax). So log s = O(log \dmax). Then total time would be O(n log \dmax + \dmax log \dmax) = $\widetilde O(n + \dmax)$. That seems plausible.
+
+   But wait: The algorithm also needs to initialize the data structure, build 0^u, etc. That's O(log^2 u) = O(log^2 \dmax), negligible.
+
+   Is there a false assertion about the lemma's proof or the algorithm's correctness?
+
+   Let's think about the problem itself. $1\|\sum p_j U_j$: The goal is to maximize the total processing time of on-time jobs. The Lawler-Moore algorithm does this by finding the maximum weight (here, processing time) subset that can be scheduled by deadlines. The DP S_j actually computes all possible completion times; the maximum element in S_n is the max total processing time? Wait, in Lawler-Moore for $1\|\sum p_j U_j$, the standard algorithm: sort by deadlines, then DP: let F_k be the set of completion times; actually, the typical Lawler-Moore algorithm for maximizing number of on-time jobs or minimizing tardiness... For $1\|\sum p_j U_j$, it's NP-hard? No, $1\|\sum p_j U_j$ is actually solvable in pseudo-polynomial time O(nP) via DP, but it's not NP-hard in the strong sense; Subset Sum is a special case. The problem is to select a subset of jobs to maximize sum p_j such that they can be scheduled by deadlines. With deadlines and processing times, it's equivalent to: given jobs with p_j, d_j, find max sum p_j of a subset that can be scheduled feasibly (i.e., there exists an order meeting deadlines). The Lawler-Moore algorithm does this by maintaining S_j as the set of possible completion times of on-time subsets using first j jobs (sorted by deadline). The maximum total processing time is max S_n. Yes.
+
+   Now, the refined algorithm claims to do this in $\widetilde O(n + \dmax)$ time. Is that actually possible? There's a known result: $1\|\sum p_j U_j$ can be solved in $O(n + \dmax)$ time? I'm not sure. But the paper presents an algorithm. The question is: is there a false assertion in the text?
+
+   Let's read the problem statement again: "At least one assertion in it is false as written: a concrete counterexample exists under the assumptions the writing itself has in force at that point. The false assertion may be a theorem or problem statement, a lemma, or an intermediate assertion inside an argument."
+
+   I need to find a specific line that is false, and provide a counterexample under the assumptions in force.
+
+   Let's examine line 0118: "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$." As discussed, this is likely a typo, but as written, it's problematic. If taken literally, $\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}|$ where j is free, and i ranges over [n]. But $|\widetilde S_{j} \setminus S_{j - 1}|$ is a number independent of i, so the sum would be n * $|\widetilde S_{j} \setminus S_{j - 1}|$. That would be ≤ \dmax + 1, implying $|\widetilde S_{j} \setminus S_{j - 1}| \leq (\dmax + 1)/n$, which is not the intended meaning and likely false in general. But the paper clearly intends the sum over j. However, the user says: "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." And "If the same assertion appears more than once, any occurrence is accepted." I need to identify a line that contains the false assertion. If the assertion as written is false, that could be it.
+
+   But maybe there's a more substantive false assertion.
+
+   Let's check line 0077: "However, observe that in Eq.~\eqref{eq:3rd}, we anyway \emph{trim} the current set $S_{j} + \{0, p_j\}$ by its processing times greater than $d_j$. Hence, if we had a mechanism to only add \emph{valid} processing times, i.e., l.e.q.~$d_j$, we could interpret the sets $S_{j}$ indeed as indicator strings of size $\dmax$ + 1." This is an observation, not necessarily false.
+
+   Line 0108-0109: "Let $u$ be the string size (this will be set to $\dmax + 1$ later). We represent a set $S \subseteq [n]$ by its corresponding indicator string $x_S \in \{0, 1\}^u$, i.e., $i \in S$ if and only if $x_S[i] = 1$." Wait, here S ⊆ [n], but earlier sets S_j are subsets of [0..P] or [0..d_j]. This might be a notational sloppiness, but not necessarily false.
+
+   Line 0110: "To initialize the data structure, we build $0^{u}$ by inserting the word $w = 0$ and self-concatenating it $\log u$ times. This takes time $O(\log^2 u)$." This is a standard technique, probably true.
+
+   Line 0112: "Then, to obtain, $L_{j - 1}$, we split $x_{S_{j-1}}$ at position $d_j - p_j$." But x_{S_{j-1}} is an indicator string of size u = \dmax + 1. The set S_{j-1} is a subset of [0..d_{j-1}], which is within [0..\dmax]. Splitting at position d_j - p_j: positions are 0 to u-1. If d_j - p_j is negative or > u, need handling. But they might assume d_j - p_j is within range. Not necessarily false.
+
+   Line 0115-0130: The lemma and proof. Let's try to find a concrete counterexample to the lemma's claim under the algorithm's assumptions.
+
+   Suppose we have n jobs, sorted by deadlines. The lemma claims $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}| \leq \dmax + 1$. Is it possible that this sum exceeds \dmax + 1?
+
+   Let's construct a small example where it might fail. We need S_j increasing, and $\widetilde S_j = L_{j-1} + p_j$, with L_{j-1} = S_{j-1} \cap [0..d_j - p_j].
+
+   Consider jobs with processing times and deadlines such that many different x are added across different j.
+
+   Since S_j are subsets of [0..d_j] and increasing, and x ∈ [0..\dmax], the total number of distinct x that can ever be added is at most \dmax + 1 (values 0 to \dmax). And the lemma says each x is added at most once (i.e., appears in the difference for at most one j). Therefore, the total number of "insertions" (sum of sizes of differences) is at most the number of distinct x, which is \dmax + 1. This is a cardinality argument: if each x is counted at most once across all differences, then sum of |diff_j| ≤ |union of diff_j| ≤ \dmax + 1. But is it true that each x appears in at most one diff_j? The proof argues yes, based on S_j increasing. But we must ensure that the diff_j are exactly the new x's not in S_{j-1}, and that S_j are increasing.
+
+   However, there's a catch: The sets S_j are subsets of [0..d_j], but d_j may vary. x is in [0..\dmax]. Could an x be in diff_j and also in diff_k for k > j if S_{k-1} doesn't contain x because d_{k-1} < x? But S_{k-1} ⊆ [0..d_{k-1}], and if x > d_{k-1}, then x ∉ S_{k-1}. But wait, the invariant S_{j-1} ⊆ [0..d_{j-1}] is maintained. If x > d_{j-1}, then x ∉ S_{j-1}. But could x be added at step j where d_j ≥ x, and then later at step k where d_k ≥ x, but S_{k-1} might not contain x if x was not added earlier? But if x was added at step j, then S_j contains x, and since S is increasing, S_{k-1} contains x for k-1 ≥ j. So if k > j, S_{k-1} contains x. If k ≤ j, then x was added at or after k. So x can only be in diff for the first step where it gets added.
+
+   But what if x is never added in the "new" way, but appears in S_j through S_{j-1} already? Then it's not in diff_j.
+
+   So the cardinality argument seems solid: each integer x from 0 to \dmax can be "newly introduced" at most once. Therefore, total number of new elements added across all steps ≤ \dmax + 1.
+
+   Is there any scenario where an x is introduced, then somehow "removed" or the sets are not increasing? We already saw S_j = $\widetilde S_j \cup S_{j-1}$, so S_j ⊇ S_{j-1}. Strictly increasing or not, it's monotone. So no removal.
+
+   What about the fact that S_j are subsets of [0..d_j], and d_j might be smaller than \dmax for early j? But x ∈ [0..\dmax]. If x > d_j for some j, x cannot be in S_j. But the lemma's sum is over j, and x ∈ [0..\dmax]. For x > d_j, x ∉ S_j, so it could potentially be in diff_j if x ∉ S_{j-1} and x ∈ $\widetilde S_j$. But $\widetilde S_j ⊆ [0..d_j]$, so if x > d_j, x ∉ $\widetilde S_j$. So x > d_j can never be in diff_j. So only x ≤ d_j matter. And since d_j ≤ \dmax, x ∈ [0..d_j] ⊆ [0..\dmax]. So the range [0..\dmax] covers all possible x that could ever be in any S_j or diff_j.
+
+   So the lemma seems mathematically correct under the stated algorithm and assumptions (jobs sorted by deadline, invariant maintained).
+
+   Maybe the false assertion is in the running time analysis or the multi-machine extension.
+
+   Let's look at line 0163-0175: Lemma for m machines: $\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| \leq (\dmax + 1)^m$. The proof: "We closely follow our proof for Lemma~\ref{lemma:refined_single}. Namely, we make the observation that for any $x \in [0..\dmax]^m$, once $x \in \widetilde S_j \setminus S_{j - 1}$, then $x \in S_j, \ldots, S_n$. Hence, we have $| \{ j \in [n] \mid x \in \widetilde S_j \setminus S_{j - 1} \}| \leq 1$. Therefore, we can bound the total number of insertions by $\displaystyle\sum_{j\in[n]}|\widetilde S_j \setminus S_{j-1}| = \displaystyle\sum_{x\in [0..\dmax]^m} |\{ j \in [n] \mid x \in \widetilde S_j \setminus S_{j - 1} \}| \leq (\dmax + 1)^m$."
+
+   Here, the sets S_j are subsets of [0..P]^m, but they trim point-wise to [0..d_j]^m. The vector x has m coordinates, each in [0..\dmax]. The number of possible vectors is (\dmax + 1)^m. The same logic: each vector x can be in the difference for at most one j, because S_j are increasing point-wise. Is S_j increasing point-wise? S_j = $\widetilde S_j \cup S_{j-1}$, and both components are defined point-wise. Yes, if we define the vector sets component-wise, then S_j ⊇ S_{j-1} component-wise. So each vector x can be newly added at most once. Thus total insertions ≤ number of possible vectors = (\dmax + 1)^m. This seems correct.
+
+   But wait: In the multi-machine setting, the jobs have processing times p_j, and they are distributed among m machines. The algorithm adds p_j * e_1, etc. The deadlines d_j are the same for all machines? In $P_m\|\sum p_j U_j$, each job is processed on one machine, and its deadline is d_j. The completion time on each machine must be ≤ d_j? Actually, in parallel machine scheduling to maximize on-time jobs, it's more complex. But the paper says: "In that context, the original dynamic program slightly changes, but the core idea remains the same. In particular, we can define similar sets $S_0, \ldots, S_n$ which are this time subsets of $[0..P]^{m}$, i.e., the $i$-th entry of each vector corresponds to the $i$-th machine: ... A feasible schedule of total processing time $t$ exists if and only if there exists $s \in S_n$ such that $s_1 + \ldots + s_m = t$~\cite{lawler_moore}." This is a known reduction, but I'm not sure if it's exactly correct for the problem as stated. However, the question is about a false assertion in the writing, not about whether the whole problem is solvable.
+
+   Let's look for something more blatantly false.
+
+   Line 0033: "We study the fundamental scheduling problem $1\|\sum p_jU_j$. Given a set of $n$ jobs with processing times $p_j$ and deadlines $d_j$, the problem is to select a subset of jobs such that the total processing time is maximized without violating the deadlines." This is the problem definition. Is it accurate? In $1\|\sum p_j U_j$, the objective is to maximize the total processing time of jobs that complete by their deadlines. Yes.
+
+   Line 0035: "However, $P$ is not the sole parameter one could parameterize the running time by. Indeed, they explicitly leave open the question of whether a running time of $\widetilde O(n + \max d_j)$ or even $\widetilde O(n + \max p_j)$ is possible." This is a statement about prior work leaving it open. Not false.
+
+   Line 0050: "Similar to the Subset Sum problem, our problem also has other parameters that can be used to parametrize the running time by. Prominent examples are $\dmax = \max d_j$ and $\pmax = \max p_j$. Prior research also introduced algorithm w.r.t.~to these parameters: an $\widetilde O(\min\{P\cdot D_{\#}, P + D\})$-time algorithm~\cite{ref_12}, where $\#D$ is the number of distinct deadlines and $D$ is the sum of all distinct deadlines, and an $\widetilde O(n + \pmax^3)$-time algorithm~\cite{ref_28}. Fischer and Wennmann explicitly leave open the question of whether a time of $\widetilde O(n + \dmax)$ or even $\widetilde O(n + \pmax)$ is possible~\cite{baseline}." Again, stating prior work.
+
+   Line 0052: "We show that an $\widetilde O(n + \dmax)$-time algorithm does indeed exist. Perhaps surprisingly, our algorithm is a simple refined implementation of Fischer and Wennmann's. Our analysis also extends to the multi-machine setting, resulting in a $\widetilde O(n + \dmax^m)$-time algorithm." This is the main claim.
+
+   Line 0130: "Using the dynamic string data structure with string-size $u = \dmax + 1$, we obtain an $\widetilde O(n + \dmax)$-time algorithm." This follows from the lemma.
+
+   Now, is there a false assertion about the algorithm's correctness or the lemma's proof that I'm missing?
+
+   Let's re-read the lemma proof very carefully, maybe there's a subtle flaw.
+
+   Lemma (line 0116-0119): "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$."
+
+   Proof (lines 0120-0129):
+   "A benefit of the new algorithm is that, compared to Ref.~\cite{baseline}, we do not need to split w.r.t.~$d_j$ since the set $S_j$ is, \emph{by construction}, already filtered out of processing times greater than $d_j$. Hence, for any $x \in [0..\dmax]$, once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have
+   \[
+   |\{i \in [n] \mid x \in \widetilde S_j \setminus S_{j - 1}\}| \leq 1.
+   \]
+   With this observation, the cumulative number of insertions reads
+   \[
+   \displaystyle\sum_{i\in[n]}|\widetilde S_{j} \setminus S_{j-1}| = \displaystyle\sum_{x \in [0.. \dmax]} |\{i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1}\}| \leq \dmax + 1.
+   \]"
+
+   As noted, the indices are messed up. But if we interpret "i" as job index and the condition "x ∈ $\widetilde S_j \setminus S_{j-1}$" as a property, the set {i ∈ [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$} would have size either 0 or 1 if for each x, it's in the difference for at most one j. But the sum is over i in [n] of $|\widetilde S_j \setminus S_{j-1}|$, which is n times that size if j is fixed. This is definitely a typo in the text. The intended lemma is almost certainly $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}| \leq \dmax + 1$, and the proof sums over x of |{j ∈ [n] | x ∈ $\widetilde S_j \setminus S_{j-1}$}| ≤ \dmax + 1.
+
+   Given that the user says "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin.", I need to find an assertion that is actually false, not just typographically ambiguous.
+
+   Maybe the false assertion is in the description of the dynamic string data structure or its application.
+
+   Let's check line 0099-0107: Lemma for dynamic string data structure.
+   "The dynamic string data structure maintains a dynamic collection $X$ of non-empty strings, supporting the following operations:
+   - make_string$(x)$: Given any string $x \in \Sigma^+$, insert $x$ into $X$.
+   - concat$(x_1, x_2)$: Given $x_1, x_2 \in X$, insert the concatenated string $x_1x_2$ into $X$.
+   - split$(x, i)$: Given $x \in X$ and $i \in [0..|x|)$, insert $x[0..i]$ and $x(i..|x|]$ into $X$.
+   Let $s$ be the maximum of the total length of all strings and the number of executed operations. Then all operations run in randomized time $O(\log s)$ or in deterministic time $O(\log^{1 + o(1)}s)$, except for make_string which takes time $O(|x| + \log s)$ and $O(|x| \cdot \log^{o(1)}s)$, respectively."
+
+   Is this lemma correctly stated? The dynamic string data structure (e.g., from Hardy, Miltersen, et al., or similar) typically maintains a set of strings, and operations like concat and split have costs depending on the total length. The statement says "except for make_string which takes time O(|x| + log s) and O(|x| · log^{o(1)}s)". This seems plausible for some implementations, but I'm not sure if it's a standard proven bound. However, the paper cites it, so within the context, it's assumed true. The user says "under the assumptions the writing itself has in force at that point." So if the paper assumes this data structure with those running times, then assertions based on it are conditionally true. I need a false assertion given the paper's own assumptions.
+
+   Maybe the false assertion is in the algorithm's description or the invariant.
+
+   Let's look at line 0081-0094: "First, observe that, by construction, the following invariant holds: $S_{j-1} \subseteq [0..d_{j-1}]$. The new algorithm works as follows. Instead of directly performing Eq.~\eqref{eq:2nd} as is, we first split $S_j$ into two parts w.r.t.~to $d_j - p_j$, i.e., we obtain $L_{j-1} \vcentcolon= S_{j-1} \cap [0..d_j - p_j]$ and $R_{j-1} \vcentcolon= S_{j-1} \cap (d_j - p_j..d_j]$. We will see later how $L_{j-1}$ and $R_{j-1}$ can be computed via the dynamic string data structure. We then compute $\widetilde S_j = L_{j-1} + p_j$. Finally, we need to merge $\widetilde S_j$ with both $L_{j-1}$ and $R_{j-1}$ to obtain the final $S_j$. Better said, we are left with merging $\widetilde S_j$ with $S_{j-1}$ to get $S_j = \widetilde S_j \cup S_{j-1}$."
+
+   Wait! The text says: "we first split $S_j$ into two parts w.r.t.~to $d_j - p_j$, i.e., we obtain $L_{j-1} \vcentcolon= S_{j-1} \cap [0..d_j - p_j]$ and $R_{j-1} \vcentcolon= S_{j-1} \cap (d_j - p_j..d_j]$." But then the algorithm (line 0082-0094) only uses $L_{j-1}$ and computes $\widetilde S_j = L_{j-1} + p_j$, and $S_j = \widetilde S_j \cup S_{j-1}$. It completely ignores $R_{j-1}$! The description says "we need to merge $\widetilde S_j$ with both $L_{j-1}$ and $R_{j-1}$ to obtain the final $S_j$. Better said, we are left with merging $\widetilde S_j$ with $S_{j-1}$ to get $S_j = \widetilde S_j \cup S_{j-1}$." This is a discrepancy. The initial description mentions $R_{j-1}$, but the actual algorithm given later does not use $R_{j-1}$; it just does $S_j = \widetilde S_j \cup S_{j-1}$. Is $R_{j-1}$ redundant? Let's check.
+
+   In the original Lawler-Moore: $S_j = (S_{j-1} + \{0, p_j\}) \cap [0..d_j]$. This can be seen as: add 0 (keep previous sums) and add p_j (new sums), then trim by d_j. The refined algorithm splits S_{j-1} into those ≤ d_j - p_j and those > d_j - p_j (but ≤ d_j). Then $\widetilde S_j = L_{j-1} + p_j$ gives new sums that are ≤ d_j. The sums in S_{j-1} that are > d_j - p_j but ≤ d_j: what happens to them? In the original, they would be kept if they were already ≤ d_j, but when adding p_j, they might exceed d_j. The refined algorithm seems to drop them? Let's see: Original $S_j = (S_{j-1} + \{0, p_j\}) \cap [0..d_j]$. This equals $(S_{j-1} \cap [0..d_j]) \cup ((S_{j-1} + p_j) \cap [0..d_j])$. Since S_{j-1} ⊆ [0..d_{j-1}] and d_{j-1} ≤ d_j, S_{j-1} ⊆ [0..d_j], so first part is S_{j-1}. Second part is $(S_{j-1} + p_j) \cap [0..d_j]$. Now, $(S_{j-1} + p_j) \cap [0..d_j] = \{x + p_j \mid x \in S_{j-1}, x + p_j \leq d_j\} = \{x + p_j \mid x \in S_{j-1} \cap [0..d_j - p_j]\} = L_{j-1} + p_j = \widetilde S_j$. So indeed, $S_j = S_{j-1} \cup \widetilde S_j$. The set $R_{j-1} = S_{j-1} \cap (d_j - p_j..d_j]$ consists of those x in S_{j-1} with d_j - p_j < x ≤ d_j. For these, x + p_j > d_j, so they are excluded from the +p_j part in the original algorithm. But they are kept in the 0 part, i.e., they remain in S_j because S_{j-1} ⊆ S_j. So in the refined algorithm, $S_j = \widetilde S_j \cup S_{j-1}$ naturally keeps them via $S_{j-1}$. The description in line 0081 says "we need to merge $\widetilde S_j$ with both $L_{j-1}$ and $R_{j-1}$ to obtain the final $S_j$. Better said, we are left with merging $\widetilde S_j$ with $S_{j-1}$ to get $S_j = \widetilde S_j \cup S_{j-1}$." This is consistent: the initial description mentions $R_{j-1}$ as a conceptual split, but the actual algorithm just unions with $S_{j-1}$, which automatically includes $R_{j-1}$. So no false assertion there; it's just explaining that $R_{j-1}$ is implicitly handled.
+
+   But wait: The text says "we first split $S_j$ into two parts w.r.t.~to $d_j - p_j$, i.e., we obtain $L_{j-1} \vcentcolon= S_{j-1} \cap [0..d_j - p_j]$ and $R_{j-1} \vcentcolon= S_{j-1} \cap (d_j - p_j..d_j]$." It says "split $S_j$" but then defines $L_{j-1}$ and $R_{j-1}$ from $S_{j-1}$. That's a minor sloppiness, but not mathematically false.
+
+   Let's look at line 0112: "To obtain, $L_{j - 1}$, we split $x_{S_{j-1}}$ at position $d_j - p_j$." Here, splitting an indicator string at position k means dividing into prefix of length k and suffix. If d_j - p_j is negative, splitting at negative position might be undefined. But they might assume d_j ≥ p_j or handle edge cases. Not necessarily false.
+
+   Maybe the false assertion is in the running time claim or the lemma's proof regarding the dynamic string operations.
+
+   Let's think about the lemma's proof again, but this time focusing on the phrase "once $x \in \widetilde S_{j} \setminus S_{j-1}$, then $x \in S_{j}, \ldots, S_{n}$ and, hence, we have $| \{ i \in [n] \mid x \in \widetilde S_j \setminus S_{j-1} \}| \leq 1$." The "hence" might be logically flawed. The statement "once x ∈ $\widetilde S_j \setminus S_{j-1}$, then x ∈ S_j, ..., S_n" is true if S is increasing. But does that imply the count is ≤ 1? Not directly; you need the additional reasoning that if it were in the difference for two different j, say j1 < j2, then x ∈ $\widetilde S_{j1} \setminus S_{j1-1}$ and x ∈ $\widetilde S_{j2} \setminus S_{j2-1}$. Since S_{j2-1} ⊇ S_{j1} (because increasing), and x ∈ S_{j1}, we have x ∈ S_{j2-1}, contradicting x ∈ $\widetilde S_{j2} \setminus S_{j2-1}$. So yes, it implies at most one. The proof as written is a bit abbreviated but essentially correct.
+
+   Is there any assumption in the proof that might not hold? The invariant S_{j-1} ⊆ [0..d_{j-1}] is given. With jobs sorted by deadline, d_{j-1} ≤ d_j, so S_{j-1} ⊆ [0..d_j]. The algorithm defines L_{j-1} = S_{j-1} ∩ [0..d_j - p_j]. If d_j - p_j < 0, then L_{j-1} = ∅, and $\widetilde S_j = ∅$. That's fine.
+
+   What about the dynamic string data structure? The lemma's proof about insertions doesn't directly depend on it; it's about the sets S_j.
+
+   Maybe the false assertion is in line 0130: "Using the dynamic string data structure with string-size $u = \dmax + 1$, we obtain an $\widetilde O(n + \dmax)$-time algorithm." Is this always true given the operations described? The dynamic string data structure's operations have costs that depend on s, the max of total length and number of operations. If we have O(n + \dmax) operations, and string size u = \dmax + 1, then total length s = O(\dmax + n + \dmax) = O(n + \dmax). Then log s = O(log(n + \dmax)). The paper claims $\widetilde O(n + \dmax)$, which would be O((n + \dmax) log^{O(1)}(n + \dmax)). That's consistent with the data structure's time bounds. But is the number of operations really O(n + \dmax)? The lemma says the number of insertions (which correspond to operations like concat, split, make_string) is ≤ \dmax + 1. But the algorithm also does other operations per job, like initializing, splitting, concat for shifting, bit-wise OR, etc. The paper's analysis might count those as part of the $\widetilde O$. I need to see if there's a specific false claim.
+
+   Let's read the running time analysis section (lines 0114-0130):
+   "Our running time analysis closely follows that by Fischer and Wennmann~\cite{baseline}, with the key difference that, using our new implementation, we manage to bound the number of insertions by $\dmax + 1$ instead of $2P + 1$:
+   \begin{lemma}
+   \label{lemma:refined_single}
+   It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$.
+   \end{lemma}
+   \begin{proof}
+   ...
+   \end{proof}
+   Using the dynamic string data structure with string-size $u = \dmax + 1$, we obtain an $\widetilde O(n + \dmax)$-time algorithm."
+
+   The lemma as written has the index i over [n] and j free. If taken literally, it's false or nonsensical. But as argued, it's a typo. However, the user might expect me to catch that the assertion as written is false. The instruction: "Identify a line that contains the false assertion. If the same assertion appears more than once, any occurrence is accepted. Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." It doesn't say I can't point out a typo/ambiguity if it's actually false. But "a concrete counterexample exists under the assumptions the writing itself has in force at that point." So I need a concrete counterexample to the assertion as written, under the assumptions.
+
+   Let's test the literal assertion: Line 0118: "It holds that $\displaystyle\sum_{i\in [n]} |\widetilde S_{j} \setminus S_{j - 1}| \leq \dmax + 1$." Under the assumptions: jobs have processing times and deadlines, S_j defined as per algorithm, etc. Is this sum ≤ \dmax + 1? As written, the sum is over i ∈ [n], and the term $|\widetilde S_{j} \setminus S_{j - 1}|$ does not depend on i. So the sum is n * $|\widetilde S_{j} \setminus S_{j - 1}|$. For this to be ≤ \dmax + 1, we need $|\widetilde S_{j} \setminus S_{j - 1}| \leq (\dmax + 1)/n$. Is that true? Not necessarily. For example, take n=2, \dmax=10, and suppose at some j, $|\widetilde S_{j} \setminus S_{j - 1}| = 5$. Then n * 5 = 10, and \dmax + 1 = 11, so 10 ≤ 11 holds. But if n=3, \dmax=5, and size=2, then 3*2=6 > 6? \dmax+1=6, so 6≤6 holds. If n=4, \dmax=3, size=1, 4*1=4 ≤ 4 holds. It could accidentally hold for some parameters, but is it always true under the algorithm? Probably not. Let's construct a counterexample to the literal statement.
+
+   Suppose n=3 jobs, sorted by deadlines. \dmax = 10. At some step j, say j=2, we have $\widetilde S_2 \setminus S_1 = \{2, 5, 8\}$, size 3. Then literal sum over i∈[3] would be 3 * 3 = 9. \dmax + 1 = 11. 9 ≤ 11, holds. To violate, need n * size > \dmax + 1. Let n=10, \dmax=5, size=1 at some j. Then 10*1=10 > 6. But can size be 1 when n=10, \dmax=5? Possibly. But we need to check if the algorithm's S_j definitions allow size > (\dmax+1)/n. Since the intended meaning is clearly different, pointing this out might be valid, but the user might consider it "merely because its justification is thin" or a typo. The user says: "Do not point at a line that only uses the assertion later, and do not point at a step merely because its justification is thin." Pointing out a notational typo that doesn't affect the intended meaning might be frowned upon, but if it's mathematically false as written, it could be the target.
+
+   Let's look for a more substantial false assertion.
+
+   What about the claim in line 0115: "with the key difference that, using our new implementation, we manage to bound the number of insertions by $\dmax + 1$ instead of $2P + 1$". This is a comparison. Is it true that the original algorithm has $2P + 1$ insertions? In Fischer and Wennmann's algorithm, they have indicator strings of size P, and they do operations that might insert O(P) elements. The refined algorithm claims ≤ \dmax + 1. If \dmax is much smaller than P, this is a improvement. But is the bound \dmax + 1 always true? We started analyzing and it seemed plausible. But maybe there's a counterexample to the lemma.
+
+   Let's try to construct a concrete counterexample to the lemma's claim $\sum_{j\in[n]} |\widetilde S_j \setminus S_{j-1}| \leq \dmax + 1$, assuming the intended meaning.
+
+   We need S_j increasing, S_j ⊆ [0..d_j], $\widetilde S_j = L_{j-1} + p_j$, L_{j-

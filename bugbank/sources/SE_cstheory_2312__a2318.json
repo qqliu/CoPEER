@@ -1,0 +1,165 @@
+{
+ "cluster": "8cae14902fa72205bdede3a1765bc362f149824f5e5ef4cc7bc75bf21a3cccf6",
+ "cluster_merged": "8cae14902fa72205bdede3a1765bc362f149824f5e5ef4cc7bc75bf21a3cccf6",
+ "current_roles": {
+  "admitted": true,
+  "evaluation_population": true,
+  "evaluation_primary": true,
+  "evaluation_scorable": true,
+  "exclude_from_primary": false,
+  "execution_required_if_corrected": true,
+  "n_nonblank_text": 11,
+  "pilot_population": false,
+  "pilot_scorable": false,
+  "scorable_in_own_split": true,
+  "split": "evaluation",
+  "unscorable": false,
+  "withdrawn_diagnostic_only": false
+ },
+ "exclude_from_primary": false,
+ "flags": [],
+ "gold": [
+  21
+ ],
+ "group": "stackexchange",
+ "lines": [
+  [
+   "P1",
+   "Max-cut with negative weight edges"
+  ],
+  [
+   "P2",
+   "Let $G = (V, E, w)$ be a graph with weight function $w:E\\rightarrow \\mathbb{R}$. The max-cut problem is to find:"
+  ],
+  [
+   "P3",
+   "$$\\arg\\max_{S \\subset V} \\sum_{(u,v) \\in E : u \\in S, v \\not \\in S}w(u,v)$$"
+  ],
+  [
+   "P4",
+   "If the weight function is non-negative (i.e. $w(e) \\geq 0$ for all $e \\in E$), then there are many extremely simple 2-approximations for max-cut. For example, we can:"
+  ],
+  [
+   "P5",
+   " 1. Pick a random subset of vertices $S$."
+  ],
+  [
+   "P6",
+   " 2. Pick an ordering on the vertices, and greedily place each vertex $v$ in $S$ or $\\bar{S}$ to maximize the edges cut so far"
+  ],
+  [
+   "P7",
+   " 3. Make local improvements: If there is any vertex in $S$ that can be moved to $\\bar{S}$ to increase the cut (or vice versa), make the move."
+  ],
+  [
+   "P8",
+   "The standard analysis of all of these algorithms actually shows that the resulting cut is at least as large as $\\frac{1}{2}\\sum_{e \\in E}w(e)$, which is an upper bound on $1/2$ the weight of the max-cut if $w$ is non-negative -- but if some edges are allowed to have negative weight, is not!"
+  ],
+  [
+   "P9",
+   "For example, algorithm 1 (pick a random subset of vertices) can clearly fail on graphs with negative edge weights."
+  ],
+  [
+   "P10",
+   "My question is:"
+  ],
+  [
+   "P11",
+   "> Is there a simple combinatorial algorithm that gets an O(1) approximation to the max-cut problem on graphs that can have negative edge weights?"
+  ],
+  [
+   "P12",
+   "To avoid the possibly sticky issue of the max-cut taking value $0$, I will allow that $\\sum_{e \\in E}w(e) > 0$, and/or be satisfied with algorithms that result in small additive error in addition to a multiplicative factor approximation."
+  ],
+  [
+   1,
+   "Here was my first attempt at an argument. It was wrong, but I fixed it after the \"EDIT:\""
+  ],
+  [
+   2,
+   ""
+  ],
+  [
+   3,
+   "If you could efficiently approximately solve the max-cut problem with negative edge weights, couldn't you use that to solve the max-cut problem with positive edge weights?  Start with a max-cut problem you want to solve whose optimal solution is $b$. Now, put a large negative weight edge (with weight $-a$) between $u$ and $v$. The optimum solution of the new problem is $b-a$, so our hypothetical approximation algorithm will get you a solution with maximum cut whose value is at most $(b-a)/2$ worse than optimal. On the original graph, the maximum cut is still at most $(b-a)/2$ worse than optimal. If you choose $a$ close to $b$, this violates the inapproximability result that if P$\\neq$NP, you cannot approximate max-cut to better than a $16/17$ factor.  "
+  ],
+  [
+   4,
+   ""
+  ],
+  [
+   5,
+   "EDIT:"
+  ],
+  [
+   6,
+   ""
+  ],
+  [
+   7,
+   "The above algorithm doesn't work because you can't guarantee that $u$ and $v$ are on opposite sides of the cut in the new graph, even if they were originally. I can fix this as follows, though. "
+  ],
+  [
+   8,
+   ""
+  ],
+  [
+   9,
+   "Let's assume that we have an approximation algorithm which will give us a cut within a factor of 2 of OPT as long as the sum of all the edge weights are positive."
+  ],
+  [
+   10,
+   ""
+  ],
+  [
+   11,
+   "As above, start with a graph $G$ with all non-negative weights on edges. We'll find a modified graph $G^* $ with some negative weights such that if we can approximate the max cut of $G^* $ within a factor of 2, we can approximate the max cut of $G$ very well."
+  ],
+  [
+   12,
+   ""
+  ],
+  [
+   13,
+   "Choose two vertices $u$ and $v$, and hope that they're on opposite sides of the max cut. (You can repeat this for all possible $v$ to ensure that one try works.) Now, put a large negative weight $-d$ on all edges $(u,x)$ and $(v,x)$ for $x \\neq u,v$, and a large positive weight $a$ on edge $(u,v)$. Assume that the optimal cut has weight $OPT$."
+  ],
+  [
+   14,
+   ""
+  ],
+  [
+   15,
+   "A cut with value $c$ in $G$, where vertices $u$ and $v$ are on the same side of the cut, now has value at $c - 2dm$ where $m$ is the number of vertices on the other side of the cut. A cut with $(u,v)$ on opposite sides with original value $c$ now has value $c + a - (n-2)d$. Thus, if we choose $d$ large enough, we can force all cuts with $u$ and $v$ on the same side to have negative value, so if there is any cut with positive value, then the optimal cut in $G^* $ will have $u$ and $v$ on opposite sides. Note that we are adding a fixed weight $(a - (n-2)d)$ to any cut with $u$ and $v$ on opposite sides. "
+  ],
+  [
+   16,
+   ""
+  ],
+  [
+   17,
+   "Let $f=(a - (n-2)d)$. Choose $a$ so that $f \\approx - 0.98 OPT$ (we'll justify this later). A cut with weight $c$ in $G$ having $u$ and $v$ on opposite sides now becomes a cut with weight $c - 0.98 OPT$. This means the optimal cut in $G^* $ has weight $0.02 OPT$. Our new algorithm finds a cut in $G^* $ with weight at least $0.01 OPT$. This translates into a cut in the original graph $G$ with weight at least $0.99OPT$ (since all cuts in $G^* $ with positive weight separate $u$ and $v$), which is better than the inapproximability result. "
+  ],
+  [
+   18,
+   ""
+  ],
+  [
+   19,
+   "There is no problem with choosing $d$ large enough to make any cut with $u$ and $v$ on the same side negative, since we can choose $d$ as large as we want. But how did we choose $a$ so that $f \\approx -.99OPT$ when we didn't know $OPT$? We can approximate $OPT$ really well ... if we let $T$ be the sum of the edge weights in $G$, we know $\\frac{1}{2}T \\leq OPT \\leq T$. So we have a fairly narrow range of values for $f$, and we can iterate over $f$ taking all values between $-.49T$ and $-.99T$ at intervals of $0.005T$. For one of these intervals, we are guaranteed that $f \\approx -0.98 OPT$, and so one of these iterations is guaranteed to return a good cut."
+  ],
+  [
+   20,
+   ""
+  ],
+  [
+   21,
+   "Finally, we need to check that the new graph has edge weights whose sum is positive. We started with a graph whose edge weights had sum $T$, and added $f$ to the sum of the edge weights. Since $-.99T \\leq f \\leq -.49T$, we're O.K."
+  ]
+ ],
+ "n_nonblank_text": 11,
+ "note": "lines are the exact ordered [label, text] pairs the models received; gold are the reference line labels; cluster fields are bootstrap-stratification identifiers, not source units",
+ "record_id": "SE_cstheory_2312__a2318",
+ "reference_item_sha256": "f02b2cf91c45fcb12b7268c74c13438db92983981a906cac703105cac200a001",
+ "split": "evaluation",
+ "unscorable": false
+}

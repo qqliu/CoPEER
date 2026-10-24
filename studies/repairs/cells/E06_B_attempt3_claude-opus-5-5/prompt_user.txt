@@ -1,0 +1,240 @@
+# Record E06: Signed cut: the total weight after the construction
+
+## Source argument (full context)
+
+ORIGINAL SOURCE CONTEXT — record E06 (SE_cstheory_2312__a2318)
+public source: https://cstheory.stackexchange.com/a/2318
+This file is the complete stored original source text of the record: the problem/question and the reply/post text,
+with the stored line labels (NNNN |). It contains original-source information only.
+
+=== PROBLEM / QUESTION (verbatim, stored text) ===
+P0001 | Max-cut with negative weight edges
+P0002 | 
+P0003 | Let $G = (V, E, w)$ be a graph with weight function $w:E\rightarrow \mathbb{R}$. The max-cut problem is to find:
+P0004 | $$\arg\max_{S \subset V} \sum_{(u,v) \in E : u \in S, v \not \in S}w(u,v)$$
+P0005 | If the weight function is non-negative (i.e. $w(e) \geq 0$ for all $e \in E$), then there are many extremely simple 2-approximations for max-cut. For example, we can:
+P0006 | 
+P0007 |  1. Pick a random subset of vertices $S$.
+P0008 |  2. Pick an ordering on the vertices, and greedily place each vertex $v$ in $S$ or $\bar{S}$ to maximize the edges cut so far
+P0009 |  3. Make local improvements: If there is any vertex in $S$ that can be moved to $\bar{S}$ to increase the cut (or vice versa), make the move.
+P0010 | 
+P0011 | The standard analysis of all of these algorithms actually shows that the resulting cut is at least as large as $\frac{1}{2}\sum_{e \in E}w(e)$, which is an upper bound on $1/2$ the weight of the max-cut if $w$ is non-negative -- but if some edges are allowed to have negative weight, is not!
+P0012 | 
+P0013 | For example, algorithm 1 (pick a random subset of vertices) can clearly fail on graphs with negative edge weights.
+P0014 | 
+P0015 | My question is:
+P0016 | > Is there a simple combinatorial algorithm that gets an O(1) approximation to the max-cut problem on graphs that can have negative edge weights?
+P0017 | 
+P0018 | To avoid the possibly sticky issue of the max-cut taking value $0$, I will allow that $\sum_{e \in E}w(e) > 0$, and/or be satisfied with algorithms that result in small additive error in addition to a multiplicative factor approximation.
+
+=== REPLY / POST TEXT (verbatim, stored text) ===
+0001 | Here was my first attempt at an argument. It was wrong, but I fixed it after the "EDIT:"
+0002 | 
+0003 | If you could efficiently approximately solve the max-cut problem with negative edge weights, couldn't you use that to solve the max-cut problem with positive edge weights?  Start with a max-cut problem you want to solve whose optimal solution is $b$. Now, put a large negative weight edge (with weight $-a$) between $u$ and $v$. The optimum solution of the new problem is $b-a$, so our hypothetical approximation algorithm will get you a solution with maximum cut whose value is at most $(b-a)/2$ worse than optimal. On the original graph, the maximum cut is still at most $(b-a)/2$ worse than optimal. If you choose $a$ close to $b$, this violates the inapproximability result that if P$\neq$NP, you cannot approximate max-cut to better than a $16/17$ factor.  
+0004 | 
+0005 | EDIT:
+0006 | 
+0007 | The above algorithm doesn't work because you can't guarantee that $u$ and $v$ are on opposite sides of the cut in the new graph, even if they were originally. I can fix this as follows, though. 
+0008 | 
+0009 | Let's assume that we have an approximation algorithm which will give us a cut within a factor of 2 of OPT as long as the sum of all the edge weights are positive.
+0010 | 
+0011 | As above, start with a graph $G$ with all non-negative weights on edges. We'll find a modified graph $G^* $ with some negative weights such that if we can approximate the max cut of $G^* $ within a factor of 2, we can approximate the max cut of $G$ very well.
+0012 | 
+0013 | Choose two vertices $u$ and $v$, and hope that they're on opposite sides of the max cut. (You can repeat this for all possible $v$ to ensure that one try works.) Now, put a large negative weight $-d$ on all edges $(u,x)$ and $(v,x)$ for $x \neq u,v$, and a large positive weight $a$ on edge $(u,v)$. Assume that the optimal cut has weight $OPT$.
+0014 | 
+0015 | A cut with value $c$ in $G$, where vertices $u$ and $v$ are on the same side of the cut, now has value at $c - 2dm$ where $m$ is the number of vertices on the other side of the cut. A cut with $(u,v)$ on opposite sides with original value $c$ now has value $c + a - (n-2)d$. Thus, if we choose $d$ large enough, we can force all cuts with $u$ and $v$ on the same side to have negative value, so if there is any cut with positive value, then the optimal cut in $G^* $ will have $u$ and $v$ on opposite sides. Note that we are adding a fixed weight $(a - (n-2)d)$ to any cut with $u$ and $v$ on opposite sides. 
+0016 | 
+0017 | Let $f=(a - (n-2)d)$. Choose $a$ so that $f \approx - 0.98 OPT$ (we'll justify this later). A cut with weight $c$ in $G$ having $u$ and $v$ on opposite sides now becomes a cut with weight $c - 0.98 OPT$. This means the optimal cut in $G^* $ has weight $0.02 OPT$. Our new algorithm finds a cut in $G^* $ with weight at least $0.01 OPT$. This translates into a cut in the original graph $G$ with weight at least $0.99OPT$ (since all cuts in $G^* $ with positive weight separate $u$ and $v$), which is better than the inapproximability result. 
+0018 | 
+0019 | There is no problem with choosing $d$ large enough to make any cut with $u$ and $v$ on the same side negative, since we can choose $d$ as large as we want. But how did we choose $a$ so that $f \approx -.99OPT$ when we didn't know $OPT$? We can approximate $OPT$ really well ... if we let $T$ be the sum of the edge weights in $G$, we know $\frac{1}{2}T \leq OPT \leq T$. So we have a fairly narrow range of values for $f$, and we can iterate over $f$ taking all values between $-.49T$ and $-.99T$ at intervals of $0.005T$. For one of these intervals, we are guaranteed that $f \approx -0.98 OPT$, and so one of these iterations is guaranteed to return a good cut.
+0020 | 
+0021 | Finally, we need to check that the new graph has edge weights whose sum is positive. We started with a graph whose edge weights had sum $T$, and added $f$ to the sum of the edge weights. Since $-.99T \leq f \leq -.49T$, we're O.K.
+
+=== CHALLENGED PASSAGE (the located line; stored text) ===
+We started with a graph whose edge weights had sum $T$, and added $f$ to the sum of the edge weights. Since $-.99T \leq f \leq -.49T$, we're O.K.
+located at line label(s): 0021
+
+## Located defective declaration
+
+Declaration: `SE_cstheory_2312_a2318_Census.LocalClaim (identity and positivity) / SE_cstheory_2312_a2318_Census.PositivityUnderWindow (positivity half)`
+
+```lean
+def LocalClaim : Prop :=
+  ∀ (n u v : Nat) (d a : Int) (G : List WEdge),
+    u ≠ v → u < n → v < n → 0 < wsum G →
+    (-99 : Int) * wsum G ≤ 100 * (a - ((n : Int) - 2) * d) →
+    100 * (a - ((n : Int) - 2) * d) ≤ (-49 : Int) * wsum G →
+    wsum (gstar n u v d a G) = wsum G + (a - ((n : Int) - 2) * d)
+      ∧ 0 < wsum (gstar n u v d a G)
+```
+
+The source (stored source line 0021) books the total weight of the constructed graph G* as T + f with f = a - (n - 2) d, and concludes from the window -0.99 T ≤ f ≤ -0.49 T that the new total is positive. As a universal statement over the construction this identity-plus-positivity is the located defect. Supply the corrected accounting total, prove the corrected identity for every instance, and prove the non-entailment: the positivity half (PositivityUnderWindow) is false, i.e. corrected accounting does not rescue the positivity claim. This does not assert that no reduction of this kind can exist.
+
+## Files in your working directory
+
+- `defs_only.lean`: the definitions (full text below), already compiled; `import defs_only` resolves. Read-only.
+- `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `.lake/`: the fixed Lean project. Read-only.
+- `work/`: the ONLY writable directory. Put `work/SUBMISSION.lean` and every scratch file (e.g. `work/test.lean`) there and compile with `lake env lean work/<file>.lean`. Writes anywhere else fail.
+- `witness_min.lean`: a kernel-checked counterexample to the located claim (full text below), already compiled; you may study it and compile scratch files that import it, but SUBMISSION.lean must import only defs_only. Read-only.
+
+## defs_only.lean
+
+```lean
+/- Record SE_cstheory_2312__a2318 (E06, cstheory.stackexchange reply a2318 to question 2312).
+Core Lean only (no imports, no Mathlib).
+
+Weighted edge lists over vertices 0 .. n-1.  From a graph G with designated vertices u ≠ v
+the source builds G* = G plus, for every other vertex k, the two edges (u,k) and (v,k) of
+weight -d, plus the edge (u,v) of weight a.  Notation of the source: T = wsum G,
+f = a - (n-2) d, written inline as `a - ((n : Int) - 2) * d`.  The source stipulates
+T > 0 and -0.99 T ≤ f ≤ -0.49 T (the "window").
+`build`/`tsum` merge parallel edges (additively when `addMode = true`, by overwrite otherwise).
+The located statement `LocalClaim` is the source's identity "the new total is T + f" together
+with the positivity of the new total, under the source's hypotheses.
+`PositivityUnderWindow` is the positivity half alone. -/
+
+set_option maxRecDepth 10000
+
+namespace SE_cstheory_2312_a2318_Census
+
+abbrev WEdge := Nat × Nat × Int
+
+def wsum (es : List WEdge) : Int := (es.map (fun e => e.2.2)).sum
+
+def penaltiesBelow (u v : Nat) (d : Int) : Nat → List WEdge
+  | 0 => []
+  | k + 1 =>
+      (if k = u ∨ k = v then [] else [(u, k, -d), (v, k, -d)]) ++ penaltiesBelow u v d k
+
+def gstar (n u v : Nat) (d a : Int) (G : List WEdge) : List WEdge :=
+  G ++ penaltiesBelow u v d n ++ [(u, v, a)]
+
+def norm (i j : Nat) : Nat × Nat := if i ≤ j then (i, j) else (j, i)
+
+def applyEdge (addMode : Bool) : List ((Nat × Nat) × Int) → WEdge → List ((Nat × Nat) × Int)
+  | [], (i, j, w) => [(norm i j, w)]
+  | (p, x) :: rest, (i, j, w) =>
+      if p = norm i j then (p, if addMode then x + w else w) :: rest
+      else (p, x) :: applyEdge addMode rest (i, j, w)
+
+def build (addMode : Bool) : List WEdge → List ((Nat × Nat) × Int) → List ((Nat × Nat) × Int)
+  | [], m => m
+  | e :: es, m => build addMode es (applyEdge addMode m e)
+
+def tsum (es : List ((Nat × Nat) × Int)) : Int := (es.map (fun e => e.2)).sum
+
+/-- The located claim: under the source's hypotheses, the new total equals `T + f` and is
+positive. -/
+def LocalClaim : Prop :=
+  ∀ (n u v : Nat) (d a : Int) (G : List WEdge),
+    u ≠ v → u < n → v < n → 0 < wsum G →
+    (-99 : Int) * wsum G ≤ 100 * (a - ((n : Int) - 2) * d) →
+    100 * (a - ((n : Int) - 2) * d) ≤ (-49 : Int) * wsum G →
+    wsum (gstar n u v d a G) = wsum G + (a - ((n : Int) - 2) * d)
+      ∧ 0 < wsum (gstar n u v d a G)
+
+/-- The positivity half of the located claim, alone. -/
+def PositivityUnderWindow : Prop :=
+  ∀ (n u v : Nat) (d a : Int) (G : List WEdge),
+    u ≠ v → u < n → v < n → 0 < wsum G →
+    (-99 : Int) * wsum G ≤ 100 * (a - ((n : Int) - 2) * d) →
+    100 * (a - ((n : Int) - 2) * d) ≤ (-49 : Int) * wsum G →
+    0 < wsum (gstar n u v d a G)
+
+end SE_cstheory_2312_a2318_Census
+```
+
+## witness_min.lean (checked counterexample)
+
+```lean
+import defs_only
+/- Record SE_cstheory_2312__a2318 (E06): the located claim fails at
+n = 3, u = 0, v = 1, G = path 0-1-2 with unit weights (T = 2), d = 20, f = -1, a = 19. -/
+set_option maxRecDepth 10000
+
+namespace SE_cstheory_2312_a2318_Census
+
+def G3 : List WEdge := [(0, 1, 1), (1, 2, 1)]
+def T3 : Int := wsum G3            -- = 2
+def d3 : Int := 20
+def f3 : Int := -1
+def a3 : Int := f3 + 1 * d3        -- a = f + (n-2)d, with n = 3, so (n-2) = 1;  = 19
+def Gstar3 : List WEdge := gstar 3 0 1 d3 a3 G3
+
+/-- The instance meets every hypothesis of the located claim (T > 0, f in the window). -/
+theorem hypotheses_hold :
+    0 < T3 ∧ (-99 : Int) * T3 ≤ 100 * f3 ∧ 100 * f3 ≤ (-49 : Int) * T3 := by decide
+
+/-- Values at the instance: booked total `T + f = 1`; actual total `-19` (also `-19` after
+additive merging of parallel edges, `-21` after overwrite merging). -/
+theorem instance_values :
+    T3 + f3 = 1 ∧ wsum Gstar3 = -19
+    ∧ tsum (build true Gstar3 []) = -19 ∧ tsum (build false Gstar3 []) = -21 := by decide
+
+theorem local_claim_false : ¬ LocalClaim :=
+  fun h => absurd (h 3 0 1 20 19 [(0, 1, 1), (1, 2, 1)]
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)).2 (by decide)
+
+theorem positivity_under_window_false : ¬ PositivityUnderWindow :=
+  fun h => absurd (h 3 0 1 20 19 [(0, 1, 1), (1, 2, 1)]
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)) (by decide)
+
+end SE_cstheory_2312_a2318_Census
+
+#print axioms SE_cstheory_2312_a2318_Census.instance_values
+#print axioms SE_cstheory_2312_a2318_Census.local_claim_false
+#print axioms SE_cstheory_2312_a2318_Census.positivity_under_window_false
+```
+
+## Repair template (fill the hole `«HOLE»`; every other character is fixed)
+
+```lean
+import defs_only
+/-!
+Record E06: correction template.
+Fill the ONE hole `«HOLE»` in the FIXED PART (nothing else in the fixed part may change), then prove
+the OBLIGATIONS below with exactly these names and statements. Helper lemmas may be added between the
+fixed part and the obligations, inside the namespace. Import nothing else.
+-/
+namespace SE_cstheory_2312_a2318_Census
+
+-- ===== FIXED PART: only the hole «HOLE» may be edited =====
+/-- The corrected total weight of the constructed graph `G*`, as an expression in `T = wsum G`, `a`, `n`
+and `d` (the source books `T + (a - (n - 2) d)`). The hole must be a closed integer expression in `T`, `a`,
+`n`, `d` (no reference to `wsum`, `gstar`, `penaltiesBelow`, `build`, `tsum`; no `if`/`match`). -/
+def total (T a : Int) (n : Nat) (d : Int) : Int := «HOLE»
+
+/-- The corrected accounting identity for every instance of the construction (shape fixed; the source's
+window hypotheses are not needed for the identity itself). -/
+def CorrectedAccounting : Prop :=
+  ∀ (n u v : Nat) (d a : Int) (G : List WEdge), u ≠ v → u < n → v < n →
+    wsum (gstar n u v d a G) = total (wsum G) a n d
+-- ===== END FIXED PART =====
+
+end SE_cstheory_2312_a2318_Census
+```
+
+Allowed edit: Replace the hole in `total` by a closed integer expression in T, a, n, d (no reference to wsum, gstar, penaltiesBelow, build, tsum; no if/match); nothing else in the fixed part may change. The construction gstar/penaltiesBelow/wsum (integer additive edge lists, distinct designated vertices) and the quantification are fixed; no hypothesis (d = 0, n ≤ 2, conditions on G) may be added. Do not redefine WEdge, wsum, penaltiesBelow, gstar, norm, applyEdge, build, tsum, LocalClaim or PositivityUnderWindow; no instances, notations, macros, axioms or exports.
+
+Reserved names (never redefine): WEdge, wsum, penaltiesBelow, gstar, norm, applyEdge, build, tsum, LocalClaim, PositivityUnderWindow
+
+## OBLIGATIONS (exact names and statements, inside `namespace SE_cstheory_2312_a2318_Census`)
+
+```lean
+theorem repair_statement : ∀ (n u v : Nat) (d a : Int) (G : List SE_cstheory_2312_a2318_Census.WEdge), u ≠ v → u < n → v < n → SE_cstheory_2312_a2318_Census.wsum (SE_cstheory_2312_a2318_Census.gstar n u v d a G) = SE_cstheory_2312_a2318_Census.total (SE_cstheory_2312_a2318_Census.wsum G) a n d
+```
+(universal: Universal: the corrected accounting identity holds for every `n`, distinct designated vertices `u ≠ v` below `n`, every `d`, `a` and every edge list `G`.)
+
+```lean
+theorem repair_nonvacuous : ∃ (T a : Int) (n : Nat) (d : Int), 2 ≤ n ∧ SE_cstheory_2312_a2318_Census.total T a n d ≠ T + (a - ((n : Int) - 2) * d)
+```
+(nonvacuity: Non-vacuity: the corrected total differs from the source's booked total `T + (a - (n - 2) d)` at some parameters with `n ≥ 2`.)
+
+```lean
+theorem final_theorem : ¬ SE_cstheory_2312_a2318_Census.PositivityUnderWindow
+```
+(final: Non-entailment (the endpoint of this record): the corrected accounting does not rescue the source's positivity claim. `PositivityUnderWindow` (from defs_only) is the positivity half of the located claim under all of the source's hypotheses; it is false. If you cannot prove it, replace this declaration (this doc comment included) by the single line `-- CANNOT: <reason>`.)
+
+## Submission
+
+Write work/SUBMISSION.lean as specified in the instructions, compile it with `lake env lean work/SUBMISSION.lean`, fix errors within the budget, and finish with the line `SUBMITTED` or `SUBMITTED-CANNOT-FINAL`.
